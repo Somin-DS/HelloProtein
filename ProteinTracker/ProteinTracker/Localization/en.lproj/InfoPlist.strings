@@ -1,0 +1,9 @@
+/* 
+  InfoPlist.strings
+  ProteinTracker
+
+  Created by 박소민 on 2021/11/24.
+  
+*/
+
+CFBundleDisplayName = "Hello,Protein";

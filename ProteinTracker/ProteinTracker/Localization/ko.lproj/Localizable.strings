@@ -1,0 +1,43 @@
+/* 
+  Localizable.strings
+  ProteinTracker
+
+  Created by 박소민 on 2021/11/23.
+  
+*/
+
+//Setting
+
+"setting_language" = "언어 설정";
+"setting_intake" = "목표 섭취량";
+"setting_theme" = "테마";
+
+
+//Add
+
+"add_namelabel" = "이름";
+"add_intakelabel" = "단백질 양";
+"add_favoritelabel" = "즐겨찾기";
+"add_button" = "추가";
+"close_button" = "닫기";
+
+//Stats
+
+"stats_averagelabel" = "평균 섭취량";
+"stats_segone" = "주";
+"stats_segtwo" = "월";
+
+//Init
+
+"init_heightfield" = "키(옵션)";
+"init_weightfield" = "몸무게(옵션)";
+"init_activelabel" = "활동량(옵션)";
+"init_segone" = "적음";
+"init_segtwo" = "보통";
+"init_segthree" = "많음";
+"init_callabel" = "계산하기";
+"init_recommendlabel" = "추천 섭취량";
+"intit_targetfield" = "목표 섭취량(필수)";
+"init_startbutton" = "시작하기";
+
+

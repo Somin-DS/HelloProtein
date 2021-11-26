@@ -1,0 +1,41 @@
+/* 
+  Localizable.strings
+  ProteinTracker
+
+  Created by 박소민 on 2021/11/23.
+  
+*/
+
+//Setting
+
+"setting_language" = "Language Setting";
+"setting_intake" = "Daily Target";
+"setting_theme" = "Themes";
+
+
+//Add
+
+"add_namelabel" = "Name";
+"add_intakelabel" = "Intake(g)";
+"add_favoritelabel" = "Favorites";
+"add_button" = "Add";
+"close_button" = "Close";
+
+//Stats
+
+"stats_averagelabel" = "Protein Average";
+"stats_segone" = "Week";
+"stats_segtwo" = "Month";
+
+//Init
+
+"init_heightfield" = "height(option)";
+"init_weightfield" = "weight(potion)";
+"init_activelabel" = "Target Level";
+"init_segone" = "Easy";
+"init_segtwo" = "Normal";
+"init_segthree" = "Hard";
+"init_callabel" = "Calculate";
+"init_recommendlabel" = "Recommend";
+"intit_targetfield" = "Target Intake(required";
+"init_startbutton" = "START";
