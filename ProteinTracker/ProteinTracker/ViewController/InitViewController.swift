@@ -6,44 +6,98 @@
 //
 
 import UIKit
+import Toast
+import TextFieldEffects
+
+enum Activity: String {
+    case light, moderate, active
+}
 
 class InitViewController: UIViewController {
 
     @IBOutlet weak var titleLabel: UILabel!
     
-    @IBOutlet weak var heightTextField: UITextField!
     @IBOutlet weak var weightTextField: UITextField!
     @IBOutlet weak var targetProteinTextField: UITextField!
+
+    @IBOutlet weak var weightSegmentControl: UISegmentedControl!
     
+    @IBOutlet weak var activityLabel: UILabel!
+    
+    @IBOutlet weak var activitySegmentControl: UISegmentedControl!
+    
+    @IBOutlet weak var recommendLabel: UILabel!
+    
+    @IBOutlet weak var recommendResultLabel: UILabel!
+    @IBOutlet weak var startButton: UIButton!
+    
+    var weightMeasure = "kg"
+    var activityLevel = Activity.light
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        getLanguageSetting()
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        
+        weightTextField.placeholder = LocalizeStrings.init_weightfield.localized
+        targetProteinTextField.placeholder = LocalizeStrings.init_targetfield.localized
+    }
+
+    
+    @IBAction func weightSegmentSelected(_ sender: UISegmentedControl) {
+        
+        if sender.selectedSegmentIndex == 0 {
+            weightMeasure = "kg"
+        }else {
+            weightMeasure = "lb"
+        }
     }
     
-    
-    func saveTargetProtein(_ protein: String?){
-        UserDefaults.standard.set(protein, forKey: "targetProtein")
+    @IBAction func activitySegmentSelected(_ sender: UISegmentedControl) {
+        
+        if sender.selectedSegmentIndex == 0 {
+            activityLevel = Activity.light
+        } else if sender.selectedSegmentIndex == 1 {
+            activityLevel = Activity.moderate
+        } else {
+            activityLevel = Activity.active
+        }
     }
-    //기기 언어 설정값 가져오기
-    func getLanguageSetting(){
-        let localeID = Locale.preferredLanguages.first
-        let deviceLocale = (Locale(identifier: localeID!).languageCode)!
-        print(deviceLocale)
+    
+    @IBAction func calculButtonClicked(_ sender: UIButton) {
+        
+       
+        let weightValid = isValidNumber(weightTextField.text)
+        
+        if weightValid == 0 {
+            let weight = Double(weightTextField.text!)!
+            
+            recommendResultLabel.text = " \(calculateTargetProtein(weight, weightMeasure, activityLevel)) g"
+            
+        }else {
+            
+            if weightValid == ErrorString.EmptyString.rawValue {
+                self.view.makeToast(LocalizeStrings.empty_weight.localized)
+            }
+            if weightValid == ErrorString.NotNumber.rawValue {
+                self.view.makeToast(LocalizeStrings.error_number.localized)
+            }
+        }
     }
     
     @IBAction func startButtonClicked(_ sender: UIButton) {
         
-        print(#function)
-        if let target = targetProteinTextField.text, !target.isEmpty {
-            saveTargetProtein(target)
+        let valid = isValidNumber(targetProteinTextField.text)
+        if valid == 0 {
+            Storage.saveTargetProtein(targetProteinTextField.text!)
             let sb = UIStoryboard(name: "Show", bundle: nil)
             let vc = sb.instantiateViewController(withIdentifier: "ShowViewController") as! ShowViewController
             self.navigationController?.pushViewController(vc, animated: true)
-        } else {
-            print("목표 단백질을 입력해주세요")
+        }else {
+            if valid == ErrorString.EmptyString.rawValue {
+                self.view.makeToast(LocalizeStrings.empty_protein.localized)
+            }else {
+                self.view.makeToast(LocalizeStrings.error_number.localized)
+            }
         }
-        
     }
 }

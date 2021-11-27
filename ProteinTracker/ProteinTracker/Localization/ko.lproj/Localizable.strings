@@ -29,7 +29,6 @@
 
 //Init
 
-"init_heightfield" = "키(옵션)";
 "init_weightfield" = "몸무게(옵션)";
 "init_activelabel" = "활동량(옵션)";
 "init_segone" = "적음";
@@ -37,7 +36,11 @@
 "init_segthree" = "많음";
 "init_callabel" = "계산하기";
 "init_recommendlabel" = "추천 섭취량";
-"intit_targetfield" = "목표 섭취량(필수)";
+"init_targetfield" = "목표 섭취량(필수)";
 "init_startbutton" = "시작하기";
 
+//Error
 
+"empty_weight" = "몸무게를 입력해주세요";
+"empty_protein" = "목표 섭취량을 입력해주세요";
+"error_number" = "숫자로만 입력해주세요";

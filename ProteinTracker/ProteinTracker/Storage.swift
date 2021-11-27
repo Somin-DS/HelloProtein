@@ -8,6 +8,7 @@
 import Foundation
 
 public class Storage {
+    
     static func isSetDefaut() -> Bool {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: "targetProtein") == nil {
@@ -15,5 +16,9 @@ public class Storage {
         } else {
             return true
         }
+    }
+    
+    static func saveTargetProtein(_ protein: String){
+        UserDefaults.standard.set(protein, forKey: "targetProtein")
     }
 }

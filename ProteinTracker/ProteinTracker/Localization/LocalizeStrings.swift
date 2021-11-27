@@ -15,10 +15,10 @@ enum LocalizeStrings: String {
          add_intakelabel,
          add_favoritelabel,
          add_button,
+         close_button,
          stats_averagelabel,
          stats_segone,
          stats_segtwo,
-         init_heightfield,
          init_weightfield,
          init_activelabel,
          init_segone,
@@ -26,8 +26,11 @@ enum LocalizeStrings: String {
          init_segthree,
          init_callabel,
          init_recommendlabel,
-         intit_targetfield,
-         init_startbutton
+         init_targetfield,
+         init_startbutton,
+         empty_weight,
+         empty_protein,
+         error_number
     
     var localized: String {
         return self.rawValue.localized()

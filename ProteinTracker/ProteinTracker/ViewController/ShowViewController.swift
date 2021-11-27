@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import Hero
 
 class ShowViewController: UIViewController {
 
@@ -42,15 +41,9 @@ class ShowViewController: UIViewController {
         let vc = sb.instantiateViewController(withIdentifier: "StatsViewController")
         
         self.navigationController?.pushViewController(vc, animated: true)
-
-//        vc.hero.isEnabled = true
-//        vc.hero.modalAnimationType = .selectBy(presenting: .push(direction: .right), dismissing: .push(direction: .left))
-//
-//        vc.heroModalAnimationType = .selectBy(presenting: .pull(direction: .left), dismissing: .slide(direction: .down))
     }
     
     //Add View로 전환(show modally)
-    
     @IBAction func addButtonClicked(_ sender: UIButton) {
         
         //1.

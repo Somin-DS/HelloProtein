@@ -29,13 +29,18 @@
 
 //Init
 
-"init_heightfield" = "height(option)";
-"init_weightfield" = "weight(potion)";
-"init_activelabel" = "Target Level";
-"init_segone" = "Easy";
-"init_segtwo" = "Normal";
-"init_segthree" = "Hard";
+"init_weightfield" = "weight(option)";
+"init_activelabel" = "Activity";
+"init_segone" = "Light";
+"init_segtwo" = "Moderate";
+"init_segthree" = "Active";
 "init_callabel" = "Calculate";
 "init_recommendlabel" = "Recommend";
-"intit_targetfield" = "Target Intake(required";
+"init_targetfield" = "Target Intake(required)";
 "init_startbutton" = "START";
+
+//Error
+
+"empty_weight" = "Enter your weight";
+"empty_protein" = "Enter daily target";
+"error_number" = "Enter numbers only";

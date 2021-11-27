@@ -10,12 +10,16 @@
 		3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */; };
 		3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */; };
 		3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD83274FD853001C5079 /* SearchViewController.swift */; };
-		3752AD87274FE317001C5079 /* Hero in Frameworks */ = {isa = PBXBuildFile; productRef = 3752AD86274FE317001C5079 /* Hero */; };
-		3752AD89274FEBBB001C5079 /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD88274FEBBA001C5079 /* Onboarding.swift */; };
+		3752AD89274FEBBB001C5079 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD88274FEBBA001C5079 /* Storage.swift */; };
 		37BEA6F2274D34BC00C0AEF7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 37BEA6F4274D34BC00C0AEF7 /* Localizable.strings */; };
 		37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37BEA6F7274D44FF00C0AEF7 /* String+Extension.swift */; };
 		37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37BEA6F9274D452300C0AEF7 /* LocalizeStrings.swift */; };
 		37BEA6FD274D4A2300C0AEF7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 37BEA6FF274D4A2300C0AEF7 /* InfoPlist.strings */; };
+		37EEADBC2752048600B06EF7 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 37EEADBB2752048600B06EF7 /* Toast */; };
+		37EEADBE275206FD00B06EF7 /* ErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */; };
+		37EEADC027520E0D00B06EF7 /* CheckValid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EEADBF27520E0D00B06EF7 /* CheckValid.swift */; };
+		37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EEADC127521A2200B06EF7 /* Calculator.swift */; };
+		37EEADC5275229F000B06EF7 /* TextFieldEffects in Frameworks */ = {isa = PBXBuildFile; productRef = 37EEADC4275229F000B06EF7 /* TextFieldEffects */; };
 		37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9828274BEA5C00C29698 /* AppDelegate.swift */; };
 		37FB982B274BEA5C00C29698 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB982A274BEA5C00C29698 /* SceneDelegate.swift */; };
 		37FB9830274BEA5C00C29698 /* Show.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB982E274BEA5C00C29698 /* Show.storyboard */; };
@@ -39,13 +43,16 @@
 		3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD83274FD853001C5079 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
-		3752AD88274FEBBA001C5079 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		3752AD88274FEBBA001C5079 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		37BEA6F3274D34BC00C0AEF7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		37BEA6F5274D34CC00C0AEF7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		37BEA6F7274D44FF00C0AEF7 /* String+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Extension.swift"; sourceTree = "<group>"; };
 		37BEA6F9274D452300C0AEF7 /* LocalizeStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizeStrings.swift; sourceTree = "<group>"; };
 		37BEA6FE274D4A2300C0AEF7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		37BEA700274D4A2600C0AEF7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
+		37EEADBF27520E0D00B06EF7 /* CheckValid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckValid.swift; sourceTree = "<group>"; };
+		37EEADC127521A2200B06EF7 /* Calculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calculator.swift; sourceTree = "<group>"; };
 		37FB9825274BEA5C00C29698 /* ProteinTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProteinTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37FB9828274BEA5C00C29698 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37FB982A274BEA5C00C29698 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -72,7 +79,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3752AD87274FE317001C5079 /* Hero in Frameworks */,
+				37EEADBC2752048600B06EF7 /* Toast in Frameworks */,
+				37EEADC5275229F000B06EF7 /* TextFieldEffects in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,7 +120,10 @@
 				37FB9846274CFF4800C29698 /* StoryBoard */,
 				37FB9828274BEA5C00C29698 /* AppDelegate.swift */,
 				37FB982A274BEA5C00C29698 /* SceneDelegate.swift */,
-				3752AD88274FEBBA001C5079 /* Onboarding.swift */,
+				3752AD88274FEBBA001C5079 /* Storage.swift */,
+				37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */,
+				37EEADC127521A2200B06EF7 /* Calculator.swift */,
+				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
 				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
 			);
@@ -177,7 +188,8 @@
 			);
 			name = ProteinTracker;
 			packageProductDependencies = (
-				3752AD86274FE317001C5079 /* Hero */,
+				37EEADBB2752048600B06EF7 /* Toast */,
+				37EEADC4275229F000B06EF7 /* TextFieldEffects */,
 			);
 			productName = ProteinTracker;
 			productReference = 37FB9825274BEA5C00C29698 /* ProteinTracker.app */;
@@ -209,7 +221,8 @@
 			);
 			mainGroup = 37FB981C274BEA5C00C29698;
 			packageReferences = (
-				3752AD85274FE317001C5079 /* XCRemoteSwiftPackageReference "Hero" */,
+				37EEADBA2752048600B06EF7 /* XCRemoteSwiftPackageReference "Toast-Swift" */,
+				37EEADC3275229F000B06EF7 /* XCRemoteSwiftPackageReference "TextFieldEffects" */,
 			);
 			productRefGroup = 37FB9826274BEA5C00C29698 /* Products */;
 			projectDirPath = "";
@@ -246,6 +259,7 @@
 			files = (
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,
 				3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */,
+				37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */,
 				37FB984C274D022000C29698 /* AddViewController.swift in Sources */,
 				37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */,
 				37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */,
@@ -253,13 +267,15 @@
 				37FB982B274BEA5C00C29698 /* SceneDelegate.swift in Sources */,
 				37FB9854274D087800C29698 /* SettingTableViewCell.swift in Sources */,
 				3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */,
+				37EEADBE275206FD00B06EF7 /* ErrorHandler.swift in Sources */,
 				37FB9845274BECA600C29698 /* ShowViewController.swift in Sources */,
 				37FB984E274D022B00C29698 /* StatsViewController.swift in Sources */,
 				37FB984A274D021900C29698 /* SettingViewController.swift in Sources */,
 				37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */,
 				37FB9852274D085D00C29698 /* ShowTableViewCell.swift in Sources */,
-				3752AD89274FEBBB001C5079 /* Onboarding.swift in Sources */,
+				3752AD89274FEBBB001C5079 /* Storage.swift in Sources */,
 				37FB9850274D084E00C29698 /* FavoritesTableViewCell.swift in Sources */,
+				37EEADC027520E0D00B06EF7 /* CheckValid.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,9 +519,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		3752AD85274FE317001C5079 /* XCRemoteSwiftPackageReference "Hero" */ = {
+		37EEADBA2752048600B06EF7 /* XCRemoteSwiftPackageReference "Toast-Swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/HeroTransitions/Hero.git";
+			repositoryURL = "https://github.com/scalessec/Toast-Swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+		37EEADC3275229F000B06EF7 /* XCRemoteSwiftPackageReference "TextFieldEffects" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/raulriera/TextFieldEffects.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
@@ -514,10 +538,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3752AD86274FE317001C5079 /* Hero */ = {
+		37EEADBB2752048600B06EF7 /* Toast */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3752AD85274FE317001C5079 /* XCRemoteSwiftPackageReference "Hero" */;
-			productName = Hero;
+			package = 37EEADBA2752048600B06EF7 /* XCRemoteSwiftPackageReference "Toast-Swift" */;
+			productName = Toast;
+		};
+		37EEADC4275229F000B06EF7 /* TextFieldEffects */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37EEADC3275229F000B06EF7 /* XCRemoteSwiftPackageReference "TextFieldEffects" */;
+			productName = TextFieldEffects;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
