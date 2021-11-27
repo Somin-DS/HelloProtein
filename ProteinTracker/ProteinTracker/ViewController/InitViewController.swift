@@ -40,6 +40,9 @@ class InitViewController: UIViewController {
         
         weightTextField.placeholder = LocalizeStrings.init_weightfield.localized
         targetProteinTextField.placeholder = LocalizeStrings.init_targetfield.localized
+        
+        //기기 설정 언어값 저장 ex) "ko"
+        Storage.saveLanguageSetting()
     }
 
     

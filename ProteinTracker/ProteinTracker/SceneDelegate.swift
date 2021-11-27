@@ -53,7 +53,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 //Onboarding Page 구현
 extension SceneDelegate {
     private func setRootViewController(_ scene: UIScene){
-        print(#function)
         if Storage.isSetDefaut() {
             setRootView(scene, name: "Show", identifier: "ShowViewController")
         } else {
@@ -62,7 +61,6 @@ extension SceneDelegate {
     }
     
     private func setRootView(_ scene: UIScene, name: String, identifier: String) {
-        print(#function)
         if let windowScene = scene as? UIWindowScene {
             let window = UIWindow(windowScene: windowScene)
             let storyBoard = UIStoryboard(name: name, bundle: nil)
@@ -71,7 +69,7 @@ extension SceneDelegate {
             window.rootViewController = navigationController
             self.window = window
             window.makeKeyAndVisible()
-            print(identifier)
+
         }
     }
     

@@ -6,9 +6,13 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ShowViewController: UIViewController {
 
+    let localRealm = try! Realm()
+    var dailyProteinRealm: Results<DailyProtein>!
+    var statProteinRealm: Results<StatProtein>!
     
     @IBOutlet weak var rightBarButton: UIBarButtonItem!
     @IBOutlet weak var leftBarButton: UIBarButtonItem!
@@ -20,6 +24,21 @@ class ShowViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        showTableView.delegate = self
+        showTableView.dataSource = self
+        
+        dailyProteinRealm = localRealm.objects(DailyProtein.self)
+        statProteinRealm = localRealm.objects(StatProtein.self)
+        
+        Storage.addTotalProtein(0)
+        
+        intakeLabel.text = "\(UserDefaults.standard.integer(forKey: "totalIntake")) g"
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        showTableView.reloadData()
+        
+        intakeLabel.text = String(UserDefaults.standard.integer(forKey: "totalIntake"))
     }
     
     
@@ -53,10 +72,39 @@ class ShowViewController: UIViewController {
 
         let nav = UINavigationController(rootViewController: vc)
         
+        nav.modalPresentationStyle = .fullScreen
         self.present(nav, animated: true, completion: nil)
         
+    }
+
+}
+
+extension ShowViewController: UITableViewDelegate, UITableViewDataSource {
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return dailyProteinRealm.count
+    }
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ShowTableViewCell.identifier, for: indexPath) as? ShowTableViewCell else { return UITableViewCell() }
+        
+        let row = dailyProteinRealm[indexPath.row]
+        
+        cell.nameLabel.text = row.proteinName
+        cell.intakeLabel.text = String(row.proteinIntake)
+        
+        return cell
+    }
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        
+        try! localRealm.write {
+            let deleteProtein = dailyProteinRealm[indexPath.row].proteinIntake
+            localRealm.delete(dailyProteinRealm[indexPath.row])
+            Storage.subtractTotalProtein(deleteProtein)
+            showTableView.reloadData()
+            intakeLabel.text = String(UserDefaults.standard.integer(forKey: "totalIntake"))
+        }
     }
     
-
+    
 }
