@@ -54,22 +54,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 extension SceneDelegate {
     private func setRootViewController(_ scene: UIScene){
         print(#function)
-        if Storage.isFirstTime() {
-            setRootViewController(scene, name: "Init", identifier: "InitViewController")
+        if Storage.isSetDefaut() {
+            setRootView(scene, name: "Show", identifier: "ShowViewController")
         } else {
-            setRootViewController(scene, name: "Show", identifier: "ShowViewController")
+            setRootView(scene, name: "Init", identifier: "InitViewController")
         }
     }
     
-    private func setRootViewController(_ scene: UIScene, name: String, identifier: String) {
+    private func setRootView(_ scene: UIScene, name: String, identifier: String) {
         print(#function)
         if let windowScene = scene as? UIWindowScene {
             let window = UIWindow(windowScene: windowScene)
             let storyBoard = UIStoryboard(name: name, bundle: nil)
             let viewController = storyBoard.instantiateViewController(withIdentifier: identifier)
-            window.rootViewController = viewController
+            let navigationController = UINavigationController(rootViewController: viewController)
+            window.rootViewController = navigationController
             self.window = window
             window.makeKeyAndVisible()
+            print(identifier)
         }
     }
     

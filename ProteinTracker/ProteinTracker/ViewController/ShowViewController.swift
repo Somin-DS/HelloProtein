@@ -20,7 +20,6 @@ class ShowViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         
     }
     
@@ -48,7 +47,6 @@ class ShowViewController: UIViewController {
 //        vc.hero.modalAnimationType = .selectBy(presenting: .push(direction: .right), dismissing: .push(direction: .left))
 //
 //        vc.heroModalAnimationType = .selectBy(presenting: .pull(direction: .left), dismissing: .slide(direction: .down))
-        present(vc, animated: true, completion: nil)
     }
     
     //Add View로 전환(show modally)

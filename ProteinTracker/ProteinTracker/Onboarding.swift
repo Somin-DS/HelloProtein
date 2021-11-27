@@ -8,15 +8,12 @@
 import Foundation
 
 public class Storage {
-    static func isFirstTime() -> Bool {
+    static func isSetDefaut() -> Bool {
         let defaults = UserDefaults.standard
-        if defaults.object(forKey: "isFisrt") == nil {
-            defaults.set("No", forKey: "isFirst")
-            print("first")
-            return true
-        } else {
-            print("not first time")
+        if defaults.object(forKey: "targetProtein") == nil {
             return false
+        } else {
+            return true
         }
     }
 }
