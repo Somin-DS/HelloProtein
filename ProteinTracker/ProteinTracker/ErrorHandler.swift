@@ -11,7 +11,7 @@ import Toast
 enum ErrorString: Int {
     case EmptyString = 1
     case NotNumber
-    
+    case Zero
 }
 
 

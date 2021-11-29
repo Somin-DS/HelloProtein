@@ -26,6 +26,7 @@
 "stats_averagelabel" = "평균 섭취량";
 "stats_segone" = "주";
 "stats_segtwo" = "월";
+"stats_empty" = "데이터가 없습니다.";
 
 //Init
 
@@ -35,7 +36,7 @@
 "init_segtwo" = "보통";
 "init_segthree" = "많음";
 "init_callabel" = "계산하기";
-"init_recommendlabel" = "추천 섭취량";
+"init_recommendlabel" = "추천 섭취량은 %@ g입니다";
 "init_targetfield" = "목표 섭취량(필수)";
 "init_startbutton" = "시작하기";
 
@@ -44,3 +45,13 @@
 "empty_weight" = "몸무게를 입력해주세요";
 "empty_protein" = "목표 섭취량을 입력해주세요";
 "error_number" = "숫자로만 입력해주세요";
+"empty_name" = "이름 입력해주세요";
+"error_duplicate" = "즐겨찾기에 이미 등록되어있습니다";
+"empty_favorite" = "즐겨찾기의 항목을 선택해주세요";
+"error_zero" = "0보다 큰 숫자를 입력해주세요";
+
+//Alert
+"alert_addTitle" = "추가 완료";
+"alert_addContent" = "추가되었습니다!";
+"alert_editTitle" = "수정 완료";
+"alert_editContent" = "수정되었습니다!";

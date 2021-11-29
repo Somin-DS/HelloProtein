@@ -11,13 +11,16 @@
 		3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */; };
 		3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD83274FD853001C5079 /* SearchViewController.swift */; };
 		3752AD89274FEBBB001C5079 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD88274FEBBA001C5079 /* Storage.swift */; };
-		37AA9E4B2752498200E3EFC1 /* ProteinInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AA9E4A2752498200E3EFC1 /* ProteinInformation.swift */; };
+		3788AFF12754D75E0043E9D7 /* TestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3788AFF02754D75E0043E9D7 /* TestViewController.swift */; };
+		3788AFF32754F9DD0043E9D7 /* SettingTargetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */; };
 		37AA9E7A27526B8C00E3EFC1 /* Realm in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7927526B8C00E3EFC1 /* Realm */; };
 		37AA9E7C27526B8C00E3EFC1 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7B27526B8C00E3EFC1 /* RealmSwift */; };
 		37AA9E7F27526BBE00E3EFC1 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7E27526BBE00E3EFC1 /* Alamofire */; };
 		37AA9E8227526C2900E3EFC1 /* SwiftyJSON in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E8127526C2900E3EFC1 /* SwiftyJSON */; };
 		37AA9E8527526C5100E3EFC1 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E8427526C5100E3EFC1 /* IQKeyboardManagerSwift */; };
 		37AA9E882752707C00E3EFC1 /* RealmModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AA9E872752707C00E3EFC1 /* RealmModel.swift */; };
+		37AA9E9B275383E500E3EFC1 /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E9A275383E500E3EFC1 /* Algorithms */; };
+		37AA9EA12753856900E3EFC1 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9EA02753856900E3EFC1 /* Charts */; };
 		37BEA6F2274D34BC00C0AEF7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 37BEA6F4274D34BC00C0AEF7 /* Localizable.strings */; };
 		37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37BEA6F7274D44FF00C0AEF7 /* String+Extension.swift */; };
 		37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37BEA6F9274D452300C0AEF7 /* LocalizeStrings.swift */; };
@@ -51,7 +54,8 @@
 		3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD83274FD853001C5079 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 		3752AD88274FEBBA001C5079 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
-		37AA9E4A2752498200E3EFC1 /* ProteinInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProteinInformation.swift; sourceTree = "<group>"; };
+		3788AFF02754D75E0043E9D7 /* TestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestViewController.swift; sourceTree = "<group>"; };
+		3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingTargetViewController.swift; sourceTree = "<group>"; };
 		37AA9E872752707C00E3EFC1 /* RealmModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmModel.swift; sourceTree = "<group>"; };
 		37BEA6F3274D34BC00C0AEF7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		37BEA6F5274D34CC00C0AEF7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -92,6 +96,8 @@
 				37AA9E8227526C2900E3EFC1 /* SwiftyJSON in Frameworks */,
 				37AA9E7F27526BBE00E3EFC1 /* Alamofire in Frameworks */,
 				37AA9E7C27526B8C00E3EFC1 /* RealmSwift in Frameworks */,
+				37AA9EA12753856900E3EFC1 /* Charts in Frameworks */,
+				37AA9E9B275383E500E3EFC1 /* Algorithms in Frameworks */,
 				37AA9E7A27526B8C00E3EFC1 /* Realm in Frameworks */,
 				37EEADBC2752048600B06EF7 /* Toast in Frameworks */,
 				37EEADC5275229F000B06EF7 /* TextFieldEffects in Frameworks */,
@@ -146,7 +152,6 @@
 				3752AD88274FEBBA001C5079 /* Storage.swift */,
 				37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */,
 				37EEADC127521A2200B06EF7 /* Calculator.swift */,
-				37AA9E4A2752498200E3EFC1 /* ProteinInformation.swift */,
 				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
 				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
@@ -171,6 +176,7 @@
 			isa = PBXGroup;
 			children = (
 				37FB9844274BECA600C29698 /* ShowViewController.swift */,
+				3788AFF02754D75E0043E9D7 /* TestViewController.swift */,
 				37FB9855274D0D5D00C29698 /* InitViewController.swift */,
 				37FB984F274D084E00C29698 /* FavoritesTableViewCell.swift */,
 				37FB9849274D021900C29698 /* SettingViewController.swift */,
@@ -179,6 +185,7 @@
 				3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */,
 				3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */,
 				37FB984B274D022000C29698 /* AddViewController.swift */,
+				3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */,
 				3752AD83274FD853001C5079 /* SearchViewController.swift */,
 				37FB984D274D022B00C29698 /* StatsViewController.swift */,
 			);
@@ -219,6 +226,8 @@
 				37AA9E7E27526BBE00E3EFC1 /* Alamofire */,
 				37AA9E8127526C2900E3EFC1 /* SwiftyJSON */,
 				37AA9E8427526C5100E3EFC1 /* IQKeyboardManagerSwift */,
+				37AA9E9A275383E500E3EFC1 /* Algorithms */,
+				37AA9EA02753856900E3EFC1 /* Charts */,
 			);
 			productName = ProteinTracker;
 			productReference = 37FB9825274BEA5C00C29698 /* ProteinTracker.app */;
@@ -256,6 +265,8 @@
 				37AA9E7D27526BBE00E3EFC1 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				37AA9E8027526C2900E3EFC1 /* XCRemoteSwiftPackageReference "SwiftyJSON" */,
 				37AA9E8327526C5100E3EFC1 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
+				37AA9E99275383E500E3EFC1 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				37AA9E9F2753856800E3EFC1 /* XCRemoteSwiftPackageReference "Charts" */,
 			);
 			productRefGroup = 37FB9826274BEA5C00C29698 /* Products */;
 			projectDirPath = "";
@@ -297,13 +308,14 @@
 				37FB984C274D022000C29698 /* AddViewController.swift in Sources */,
 				37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */,
 				37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */,
-				37AA9E4B2752498200E3EFC1 /* ProteinInformation.swift in Sources */,
+				3788AFF12754D75E0043E9D7 /* TestViewController.swift in Sources */,
 				37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */,
 				37FB982B274BEA5C00C29698 /* SceneDelegate.swift in Sources */,
 				37FB9854274D087800C29698 /* SettingTableViewCell.swift in Sources */,
 				3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */,
 				37EEADBE275206FD00B06EF7 /* ErrorHandler.swift in Sources */,
 				37FB9845274BECA600C29698 /* ShowViewController.swift in Sources */,
+				3788AFF32754F9DD0043E9D7 /* SettingTargetViewController.swift in Sources */,
 				37FB984E274D022B00C29698 /* StatsViewController.swift in Sources */,
 				37FB984A274D021900C29698 /* SettingViewController.swift in Sources */,
 				37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */,
@@ -588,6 +600,22 @@
 				minimumVersion = 6.0.0;
 			};
 		};
+		37AA9E99275383E500E3EFC1 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		37AA9E9F2753856800E3EFC1 /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.6.0;
+			};
+		};
 		37EEADBA2752048600B06EF7 /* XCRemoteSwiftPackageReference "Toast-Swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/scalessec/Toast-Swift.git";
@@ -631,6 +659,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 37AA9E8327526C5100E3EFC1 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */;
 			productName = IQKeyboardManagerSwift;
+		};
+		37AA9E9A275383E500E3EFC1 /* Algorithms */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37AA9E99275383E500E3EFC1 /* XCRemoteSwiftPackageReference "swift-algorithms" */;
+			productName = Algorithms;
+		};
+		37AA9EA02753856900E3EFC1 /* Charts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37AA9E9F2753856800E3EFC1 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = Charts;
 		};
 		37EEADBB2752048600B06EF7 /* Toast */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -26,7 +26,7 @@
 "stats_averagelabel" = "Protein Average";
 "stats_segone" = "Week";
 "stats_segtwo" = "Month";
-
+"stats_empty" = "Empty Data";
 //Init
 
 "init_weightfield" = "weight(option)";
@@ -35,7 +35,7 @@
 "init_segtwo" = "Moderate";
 "init_segthree" = "Active";
 "init_callabel" = "Calculate";
-"init_recommendlabel" = "Recommend";
+"init_recommendlabel" = "Recommend : %@ g/day";
 "init_targetfield" = "Target Intake(required)";
 "init_startbutton" = "START";
 
@@ -44,3 +44,15 @@
 "empty_weight" = "Enter your weight";
 "empty_protein" = "Enter daily target";
 "error_number" = "Enter numbers only";
+"empty_name" = "Enter protein name";
+"error_duplicate" = "There's alrealy in Favorite List";
+"empty_favorite" = "Select Favorite list";
+"error_zero" = "Do not enter Zero";
+
+//Alert
+"alert_addTitle" = "Sucess";
+"alert_addContent" = "Successfully Saved!";
+"alert_editTitle" = "Sucess";
+"alert_editContent" = "Successfully updated'!";
+
+

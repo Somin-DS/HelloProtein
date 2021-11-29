@@ -11,8 +11,11 @@ class FavoritesTableViewCell: UITableViewCell {
 
     static let identifier = "FavoritesTableViewCell"
     
-    @IBOutlet weak var intakeLabel: UILabel!
+   
     @IBOutlet weak var nameLabel: UILabel!
+    
+    @IBOutlet weak var intakeLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
       

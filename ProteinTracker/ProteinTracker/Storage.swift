@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RealmSwift
 
 public class Storage {
     
@@ -18,15 +19,10 @@ public class Storage {
         }
     }
     
-    static func saveTargetProtein(_ protein: String){
-        UserDefaults.standard.set(protein, forKey: "targetProtein")
-    }
-    
-    static func saveLanguageSetting() {
-        let localeID = Locale.preferredLanguages.first
-        let deviceLocale = (Locale(identifier: localeID!).languageCode)!
+    static func saveTargetProtein(_ protein: String?){
         
-        UserDefaults.standard.set(deviceLocale, forKey:"languageSetting")
+        guard let protein = protein else {return ;}
+        UserDefaults.standard.set(protein, forKey: "targetProtein")
     }
     
     static func addTotalProtein(_ protein: Int) {
@@ -47,6 +43,41 @@ public class Storage {
             
             UserDefaults.standard.set(totalProtein - protein, forKey: "totalIntake")
         }
+    }
+    
+    static func saveDailyTotal (_ date: String, _ total: Int) {
+        
+        let localRealm = try! Realm()
+        let statProtein = StatProtein(date: date, totalIntake: total)
+        
+        try! localRealm.write {
+            localRealm.add(statProtein)
+        }
+        
+        
+    }
+    static func saveDate (_ date: Date) {
+        
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd-EEE"
+        let date = dateFormatter.string(from: date)
+        
+        UserDefaults.standard.set(date, forKey: "date")
+    }
+    
+    static func resetData() {
+        
+        let localRealm = try! Realm()
+        
+        let dailyRealm = localRealm.objects(DailyProtein.self)
+    
+        
+        try! localRealm.write {
+            localRealm.delete(dailyRealm)
+        }
+        
+        UserDefaults.standard.set(0, forKey: "totalIntake")
     }
     
 }

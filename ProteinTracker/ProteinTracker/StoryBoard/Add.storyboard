@@ -74,12 +74,15 @@
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
-                                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="s2m-WH-Fg8">
+                                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="s2m-WH-Fg8">
                                                 <rect key="frame" x="355" y="29.5" width="53" height="31"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="31" id="lDc-sE-YYq"/>
                                                     <constraint firstAttribute="width" constant="51" id="u3t-vK-Duv"/>
                                                 </constraints>
+                                                <connections>
+                                                    <action selector="favoriteToggle:" destination="Y6W-OH-hqX" eventType="valueChanged" id="LKZ-nM-eDe"/>
+                                                </connections>
                                             </switch>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -106,7 +109,7 @@
                                                 <rect key="frame" x="75" y="18" width="279" height="54"/>
                                                 <color key="backgroundColor" systemColor="systemYellowColor"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits"/>
+                                                <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
                                             </textField>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -149,49 +152,40 @@
                                 </constraints>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                                <connections>
+                                    <action selector="customerAddButtonClicked:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="SRp-6g-ELd"/>
+                                </connections>
                             </button>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="ghS-1N-rRU">
                                 <rect key="frame" x="0.0" y="508" width="414" height="268.5"/>
                                 <color key="backgroundColor" systemColor="systemTealColor"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="FavoritesTableViewCell" id="k8Z-jU-tBF" customClass="FavoritesTableViewCell" customModule="ProteinTracker" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="44.5" width="414" height="44.5"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="gray" indentationWidth="10" reuseIdentifier="FavoritesTableViewCell" textLabel="Cwt-3s-lv2" detailTextLabel="JQ5-0u-9AW" style="IBUITableViewCellStyleValue1" id="k8Z-jU-tBF" customClass="FavoritesTableViewCell" customModule="ProteinTracker" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="44.5" width="414" height="43.5"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="k8Z-jU-tBF" id="afk-Cz-si6">
-                                            <rect key="frame" x="0.0" y="0.0" width="414" height="44.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UIK-Rr-Slc">
-                                                    <rect key="frame" x="20.5" y="11.5" width="150" height="22"/>
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="150" id="B0w-fb-lWl"/>
-                                                    </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Cwt-3s-lv2">
+                                                    <rect key="frame" x="20" y="15" width="25" height="14.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Mp-7R-xfK">
-                                                    <rect key="frame" x="220.5" y="11.5" width="70" height="21.5"/>
-                                                    <constraints>
-                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="70" id="dg7-RS-3ao"/>
-                                                    </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Detail" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="JQ5-0u-9AW">
+                                                    <rect key="frame" x="361" y="15" width="33" height="14.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="0.0"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
-                                            <constraints>
-                                                <constraint firstItem="UIK-Rr-Slc" firstAttribute="leading" secondItem="afk-Cz-si6" secondAttribute="leadingMargin" constant="0.5" id="1O1-ps-5Wp"/>
-                                                <constraint firstItem="7Mp-7R-xfK" firstAttribute="top" secondItem="afk-Cz-si6" secondAttribute="topMargin" constant="0.5" id="HAQ-HM-Y7n"/>
-                                                <constraint firstItem="7Mp-7R-xfK" firstAttribute="leading" secondItem="UIK-Rr-Slc" secondAttribute="trailing" constant="50" id="S7i-uL-jbt"/>
-                                                <constraint firstItem="UIK-Rr-Slc" firstAttribute="top" secondItem="afk-Cz-si6" secondAttribute="topMargin" constant="0.5" id="UGJ-MH-mlE"/>
-                                                <constraint firstAttribute="bottomMargin" secondItem="7Mp-7R-xfK" secondAttribute="bottom" constant="0.5" id="aab-yA-nLL"/>
-                                                <constraint firstAttribute="bottomMargin" secondItem="UIK-Rr-Slc" secondAttribute="bottom" id="yr1-S9-6ee"/>
-                                            </constraints>
                                         </tableViewCellContentView>
                                         <connections>
-                                            <outlet property="intakeLabel" destination="7Mp-7R-xfK" id="qWj-li-pep"/>
-                                            <outlet property="nameLabel" destination="UIK-Rr-Slc" id="UtC-D9-Nol"/>
+                                            <outlet property="intakeLabel" destination="JQ5-0u-9AW" id="Ssn-Yj-qxA"/>
+                                            <outlet property="nameLabel" destination="Cwt-3s-lv2" id="gyC-Rn-RLy"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -205,6 +199,9 @@
                                 </constraints>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                                <connections>
+                                    <action selector="favoriteAddButtonClicked:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="ruH-XY-0RI"/>
+                                </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="즐겨찾기" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kT9-bR-jMr">
                                 <rect key="frame" x="8" y="459" width="100" height="44"/>
@@ -237,8 +234,26 @@
                             <constraint firstItem="ghS-1N-rRU" firstAttribute="top" secondItem="kT9-bR-jMr" secondAttribute="bottom" constant="5" id="zUf-YD-UbO"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="customerAddButton" destination="YW2-qt-bUG" id="Hj1-27-jed"/>
+                        <outlet property="favoriteAddButton" destination="pFR-bn-mLY" id="uxs-X4-lrV"/>
+                        <outlet property="favoriteLabel" destination="pYP-KQ-XMr" id="Rjf-5B-xdn"/>
+                        <outlet property="favoriteSwitch" destination="s2m-WH-Fg8" id="prf-wE-Fmm"/>
+                        <outlet property="favoriteTableView" destination="ghS-1N-rRU" id="P5E-de-7YK"/>
+                        <outlet property="favoriteTitleLabel" destination="kT9-bR-jMr" id="UAn-hg-wjM"/>
+                        <outlet property="intakeLabel" destination="BAN-Ao-kfF" id="u9u-Tb-rCU"/>
+                        <outlet property="intakeTextField" destination="dIb-af-0TN" id="P1H-Dr-Eic"/>
+                        <outlet property="proteinNameLabel" destination="pKL-OM-nDU" id="aWw-6B-YxY"/>
+                        <outlet property="proteinNameTextField" destination="jnf-ya-D6p" id="wgh-hP-7t3"/>
+                        <outlet property="searchButton" destination="UgV-DU-vYu" id="KTf-Jv-VYD"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="p3f-rC-fiG">
+                    <connections>
+                        <action selector="addTapGesture:" destination="Y6W-OH-hqX" id="iDZ-ki-RnU"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="28.985507246376812" y="79.6875"/>
         </scene>
@@ -283,14 +298,14 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ResultSearchTableViewCell" id="DMq-Eh-v7F" customClass="ResultSearchTableViewCell" customModule="ProteinTracker" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="88" width="414" height="43"/>
+                                        <rect key="frame" x="0.0" y="88" width="414" height="43.5"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="DMq-Eh-v7F" id="mNb-Wg-aAd">
-                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="이름" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mLN-Yc-evi">
-                                                    <rect key="frame" x="60" y="11" width="60" height="21"/>
+                                                    <rect key="frame" x="60" y="11" width="60" height="21.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="60" id="DqE-sL-zaV"/>
                                                     </constraints>
@@ -299,7 +314,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="섭취량" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ibl-f9-Zce">
-                                                    <rect key="frame" x="177" y="11" width="60" height="21"/>
+                                                    <rect key="frame" x="177" y="11" width="60" height="21.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="60" id="Gyn-3W-DFc"/>
                                                     </constraints>
@@ -308,7 +323,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="단백질양" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="b8t-dd-8X9">
-                                                    <rect key="frame" x="294" y="11" width="60" height="21"/>
+                                                    <rect key="frame" x="294" y="11" width="60" height="21.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="60" id="U5E-vC-y6N"/>
                                                     </constraints>
@@ -352,6 +367,11 @@
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="r8q-Ep-uu3" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="EtW-v0-57Q">
+                    <connections>
+                        <action selector="addTapGesture:" destination="Vaw-IB-4az" id="0cs-kh-HKQ"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="760.86956521739137" y="79.6875"/>
         </scene>

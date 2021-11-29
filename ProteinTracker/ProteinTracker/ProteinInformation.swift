@@ -9,6 +9,12 @@ import Foundation
 
 struct ProteinInformation {
     var name: String
-    var intake: Int
+    var intake: Int = 100
     var protein: Int
+    var favorite: Int = 0
+}
+
+struct TotalProtein {
+    var intake: Int
+    var date: Date
 }

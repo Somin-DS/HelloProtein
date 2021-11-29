@@ -19,5 +19,9 @@ class SearchViewController: UIViewController {
         self.dismiss(animated: true, completion: nil)
     }
     
-
+    @IBAction func addTapGesture(_ sender: UITapGestureRecognizer) {
+        
+        view.endEditing(true)
+    }
+    
 }

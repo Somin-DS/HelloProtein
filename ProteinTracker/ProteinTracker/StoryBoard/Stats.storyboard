@@ -48,18 +48,8 @@
                                     <constraint firstItem="Qrf-Is-gox" firstAttribute="top" secondItem="ABv-Mj-dXJ" secondAttribute="top" constant="10" id="zCd-jS-zCc"/>
                                 </constraints>
                             </view>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="i2a-Fp-aGP">
-                                <rect key="frame" x="30" y="253.5" width="315" height="41"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="40" id="ncq-Kx-e2n"/>
-                                </constraints>
-                                <segments>
-                                    <segment title="First"/>
-                                    <segment title="Second"/>
-                                </segments>
-                            </segmentedControl>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hlR-fd-LU1">
-                                <rect key="frame" x="30" y="323.5" width="315" height="303.5"/>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hlR-fd-LU1" customClass="BarChartView" customModule="Charts">
+                                <rect key="frame" x="30" y="293.5" width="315" height="333.5"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                             </view>
                         </subviews>
@@ -68,16 +58,19 @@
                         <constraints>
                             <constraint firstItem="ABv-Mj-dXJ" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" constant="60" id="2Br-P3-lCX"/>
                             <constraint firstItem="hlR-fd-LU1" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="30" id="3Cj-i5-VeS"/>
+                            <constraint firstItem="hlR-fd-LU1" firstAttribute="height" secondItem="5EZ-qb-Rvc" secondAttribute="height" multiplier="0.5" id="5yc-YP-kFu"/>
                             <constraint firstItem="ABv-Mj-dXJ" firstAttribute="height" secondItem="5EZ-qb-Rvc" secondAttribute="height" multiplier="0.2" id="Bec-dJ-Qfs"/>
                             <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="hlR-fd-LU1" secondAttribute="trailing" constant="30" id="J1n-ky-5lD"/>
-                            <constraint firstItem="hlR-fd-LU1" firstAttribute="top" secondItem="i2a-Fp-aGP" secondAttribute="bottom" constant="30" id="MVq-S0-qjX"/>
                             <constraint firstItem="ABv-Mj-dXJ" firstAttribute="centerX" secondItem="5EZ-qb-Rvc" secondAttribute="centerX" id="UCM-lq-Hih"/>
-                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="i2a-Fp-aGP" secondAttribute="trailing" constant="30" id="eWS-z7-8sG"/>
-                            <constraint firstItem="i2a-Fp-aGP" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="30" id="fRr-lR-0Lf"/>
-                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="hlR-fd-LU1" secondAttribute="bottom" constant="40" id="g4Y-rv-TOz"/>
-                            <constraint firstItem="i2a-Fp-aGP" firstAttribute="top" secondItem="ABv-Mj-dXJ" secondAttribute="bottom" constant="60" id="tjw-cr-deC"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="hlR-fd-LU1" secondAttribute="bottom" constant="40" id="oGf-02-Esx"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="averageLabel" destination="XaF-SW-VVz" id="b6q-am-PES"/>
+                        <outlet property="backgroundView" destination="ABv-Mj-dXJ" id="9eG-4V-I95"/>
+                        <outlet property="barChartView" destination="hlR-fd-LU1" id="91E-3p-R6T"/>
+                        <outlet property="titleLabel" destination="Qrf-Is-gox" id="Khs-9a-1UX"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

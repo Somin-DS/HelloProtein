@@ -24,12 +24,12 @@ class DailyProtein: Object {
 }
 
 class StatProtein: Object {
-    @Persisted var date: Date
+    @Persisted var date: String
     @Persisted var totalIntake: Int
     
     @Persisted(primaryKey: true) var _id: ObjectId
     
-    convenience init(date: Date, totalIntake: Int) {
+    convenience init(date: String, totalIntake: Int) {
         self.init()
         
         self.date = date

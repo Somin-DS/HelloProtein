@@ -27,7 +27,7 @@
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="koE-RG-Bj1" customClass="HoshiTextField" customModule="TextFieldEffects">
                                 <rect key="frame" x="40" y="202" width="160" height="40"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="color" keyPath="borderActiveColor">
                                         <color key="value" red="0.20069310109999999" green="1" blue="0.68580091570000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -90,7 +90,7 @@
                             <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="hck-aT-Agu" customClass="HoshiTextField" customModule="TextFieldEffects">
                                 <rect key="frame" x="80" y="452.5" width="160" height="40"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="color" keyPath="borderActiveColor">
                                         <color key="value" red="0.20069310114862504" green="1" blue="0.68580091573799962" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -100,14 +100,8 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Gt0-BN-caB">
                                 <rect key="frame" x="70" y="362.5" width="180" height="60"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="추천 섭취량" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ivd-R3-dW2">
-                                        <rect key="frame" x="0.0" y="0.0" width="90" height="60"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5SN-6B-luV">
-                                        <rect key="frame" x="90" y="0.0" width="90" height="60"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="180" height="60"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
@@ -115,15 +109,10 @@
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
-                                    <constraint firstItem="5SN-6B-luV" firstAttribute="leading" secondItem="Ivd-R3-dW2" secondAttribute="trailing" id="6mm-rg-dTe"/>
-                                    <constraint firstItem="5SN-6B-luV" firstAttribute="width" secondItem="Ivd-R3-dW2" secondAttribute="width" id="ALC-ir-Tjr"/>
-                                    <constraint firstItem="Ivd-R3-dW2" firstAttribute="leading" secondItem="Gt0-BN-caB" secondAttribute="leading" id="Vdk-MT-lKJ"/>
-                                    <constraint firstItem="5SN-6B-luV" firstAttribute="height" secondItem="Ivd-R3-dW2" secondAttribute="height" id="X2V-Sf-DlV"/>
-                                    <constraint firstAttribute="trailing" secondItem="5SN-6B-luV" secondAttribute="trailing" id="Zp7-rf-Hud"/>
-                                    <constraint firstAttribute="bottom" secondItem="Ivd-R3-dW2" secondAttribute="bottom" id="ciI-0V-4zw"/>
-                                    <constraint firstItem="5SN-6B-luV" firstAttribute="top" secondItem="Gt0-BN-caB" secondAttribute="top" id="fQc-jl-Dol"/>
-                                    <constraint firstItem="Ivd-R3-dW2" firstAttribute="top" secondItem="Gt0-BN-caB" secondAttribute="top" id="hvO-ac-eru"/>
-                                    <constraint firstAttribute="bottom" secondItem="5SN-6B-luV" secondAttribute="bottom" id="mgC-fF-Pq0"/>
+                                    <constraint firstItem="5SN-6B-luV" firstAttribute="leading" secondItem="Gt0-BN-caB" secondAttribute="leading" id="IuM-Ft-sGb"/>
+                                    <constraint firstAttribute="trailing" secondItem="5SN-6B-luV" secondAttribute="trailing" id="XWI-RE-PDu"/>
+                                    <constraint firstAttribute="bottom" secondItem="5SN-6B-luV" secondAttribute="bottom" id="syi-Lx-qM7"/>
+                                    <constraint firstItem="5SN-6B-luV" firstAttribute="top" secondItem="Gt0-BN-caB" secondAttribute="top" id="tSH-QW-zkA"/>
                                 </constraints>
                             </view>
                         </subviews>
@@ -169,7 +158,6 @@
                     <connections>
                         <outlet property="activityLabel" destination="Sjr-O2-N7d" id="yJ6-1s-zeo"/>
                         <outlet property="activitySegmentControl" destination="dt9-Wm-MCC" id="O6z-ky-ESu"/>
-                        <outlet property="recommendLabel" destination="Ivd-R3-dW2" id="uWm-oB-g6Y"/>
                         <outlet property="recommendResultLabel" destination="5SN-6B-luV" id="Ri2-hq-qHN"/>
                         <outlet property="startButton" destination="N3T-rv-YUc" id="foo-1u-5wB"/>
                         <outlet property="targetProteinTextField" destination="hck-aT-Agu" id="0G7-3X-yzl"/>
@@ -179,10 +167,23 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="NZx-Gv-AUe">
+                    <connections>
+                        <action selector="addTapGesture:" destination="Y6W-OH-hqX" id="Ud9-kf-p94"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="982.5" y="60.2112676056338"/>
         </scene>
     </scenes>
+    <designables>
+        <designable name="hck-aT-Agu">
+            <size key="intrinsicContentSize" width="12" height="26.5"/>
+        </designable>
+        <designable name="koE-RG-Bj1">
+            <size key="intrinsicContentSize" width="12" height="26.5"/>
+        </designable>
+    </designables>
     <resources>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>

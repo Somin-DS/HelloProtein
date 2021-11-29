@@ -9,21 +9,44 @@ import UIKit
 
 class SettingViewController: UIViewController {
 
-   
+    let settings: [[String]] = [[LocalizeStrings.setting_intake.localized, "targetProtein"]]
+    
+    @IBOutlet weak var settingTableView: UITableView!
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        settingTableView.delegate = self
+        settingTableView.dataSource = self
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        
+        title = "Setting"
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        settingTableView.reloadData()
     }
     
 
-    /*
-    // MARK: - Navigation
+}
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+extension SettingViewController: UITableViewDelegate, UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return settings.count
     }
-    */
-
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        guard let cell = settingTableView.dequeueReusableCell(withIdentifier: SettingTableViewCell.identifier, for: indexPath) as? SettingTableViewCell else { return UITableViewCell()}
+        
+        let row = settings[indexPath.row]
+        cell.titleLabel.text = row[0]
+        cell.detailLabel.text = "\(UserDefaults.standard.string(forKey: row[1])!) g"
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = self.storyboard?.instantiateViewController(withIdentifier: "SettingTargetViewController") as! SettingTargetViewController
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
 }
