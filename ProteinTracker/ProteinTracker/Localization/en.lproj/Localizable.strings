@@ -8,18 +8,26 @@
 
 //Setting
 
-"setting_language" = "Language Setting";
+"setting_language" = "Search Language";
 "setting_intake" = "Daily Target";
 "setting_theme" = "Themes";
-
+"setting_edit" = "update";
+"setting_sectionOne" = "Setting";
+"setting_sectionTwo" = "Info";
+"setting_info" = "Open Source";
+"setting_qna" = "QnA";
+"setting_opensource" = "Library";
+"setting_mailAlertTitle" = "Delivery failure";
+"setting_mailAlertMessage" = "Please set your Email on device";
+"setting_alert" = "Ok";
 
 //Add
 
 "add_namelabel" = "Name";
-"add_intakelabel" = "Intake(g)";
+"add_intakelabel" = "Protein(g)";
 "add_favoritelabel" = "Favorites";
-"add_button" = "Add";
-"close_button" = "Close";
+"add_button" = "add";
+"close_button" = "close";
 
 //Stats
 
@@ -29,15 +37,19 @@
 "stats_empty" = "Empty Data";
 //Init
 
-"init_weightfield" = "weight(option)";
+"init_weightfield" = "Input your weight";
+"init_activityfield" = "Input your activity";
 "init_activelabel" = "Activity";
 "init_segone" = "Light";
 "init_segtwo" = "Moderate";
 "init_segthree" = "Active";
-"init_callabel" = "Calculate";
-"init_recommendlabel" = "Recommend : %@ g/day";
-"init_targetfield" = "Target Intake(required)";
+"init_callabel" = "calculate";
+"init_recommendlabel" = "Recommend :\n %@ g/day";
+"init_targetfield" = "Input Target Protein(g/day)";
 "init_startbutton" = "START";
+"init_cacultitle" = "Protein Calculator";
+"init_barbutton" = "Done";
+"init_weigthTitle" = "Weight";
 
 //Error
 
@@ -53,6 +65,11 @@
 "alert_addTitle" = "Sucess";
 "alert_addContent" = "Successfully Saved!";
 "alert_editTitle" = "Sucess";
-"alert_editContent" = "Successfully updated'!";
+"alert_editContent" = "Successfully updated!";
 
-
+//Search
+"search_historyTitle" = "Search history";
+"search_resultTitle" = "Result(per 100g)";
+"search_error" = "Error. Please Try again";
+"search_empty" = "No Match Found";
+"search_button" = "add";

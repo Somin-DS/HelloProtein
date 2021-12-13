@@ -44,8 +44,26 @@ func calculatePercentage() -> Double {
     if current == 0 {
         return 0
     }
-    return Double(target) / Double(current)
+    return (Double(current) / Double(target))
 }
+
+func calculateAverageProtein(_ values: [Double]) -> String {
+    
+    var totalProtein: Double = 0
+    var count = 0
+    for i in values {
+        if i != 0 {
+            totalProtein += i
+            count += 1
+        }
+    }
+    
+    if totalProtein == 0 {
+        return "0"
+    }
+    return  String(format: "%.1f", (totalProtein / Double(count)))
+}
+
 //func calculateAverageProtein() -> Int {
 //
 //    let localRealm = try! Realm()

@@ -8,6 +8,11 @@
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
+    <customFonts key="customFonts">
+        <array key="TmoneyRoundWindRegular.ttf">
+            <string>TmoneyRoundWind-Regular</string>
+        </array>
+    </customFonts>
     <scenes>
         <!--Show View Controller-->
         <scene sceneID="Aib-Bw-f9t">
@@ -19,38 +24,45 @@
                         <subviews>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="xcf-8Q-auN">
                                 <rect key="frame" x="65.5" y="357" width="244" height="300"/>
-                                <color key="backgroundColor" systemColor="systemYellowColor"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <color key="separatorColor" red="0.67450980390000004" green="0.86666666670000003" blue="0.67843137249999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="ShowTableViewCell" id="itz-Uy-FsK" customClass="ShowTableViewCell" customModule="ProteinTracker" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="44.5" width="244" height="43.5"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="ShowTableViewCell" rowHeight="134" id="itz-Uy-FsK" customClass="ShowTableViewCell" customModule="ProteinTracker" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="44.5" width="244" height="134"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="itz-Uy-FsK" id="pTg-iH-Oct">
-                                            <rect key="frame" x="0.0" y="0.0" width="244" height="43.5"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="244" height="134"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2eb-gF-40v">
-                                                    <rect key="frame" x="26" y="12" width="94" height="21"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2eb-gF-40v">
+                                                    <rect key="frame" x="5" y="0.0" width="146.5" height="134"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" relation="lessThanOrEqual" constant="100" id="kZ2-ia-riF"/>
+                                                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="40" id="Jid-ea-akN"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <fontDescription key="fontDescription" name="TmoneyRoundWind-Regular" family="Tmoney RoundWind" pointSize="0.0"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OtN-ae-k9o">
-                                                    <rect key="frame" x="158" y="11.5" width="50" height="21"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OtN-ae-k9o">
+                                                    <rect key="frame" x="167" y="0.0" width="61" height="134"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="50" id="AS4-34-zot"/>
+                                                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="40" id="2gY-Ah-hXQ"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <fontDescription key="fontDescription" name="TmoneyRoundWind-Regular" family="Tmoney RoundWind" pointSize="0.0"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="2eb-gF-40v" firstAttribute="centerY" secondItem="pTg-iH-Oct" secondAttribute="centerY" id="2Qp-J6-sfc"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="OtN-ae-k9o" secondAttribute="trailing" constant="20" id="CRb-i8-WgG"/>
-                                                <constraint firstItem="2eb-gF-40v" firstAttribute="leading" secondItem="pTg-iH-Oct" secondAttribute="leadingMargin" constant="10" id="VUH-3h-3gT"/>
+                                                <constraint firstAttribute="bottom" secondItem="2eb-gF-40v" secondAttribute="bottom" id="6BV-Wx-7Pj"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="OtN-ae-k9o" secondAttribute="trailing" id="CRb-i8-WgG"/>
+                                                <constraint firstAttribute="bottom" secondItem="OtN-ae-k9o" secondAttribute="bottom" id="H6U-5a-WuZ"/>
+                                                <constraint firstItem="OtN-ae-k9o" firstAttribute="width" secondItem="pTg-iH-Oct" secondAttribute="width" multiplier="0.25" id="R33-2g-LPQ"/>
+                                                <constraint firstItem="2eb-gF-40v" firstAttribute="top" secondItem="pTg-iH-Oct" secondAttribute="top" id="eby-wA-8BR"/>
+                                                <constraint firstItem="2eb-gF-40v" firstAttribute="leading" secondItem="pTg-iH-Oct" secondAttribute="leading" constant="5" id="o15-mu-hv4"/>
+                                                <constraint firstItem="OtN-ae-k9o" firstAttribute="top" secondItem="pTg-iH-Oct" secondAttribute="top" id="pBK-xN-ngV"/>
+                                                <constraint firstItem="2eb-gF-40v" firstAttribute="width" secondItem="pTg-iH-Oct" secondAttribute="width" multiplier="0.6" id="ro6-QG-7A1"/>
                                                 <constraint firstItem="OtN-ae-k9o" firstAttribute="centerY" secondItem="pTg-iH-Oct" secondAttribute="centerY" id="uZL-fm-61X"/>
                                             </constraints>
                                         </tableViewCellContentView>
@@ -61,38 +73,42 @@
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DSA-2h-k3I">
-                                <rect key="frame" x="11.5" y="357" width="44" height="44"/>
-                                <color key="backgroundColor" systemColor="systemPurpleColor"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DSA-2h-k3I">
+                                <rect key="frame" x="21.5" y="357" width="34" height="34"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="44" id="OaU-Wi-0Mu"/>
-                                    <constraint firstAttribute="height" constant="44" id="doF-S7-cCI"/>
+                                    <constraint firstAttribute="width" constant="34" id="OaU-Wi-0Mu"/>
+                                    <constraint firstAttribute="height" constant="34" id="doF-S7-cCI"/>
                                 </constraints>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Button"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" image="plusButton">
+                                    <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                                </state>
                                 <connections>
                                     <action selector="addButtonClicked:" destination="Fs7-na-jeJ" eventType="touchUpInside" id="Npl-ST-Gi8"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VwN-y6-qkh">
-                                <rect key="frame" x="150" y="176.5" width="75" height="20.5"/>
-                                <color key="backgroundColor" red="1" green="0.15161504679999999" blue="0.2366880787" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="VwN-y6-qkh">
+                                <rect key="frame" x="85" y="135" width="184" height="110"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="VwN-y6-qkh" secondAttribute="height" multiplier="4:2" id="Bbp-wN-KYh"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="TmoneyRoundWind-Regular" family="Tmoney RoundWind" pointSize="24"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="w4I-Pk-06S"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" red="1" green="0.99607843139999996" blue="0.97647058819999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="xcf-8Q-auN" firstAttribute="leading" secondItem="DSA-2h-k3I" secondAttribute="trailing" constant="10" id="20s-lk-UKU"/>
                             <constraint firstItem="xcf-8Q-auN" firstAttribute="height" secondItem="iWg-dO-zWQ" secondAttribute="height" multiplier="0.45" id="3n6-FS-4tp"/>
                             <constraint firstItem="DSA-2h-k3I" firstAttribute="top" secondItem="xcf-8Q-auN" secondAttribute="top" id="6F6-bA-Bp7"/>
                             <constraint firstItem="VwN-y6-qkh" firstAttribute="centerX" secondItem="iWg-dO-zWQ" secondAttribute="centerX" id="QgE-KO-brI"/>
-                            <constraint firstItem="VwN-y6-qkh" firstAttribute="width" secondItem="iWg-dO-zWQ" secondAttribute="width" multiplier="0.2" id="de6-pC-GfZ"/>
+                            <constraint firstItem="VwN-y6-qkh" firstAttribute="width" secondItem="iWg-dO-zWQ" secondAttribute="width" multiplier="0.4" id="de6-pC-GfZ"/>
                             <constraint firstItem="xcf-8Q-auN" firstAttribute="width" secondItem="iWg-dO-zWQ" secondAttribute="width" multiplier="0.65" id="e7f-Rm-aFv"/>
                             <constraint firstItem="xcf-8Q-auN" firstAttribute="centerX" secondItem="iWg-dO-zWQ" secondAttribute="centerX" id="jLp-Xw-CGq"/>
-                            <constraint firstItem="VwN-y6-qkh" firstAttribute="centerY" secondItem="w4I-Pk-06S" secondAttribute="centerY" multiplier="0.56" id="kRQ-O4-q5n"/>
+                            <constraint firstItem="VwN-y6-qkh" firstAttribute="centerY" secondItem="w4I-Pk-06S" secondAttribute="centerY" multiplier="0.54" id="kRQ-O4-q5n"/>
                             <constraint firstItem="w4I-Pk-06S" firstAttribute="bottom" secondItem="xcf-8Q-auN" secondAttribute="bottom" constant="10" id="x6u-oM-GXM"/>
                         </constraints>
                     </view>
@@ -118,18 +134,13 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="0zw-Ad-rfq" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3740" y="81"/>
+            <point key="canvasLocation" x="3740" y="80.50974512743629"/>
         </scene>
     </scenes>
     <resources>
+        <image name="plusButton" width="1024" height="1024"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemPurpleColor">
-            <color red="0.68627450980392157" green="0.32156862745098042" blue="0.87058823529411766" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-        <systemColor name="systemYellowColor">
-            <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

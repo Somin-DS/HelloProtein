@@ -7,12 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3728B244275D0AE60098BDCF /* Protein-En.json in Resources */ = {isa = PBXBuildFile; fileRef = 3728B243275D0AE60098BDCF /* Protein-En.json */; };
+		3728B248275D37280098BDCF /* SettingLanguageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B247275D37280098BDCF /* SettingLanguageViewController.swift */; };
+		3728B24A275D373F0098BDCF /* SettingLanguageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B249275D373F0098BDCF /* SettingLanguageTableViewCell.swift */; };
+		3728B24D275E58420098BDCF /* JGProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 3728B24C275E58420098BDCF /* JGProgressHUD */; };
+		3728B24F275E618F0098BDCF /* EmptyTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B24E275E618F0098BDCF /* EmptyTableViewCell.swift */; };
+		3728B25127608EB60098BDCF /* NSNotification+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B25027608EB60098BDCF /* NSNotification+Extension.swift */; };
+		3728B2552760DB210098BDCF /* InfoOpenSourceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B2542760DB210098BDCF /* InfoOpenSourceViewController.swift */; };
+		3728B2572760DB310098BDCF /* OpenSourceTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B2562760DB310098BDCF /* OpenSourceTableViewCell.swift */; };
+		374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 374507FE2757913000A14A4C /* TmoneyRoundWindRegular.ttf */; };
+		374508022757928B00A14A4C /* UIFont+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374508012757928B00A14A4C /* UIFont+Extension.swift */; };
+		3751318727647B92009603A0 /* libswift_Concurrency.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3751318627647B92009603A0 /* libswift_Concurrency.tbd */; settings = {ATTRIBUTES = (Weak, ); }; };
+		375131B327678449009603A0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 375131B227678449009603A0 /* GoogleService-Info.plist */; };
 		3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */; };
 		3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */; };
 		3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD83274FD853001C5079 /* SearchViewController.swift */; };
 		3752AD89274FEBBB001C5079 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD88274FEBBA001C5079 /* Storage.swift */; };
-		3788AFF12754D75E0043E9D7 /* TestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3788AFF02754D75E0043E9D7 /* TestViewController.swift */; };
 		3788AFF32754F9DD0043E9D7 /* SettingTargetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */; };
+		378A79692758CEA9008ECDE1 /* Binggrae-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 378A79682758CEA9008ECDE1 /* Binggrae-Bold.ttf */; };
+		378A796B2758D750008ECDE1 /* UIAlert+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 378A796A2758D750008ECDE1 /* UIAlert+Extension.swift */; };
 		37AA9E7A27526B8C00E3EFC1 /* Realm in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7927526B8C00E3EFC1 /* Realm */; };
 		37AA9E7C27526B8C00E3EFC1 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7B27526B8C00E3EFC1 /* RealmSwift */; };
 		37AA9E7F27526BBE00E3EFC1 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 37AA9E7E27526BBE00E3EFC1 /* Alamofire */; };
@@ -30,6 +43,8 @@
 		37EEADC027520E0D00B06EF7 /* CheckValid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EEADBF27520E0D00B06EF7 /* CheckValid.swift */; };
 		37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37EEADC127521A2200B06EF7 /* Calculator.swift */; };
 		37EEADC5275229F000B06EF7 /* TextFieldEffects in Frameworks */ = {isa = PBXBuildFile; productRef = 37EEADC4275229F000B06EF7 /* TextFieldEffects */; };
+		37F3B8662755F81300641C80 /* Calendar+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F3B8652755F81300641C80 /* Calendar+Extension.swift */; };
+		37F3B8682755FFAB00641C80 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F3B8672755FFAB00641C80 /* Date.swift */; };
 		37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9828274BEA5C00C29698 /* AppDelegate.swift */; };
 		37FB982B274BEA5C00C29698 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB982A274BEA5C00C29698 /* SceneDelegate.swift */; };
 		37FB9830274BEA5C00C29698 /* Show.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB982E274BEA5C00C29698 /* Show.storyboard */; };
@@ -50,12 +65,24 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3728B243275D0AE60098BDCF /* Protein-En.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "Protein-En.json"; sourceTree = "<group>"; };
+		3728B247275D37280098BDCF /* SettingLanguageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingLanguageViewController.swift; sourceTree = "<group>"; };
+		3728B249275D373F0098BDCF /* SettingLanguageTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingLanguageTableViewCell.swift; sourceTree = "<group>"; };
+		3728B24E275E618F0098BDCF /* EmptyTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyTableViewCell.swift; sourceTree = "<group>"; };
+		3728B25027608EB60098BDCF /* NSNotification+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSNotification+Extension.swift"; sourceTree = "<group>"; };
+		3728B2542760DB210098BDCF /* InfoOpenSourceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoOpenSourceViewController.swift; sourceTree = "<group>"; };
+		3728B2562760DB310098BDCF /* OpenSourceTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSourceTableViewCell.swift; sourceTree = "<group>"; };
+		374507FE2757913000A14A4C /* TmoneyRoundWindRegular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = TmoneyRoundWindRegular.ttf; sourceTree = "<group>"; };
+		374508012757928B00A14A4C /* UIFont+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+Extension.swift"; sourceTree = "<group>"; };
+		3751318627647B92009603A0 /* libswift_Concurrency.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswift_Concurrency.tbd; path = usr/lib/swift/libswift_Concurrency.tbd; sourceTree = SDKROOT; };
+		375131B227678449009603A0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD83274FD853001C5079 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 		3752AD88274FEBBA001C5079 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
-		3788AFF02754D75E0043E9D7 /* TestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestViewController.swift; sourceTree = "<group>"; };
 		3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingTargetViewController.swift; sourceTree = "<group>"; };
+		378A79682758CEA9008ECDE1 /* Binggrae-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Binggrae-Bold.ttf"; sourceTree = "<group>"; };
+		378A796A2758D750008ECDE1 /* UIAlert+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIAlert+Extension.swift"; sourceTree = "<group>"; };
 		37AA9E872752707C00E3EFC1 /* RealmModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmModel.swift; sourceTree = "<group>"; };
 		37BEA6F3274D34BC00C0AEF7 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		37BEA6F5274D34CC00C0AEF7 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -66,6 +93,8 @@
 		37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandler.swift; sourceTree = "<group>"; };
 		37EEADBF27520E0D00B06EF7 /* CheckValid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckValid.swift; sourceTree = "<group>"; };
 		37EEADC127521A2200B06EF7 /* Calculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calculator.swift; sourceTree = "<group>"; };
+		37F3B8652755F81300641C80 /* Calendar+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calendar+Extension.swift"; sourceTree = "<group>"; };
+		37F3B8672755FFAB00641C80 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		37FB9825274BEA5C00C29698 /* ProteinTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProteinTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37FB9828274BEA5C00C29698 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37FB982A274BEA5C00C29698 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -92,10 +121,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3751318727647B92009603A0 /* libswift_Concurrency.tbd in Frameworks */,
 				37AA9E8527526C5100E3EFC1 /* IQKeyboardManagerSwift in Frameworks */,
 				37AA9E8227526C2900E3EFC1 /* SwiftyJSON in Frameworks */,
 				37AA9E7F27526BBE00E3EFC1 /* Alamofire in Frameworks */,
 				37AA9E7C27526B8C00E3EFC1 /* RealmSwift in Frameworks */,
+				3728B24D275E58420098BDCF /* JGProgressHUD in Frameworks */,
 				37AA9EA12753856900E3EFC1 /* Charts in Frameworks */,
 				37AA9E9B275383E500E3EFC1 /* Algorithms in Frameworks */,
 				37AA9E7A27526B8C00E3EFC1 /* Realm in Frameworks */,
@@ -107,6 +138,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		374507F827578B6E00A14A4C /* Font */ = {
+			isa = PBXGroup;
+			children = (
+				378A79682758CEA9008ECDE1 /* Binggrae-Bold.ttf */,
+				374507FE2757913000A14A4C /* TmoneyRoundWindRegular.ttf */,
+			);
+			path = Font;
+			sourceTree = "<group>";
+		};
+		3751318527647B92009603A0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3751318627647B92009603A0 /* libswift_Concurrency.tbd */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		37AA9E862752704500E3EFC1 /* Realm */ = {
 			isa = PBXGroup;
 			children = (
@@ -119,6 +167,10 @@
 			isa = PBXGroup;
 			children = (
 				37BEA6F7274D44FF00C0AEF7 /* String+Extension.swift */,
+				37F3B8652755F81300641C80 /* Calendar+Extension.swift */,
+				3728B25027608EB60098BDCF /* NSNotification+Extension.swift */,
+				374508012757928B00A14A4C /* UIFont+Extension.swift */,
+				378A796A2758D750008ECDE1 /* UIAlert+Extension.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -128,6 +180,7 @@
 			children = (
 				37FB9827274BEA5C00C29698 /* ProteinTracker */,
 				37FB9826274BEA5C00C29698 /* Products */,
+				3751318527647B92009603A0 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -142,6 +195,8 @@
 		37FB9827274BEA5C00C29698 /* ProteinTracker */ = {
 			isa = PBXGroup;
 			children = (
+				375131B227678449009603A0 /* GoogleService-Info.plist */,
+				374507F827578B6E00A14A4C /* Font */,
 				37AA9E862752704500E3EFC1 /* Realm */,
 				37BEA6F6274D44EA00C0AEF7 /* Extension */,
 				37FB9848274D01FF00C29698 /* Localization */,
@@ -150,9 +205,11 @@
 				37FB9828274BEA5C00C29698 /* AppDelegate.swift */,
 				37FB982A274BEA5C00C29698 /* SceneDelegate.swift */,
 				3752AD88274FEBBA001C5079 /* Storage.swift */,
+				37F3B8672755FFAB00641C80 /* Date.swift */,
 				37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */,
 				37EEADC127521A2200B06EF7 /* Calculator.swift */,
 				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
+				3728B243275D0AE60098BDCF /* Protein-En.json */,
 				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
 			);
@@ -176,7 +233,6 @@
 			isa = PBXGroup;
 			children = (
 				37FB9844274BECA600C29698 /* ShowViewController.swift */,
-				3788AFF02754D75E0043E9D7 /* TestViewController.swift */,
 				37FB9855274D0D5D00C29698 /* InitViewController.swift */,
 				37FB984F274D084E00C29698 /* FavoritesTableViewCell.swift */,
 				37FB9849274D021900C29698 /* SettingViewController.swift */,
@@ -187,6 +243,11 @@
 				37FB984B274D022000C29698 /* AddViewController.swift */,
 				3788AFF22754F9DD0043E9D7 /* SettingTargetViewController.swift */,
 				3752AD83274FD853001C5079 /* SearchViewController.swift */,
+				3728B24E275E618F0098BDCF /* EmptyTableViewCell.swift */,
+				3728B247275D37280098BDCF /* SettingLanguageViewController.swift */,
+				3728B2542760DB210098BDCF /* InfoOpenSourceViewController.swift */,
+				3728B2562760DB310098BDCF /* OpenSourceTableViewCell.swift */,
+				3728B249275D373F0098BDCF /* SettingLanguageTableViewCell.swift */,
 				37FB984D274D022B00C29698 /* StatsViewController.swift */,
 			);
 			path = ViewController;
@@ -228,6 +289,7 @@
 				37AA9E8427526C5100E3EFC1 /* IQKeyboardManagerSwift */,
 				37AA9E9A275383E500E3EFC1 /* Algorithms */,
 				37AA9EA02753856900E3EFC1 /* Charts */,
+				3728B24C275E58420098BDCF /* JGProgressHUD */,
 			);
 			productName = ProteinTracker;
 			productReference = 37FB9825274BEA5C00C29698 /* ProteinTracker.app */;
@@ -267,6 +329,7 @@
 				37AA9E8327526C5100E3EFC1 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
 				37AA9E99275383E500E3EFC1 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				37AA9E9F2753856800E3EFC1 /* XCRemoteSwiftPackageReference "Charts" */,
+				3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */,
 			);
 			productRefGroup = 37FB9826274BEA5C00C29698 /* Products */;
 			projectDirPath = "";
@@ -282,7 +345,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				375131B327678449009603A0 /* GoogleService-Info.plist in Resources */,
 				37FB9841274BEAD100C29698 /* Stats.storyboard in Resources */,
+				374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */,
+				3728B244275D0AE60098BDCF /* Protein-En.json in Resources */,
+				378A79692758CEA9008ECDE1 /* Binggrae-Bold.ttf in Resources */,
 				37FB9858274D0D6800C29698 /* Init.storyboard in Resources */,
 				37FB9835274BEA5F00C29698 /* LaunchScreen.storyboard in Resources */,
 				37FB9832274BEA5F00C29698 /* Assets.xcassets in Resources */,
@@ -301,14 +368,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,
 				37AA9E882752707C00E3EFC1 /* RealmModel.swift in Sources */,
 				3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */,
 				37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */,
+				3728B24F275E618F0098BDCF /* EmptyTableViewCell.swift in Sources */,
 				37FB984C274D022000C29698 /* AddViewController.swift in Sources */,
+				374508022757928B00A14A4C /* UIFont+Extension.swift in Sources */,
+				378A796B2758D750008ECDE1 /* UIAlert+Extension.swift in Sources */,
 				37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */,
 				37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */,
-				3788AFF12754D75E0043E9D7 /* TestViewController.swift in Sources */,
 				37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */,
 				37FB982B274BEA5C00C29698 /* SceneDelegate.swift in Sources */,
 				37FB9854274D087800C29698 /* SettingTableViewCell.swift in Sources */,
@@ -316,13 +386,19 @@
 				37EEADBE275206FD00B06EF7 /* ErrorHandler.swift in Sources */,
 				37FB9845274BECA600C29698 /* ShowViewController.swift in Sources */,
 				3788AFF32754F9DD0043E9D7 /* SettingTargetViewController.swift in Sources */,
+				3728B2572760DB310098BDCF /* OpenSourceTableViewCell.swift in Sources */,
 				37FB984E274D022B00C29698 /* StatsViewController.swift in Sources */,
+				37F3B8662755F81300641C80 /* Calendar+Extension.swift in Sources */,
+				3728B24A275D373F0098BDCF /* SettingLanguageTableViewCell.swift in Sources */,
 				37FB984A274D021900C29698 /* SettingViewController.swift in Sources */,
 				37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */,
 				37FB9852274D085D00C29698 /* ShowTableViewCell.swift in Sources */,
 				3752AD89274FEBBB001C5079 /* Storage.swift in Sources */,
+				3728B25127608EB60098BDCF /* NSNotification+Extension.swift in Sources */,
+				3728B248275D37280098BDCF /* SettingLanguageViewController.swift in Sources */,
 				37FB9850274D084E00C29698 /* FavoritesTableViewCell.swift in Sources */,
 				37EEADC027520E0D00B06EF7 /* CheckValid.swift in Sources */,
+				3728B2552760DB210098BDCF /* InfoOpenSourceViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,20 +566,25 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = KX3AB9M769;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ProteinTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Hello Protein";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Show;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.devsom.ProteinTracker;
@@ -520,20 +601,25 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = KX3AB9M769;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ProteinTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Hello Protein";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Show;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SDKROOT)/usr/lib/swift",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.devsom.ProteinTracker;
@@ -568,6 +654,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/JonasGessner/JGProgressHUD.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		37AA9E7827526B8C00E3EFC1 /* XCRemoteSwiftPackageReference "realm-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/realm/realm-cocoa.git";
@@ -635,6 +729,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3728B24C275E58420098BDCF /* JGProgressHUD */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */;
+			productName = JGProgressHUD;
+		};
 		37AA9E7927526B8C00E3EFC1 /* Realm */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 37AA9E7827526B8C00E3EFC1 /* XCRemoteSwiftPackageReference "realm-cocoa" */;

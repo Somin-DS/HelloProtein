@@ -24,9 +24,20 @@ class ShowViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("locate-> \(localRealm.configuration.fileURL!)")
-
-
+//        print("locate-> \(localRealm.configuration.fileURL!)")
+//        var date =  Date()
+//        statProteinRealm = localRealm.objects(StatProtein.self)
+//        let yesterday = calculateDayBefore(date)
+//        let test = StatProtein(date: "2021-12-09-목", originDate: date, totalIntake: 100)
+//        let test1 = StatProtein(date: "2021-12-08-수", originDate: yesterday, totalIntake: 70)
+//        let test2 = StatProtein(date: "2021-12-07-화", originDate: calculateDayBefore(yesterday), totalIntake: 20)
+//
+//        try! localRealm.write {
+//            localRealm.add(test)
+//            localRealm.add(test1)
+//            localRealm.add(test2)
+//        }
+        
         
         showTableView.delegate = self
         showTableView.dataSource = self
@@ -36,9 +47,15 @@ class ShowViewController: UIViewController {
         
         Storage.addTotalProtein(0)
         
-        title = "Today"
-
+        showTableView.rowHeight = UITableView.automaticDimension
+        showTableView.estimatedRowHeight = 44.0
         
+        
+        UINavigationBar.appearance().titleTextAttributes = [NSAttributedString.Key.font: UIFont().headFont]
+        title = "Today"
+        self.navigationController?.navigationBar.topItem?.title = "Today"
+        self.navigationController?.navigationBar.tintColor = .black
+
         let trackLayer = CAShapeLayer()
         let circularPath =  UIBezierPath(arcCenter: CGPoint(x: view.frame.size.width / 2.0 , y: view.frame.size.height / 3.5), radius: 120, startAngle: -.pi / 2, endAngle: 3 * .pi / 2, clockwise: true)
 
@@ -48,12 +65,11 @@ class ShowViewController: UIViewController {
         trackLayer.lineWidth = 20
         trackLayer.fillColor = UIColor.clear.cgColor
         trackLayer.lineCap = .round
-
-        
         
         shapeLayer.path = circularPath.cgPath
         
-        shapeLayer.strokeColor = UIColor.red.cgColor
+        shapeLayer.strokeColor = UIColor(red: 200.0/255.0, green: 244.0/255.0, blue: 194.0/255.0, alpha: 1.0).cgColor
+
         shapeLayer.lineWidth = 20
         shapeLayer.fillColor = UIColor.clear.cgColor
         shapeLayer.lineCap = .round
@@ -62,8 +78,24 @@ class ShowViewController: UIViewController {
         view.layer.addSublayer(trackLayer)
         view.layer.addSublayer(shapeLayer)
         
+//        showTableView.backgroundColor = .white
+//        showTableView.layer.cornerRadius = 20
+        showTableView.layer.masksToBounds = true
         
-    
+        intakeLabel.numberOfLines = 0
+        intakeLabel.textAlignment = .center
+        intakeLabel.font = UIFont().subFont
+        intakeLabel.layer.cornerRadius = 20
+        intakeLabel.layer.masksToBounds = true
+        
+        addButton.tintColor = .black
+        
+        rightBarButton.image = UIImage(systemName: "gearshape.fill")
+        rightBarButton.tintColor = .black
+        
+        leftBarButton.image = UIImage(systemName: "chart.bar.xaxis")
+        leftBarButton.tintColor = .black
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -72,21 +104,20 @@ class ShowViewController: UIViewController {
         
         let day = Date()
         if !isToday(day) {
-            let yesterday = UserDefaults.standard.string(forKey: "date")!
+            let yesterday = UserDefaults.standard.string(forKey: "date")
+            let yesterdayDate = UserDefaults.standard.object(forKey: "Date")
             let yesterdayTotalProtein = UserDefaults.standard.integer(forKey: "totalIntake")
 
             Storage.saveDate(day)
-            Storage.saveDailyTotal(yesterday, yesterdayTotalProtein)
+            Storage.saveDailyTotal(yesterday, yesterdayDate as? Date , yesterdayTotalProtein)
             Storage.resetData()
             showTableView.reloadData()
         }
         intakeLabel.text = "\(UserDefaults.standard.integer(forKey: "totalIntake"))g / \(UserDefaults.standard.integer(forKey: "targetProtein"))g"
-        handleTap(calculatePercentage())
+        drawCircle(calculatePercentage())
     }
-    func handleTap(_ percentage: Double) {
-        print(#function)
-        print(percentage)
-        
+    func drawCircle(_ percentage: Double) {
+
         let basicAnimation = CABasicAnimation(keyPath: "strokeEnd")
         
         basicAnimation.toValue = percentage
@@ -146,7 +177,19 @@ extension ShowViewController: UITableViewDelegate, UITableViewDataSource {
         let row = dailyProteinRealm[indexPath.row]
         
         cell.nameLabel.text = row.proteinName
-        cell.intakeLabel.text = String(row.proteinIntake)
+        cell.nameLabel.textAlignment = .center
+        cell.nameLabel.numberOfLines = 0
+        cell.nameLabel.font = UIFont().bodyFont
+        
+        cell.nameLabel.numberOfLines = 0
+        cell.nameLabel.lineBreakMode = .byWordWrapping
+        
+        cell.intakeLabel.numberOfLines = 0
+        cell.intakeLabel.lineBreakMode = .byWordWrapping
+        cell.intakeLabel.text = "\(row.proteinIntake)g"
+        cell.intakeLabel.textAlignment = .center
+        cell.intakeLabel.numberOfLines = 0
+        cell.intakeLabel.font = UIFont().bodyFont
         
         return cell
     }
@@ -157,7 +200,8 @@ extension ShowViewController: UITableViewDelegate, UITableViewDataSource {
             localRealm.delete(dailyProteinRealm[indexPath.row])
             Storage.subtractTotalProtein(deleteProtein)
             showTableView.reloadData()
-            intakeLabel.text = String(UserDefaults.standard.integer(forKey: "totalIntake"))
+            intakeLabel.text = "\(UserDefaults.standard.integer(forKey: "totalIntake"))g / \(UserDefaults.standard.integer(forKey: "targetProtein"))g"
+            drawCircle(calculatePercentage())
         }
     }
     

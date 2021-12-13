@@ -39,6 +39,7 @@ func isToday(_ date: Date) -> Bool {
     let defaults = UserDefaults.standard
     if defaults.object(forKey: "date") == nil {
         UserDefaults.standard.set(str, forKey: "date")
+        UserDefaults.standard.set(now, forKey: "Date")
         return true
     } else {
         var date = UserDefaults.standard.string(forKey: "date")!
@@ -46,8 +47,7 @@ func isToday(_ date: Date) -> Bool {
         let tmpStr = str.split(separator: "-").map{String($0)}
         date = "\(tmpDate[0])-\(tmpDate[1])-\(tmpDate[2])"
         str = "\(tmpStr[0])-\(tmpStr[1])-\(tmpStr[2])"
-        print("date: \(date)")
-        print("date: \(str)")
+
         if date == str {
             return true
         }else {

@@ -9,6 +9,9 @@ import UIKit
 
 class RecentSearchTableViewCell: UITableViewCell {
 
+    static let identifier = "RecentSearchTableViewCell"
+    @IBOutlet weak var deleteButton: UIButton!
+    @IBOutlet weak var recentLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

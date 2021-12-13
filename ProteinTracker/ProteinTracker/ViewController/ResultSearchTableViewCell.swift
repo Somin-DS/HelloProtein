@@ -9,8 +9,9 @@ import UIKit
 
 class ResultSearchTableViewCell: UITableViewCell {
 
+    static let identifier = "ResultSearchTableViewCell"
     @IBOutlet weak var proteinLabel: UILabel!
-    @IBOutlet weak var intakeLabel: UILabel!
+
     @IBOutlet weak var nameLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()

@@ -16,7 +16,10 @@ class ShowTableViewCell: UITableViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+        self.layer.borderColor = UIColor(red: 200.0/255.0, green: 244.0/255.0, blue: 194.0/255.0, alpha: 1.0).cgColor
+        self.layer.cornerRadius = 5
+        self.layer.masksToBounds = true
+        self.layer.borderWidth = 1
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {

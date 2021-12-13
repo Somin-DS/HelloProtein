@@ -8,15 +8,22 @@
 
 //Setting
 
-"setting_language" = "언어 설정";
+"setting_language" = "검색 언어";
 "setting_intake" = "목표 섭취량";
 "setting_theme" = "테마";
-
-
+"setting_edit" = "수정";
+"setting_sectionOne" = "설정";
+"setting_sectionTwo" = "정보";
+"setting_info" = "오픈소스";
+"setting_qna" = "문의하기";
+"setting_opensource" = "라이브러리";
+"setting_mailAlertTitle" = "메일을 전송 실패";
+"setting_mailAlertMessage" = "아이폰 이메일 설정을 확인하고 다시 시도해주세요";
+"setting_alert" = "확인";
 //Add
 
 "add_namelabel" = "이름";
-"add_intakelabel" = "단백질 양";
+"add_intakelabel" = "단백질(g)";
 "add_favoritelabel" = "즐겨찾기";
 "add_button" = "추가";
 "close_button" = "닫기";
@@ -30,19 +37,22 @@
 
 //Init
 
-"init_weightfield" = "몸무게(옵션)";
-"init_activelabel" = "활동량(옵션)";
+"init_weightfield" = "몸무게를 입력해주세요";
+"init_activelabel" = "활동량";
 "init_segone" = "적음";
 "init_segtwo" = "보통";
 "init_segthree" = "많음";
-"init_callabel" = "계산하기";
-"init_recommendlabel" = "추천 섭취량은 %@ g입니다";
-"init_targetfield" = "목표 섭취량(필수)";
+"init_callabel" = "계산";
+"init_recommendlabel" = "추천 단백질 양은\n %@ g입니다";
+"init_targetfield" = "목표 하루 섭취량(g)을 입력해주세요";
 "init_startbutton" = "시작하기";
-
+"init_cacultitle" = "단백질 섭취량 계산기";
+"init_activityfield" = "활동량을 입력해주세요";
+"init_barbutton" = "완료";
+"init_weigthTitle" = "몸무게";
 //Error
 
-"empty_weight" = "몸무게를 입력해주세요";
+"empty_weight" = "몸무게와 단위를 입력해주세요";
 "empty_protein" = "목표 섭취량을 입력해주세요";
 "error_number" = "숫자로만 입력해주세요";
 "empty_name" = "이름 입력해주세요";
@@ -55,3 +65,9 @@
 "alert_addContent" = "추가되었습니다!";
 "alert_editTitle" = "수정 완료";
 "alert_editContent" = "수정되었습니다!";
+
+"search_historyTitle" = "최근 검색어";
+"search_resultTitle" = "검색 결과(100g기준)";
+"search_error" = "오류가 발생했습니다. 다시 시도해주세요";
+"search_empty" = "검색결과가 없습니다";
+"search_button" = "추가";

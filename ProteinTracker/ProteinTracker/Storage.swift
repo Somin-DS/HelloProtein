@@ -45,15 +45,14 @@ public class Storage {
         }
     }
     
-    static func saveDailyTotal (_ date: String, _ total: Int) {
+    static func saveDailyTotal (_ date: String?,_ originDate: Date?, _ total: Int?) {
         
         let localRealm = try! Realm()
-        let statProtein = StatProtein(date: date, totalIntake: total)
+        let statProtein = StatProtein(date: date ?? "0", originDate: originDate ?? Date() , totalIntake: total ?? 0)
         
         try! localRealm.write {
             localRealm.add(statProtein)
         }
-        
         
     }
     static func saveDate (_ date: Date) {
@@ -63,6 +62,7 @@ public class Storage {
         dateFormatter.dateFormat = "yyyy-MM-dd-EEE"
         let date = dateFormatter.string(from: date)
         
+        UserDefaults.standard.set(Date(), forKey: "Date")
         UserDefaults.standard.set(date, forKey: "date")
     }
     

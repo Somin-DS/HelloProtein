@@ -11,6 +11,15 @@ enum LocalizeStrings: String {
     case setting_language,
          setting_intake,
          setting_theme,
+         setting_edit,
+         setting_sectionOne,
+         setting_sectionTwo,
+         setting_info,
+         setting_qna,
+         setting_opensource,
+    setting_mailAlertTitle,
+    setting_mailAlertMessage,
+    setting_alert,
          add_namelabel,
          add_intakelabel,
          add_favoritelabel,
@@ -20,6 +29,7 @@ enum LocalizeStrings: String {
          stats_segone,
          stats_segtwo,
          stats_empty,
+         init_cacultitle,
          init_weightfield,
          init_activelabel,
          init_segone,
@@ -29,6 +39,9 @@ enum LocalizeStrings: String {
          init_recommendlabel,
          init_targetfield,
          init_startbutton,
+         init_activityfield,
+         init_barbutton,
+         init_weigthTitle,
          empty_weight,
          empty_protein,
          error_number,
@@ -39,7 +52,12 @@ enum LocalizeStrings: String {
          alert_addTitle,
          alert_addContent,
          alert_editTitle,
-         alert_editContent
+         alert_editContent,
+         search_historyTitle,
+         search_resultTitle,
+         search_error,
+         search_empty,
+         search_button
     
     var localized: String {
         return self.rawValue.localized()

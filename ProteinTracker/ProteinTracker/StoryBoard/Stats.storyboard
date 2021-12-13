@@ -5,7 +5,6 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19454"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -18,29 +17,28 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ABv-Mj-dXJ">
-                                <rect key="frame" x="107.5" y="60" width="160" height="133.5"/>
+                                <rect key="frame" x="81" y="110" width="213" height="133.5"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="평균 섭취량" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qrf-Is-gox">
-                                        <rect key="frame" x="48" y="10" width="64" height="20"/>
-                                        <color key="backgroundColor" systemColor="systemYellowColor"/>
+                                        <rect key="frame" x="32" y="10" width="149" height="20"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="XaF-SW-VVz">
-                                        <rect key="frame" x="24" y="45" width="112" height="80"/>
-                                        <color key="backgroundColor" red="1" green="0.19042568770000001" blue="0.069922124490000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                        <rect key="frame" x="32" y="45" width="149" height="80"/>
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                 </subviews>
-                                <color key="backgroundColor" systemColor="systemBlueColor"/>
+                                <color key="backgroundColor" red="0.67450980390000004" green="0.86666666670000003" blue="0.67843137249999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstItem="XaF-SW-VVz" firstAttribute="height" secondItem="ABv-Mj-dXJ" secondAttribute="height" multiplier="0.6" id="Ibo-gf-6S8"/>
                                     <constraint firstItem="Qrf-Is-gox" firstAttribute="height" secondItem="ABv-Mj-dXJ" secondAttribute="height" multiplier="0.15" id="Khq-7d-sxx"/>
-                                    <constraint firstItem="Qrf-Is-gox" firstAttribute="width" secondItem="ABv-Mj-dXJ" secondAttribute="width" multiplier="0.4" id="Od6-cy-wDN"/>
-                                    <constraint firstAttribute="width" secondItem="ABv-Mj-dXJ" secondAttribute="height" multiplier="1.2:1" id="QQz-Re-Sqg"/>
+                                    <constraint firstItem="Qrf-Is-gox" firstAttribute="width" secondItem="ABv-Mj-dXJ" secondAttribute="width" multiplier="0.7" id="Od6-cy-wDN"/>
+                                    <constraint firstAttribute="width" secondItem="ABv-Mj-dXJ" secondAttribute="height" multiplier="1.6:1" id="QQz-Re-Sqg"/>
                                     <constraint firstItem="XaF-SW-VVz" firstAttribute="top" secondItem="Qrf-Is-gox" secondAttribute="bottom" constant="15" id="XYB-IL-aE7"/>
                                     <constraint firstItem="Qrf-Is-gox" firstAttribute="centerX" secondItem="ABv-Mj-dXJ" secondAttribute="centerX" id="ecn-oV-cQj"/>
                                     <constraint firstItem="XaF-SW-VVz" firstAttribute="centerX" secondItem="ABv-Mj-dXJ" secondAttribute="centerX" id="ttP-pe-JWT"/>
@@ -49,20 +47,20 @@
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hlR-fd-LU1" customClass="BarChartView" customModule="Charts">
-                                <rect key="frame" x="30" y="293.5" width="315" height="333.5"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <rect key="frame" x="30" y="373.5" width="315" height="233.5"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" red="1" green="0.99607843137254903" blue="0.97647058823529409" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="ABv-Mj-dXJ" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" constant="60" id="2Br-P3-lCX"/>
                             <constraint firstItem="hlR-fd-LU1" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" constant="30" id="3Cj-i5-VeS"/>
-                            <constraint firstItem="hlR-fd-LU1" firstAttribute="height" secondItem="5EZ-qb-Rvc" secondAttribute="height" multiplier="0.5" id="5yc-YP-kFu"/>
+                            <constraint firstItem="hlR-fd-LU1" firstAttribute="height" secondItem="5EZ-qb-Rvc" secondAttribute="height" multiplier="0.35" id="5yc-YP-kFu"/>
                             <constraint firstItem="ABv-Mj-dXJ" firstAttribute="height" secondItem="5EZ-qb-Rvc" secondAttribute="height" multiplier="0.2" id="Bec-dJ-Qfs"/>
                             <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="hlR-fd-LU1" secondAttribute="trailing" constant="30" id="J1n-ky-5lD"/>
                             <constraint firstItem="ABv-Mj-dXJ" firstAttribute="centerX" secondItem="5EZ-qb-Rvc" secondAttribute="centerX" id="UCM-lq-Hih"/>
-                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="hlR-fd-LU1" secondAttribute="bottom" constant="40" id="oGf-02-Esx"/>
+                            <constraint firstItem="hlR-fd-LU1" firstAttribute="top" secondItem="ABv-Mj-dXJ" secondAttribute="bottom" constant="130" id="mgZ-6V-dZn"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="hlR-fd-LU1" secondAttribute="bottom" constant="60" id="oGf-02-Esx"/>
                         </constraints>
                     </view>
                     <connections>
@@ -77,15 +75,4 @@
             <point key="canvasLocation" x="-324.63768115942031" y="75"/>
         </scene>
     </scenes>
-    <resources>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemBlueColor">
-            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-        <systemColor name="systemYellowColor">
-            <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-    </resources>
 </document>
