@@ -1,6 +1,6 @@
 ---
-name: 'Issue: Bug report'
-about: 개발 중 생긴 버그를 작성합니다 here.
+name: Bug report
+about: 개발 중 생긴 버그를 작성합니다.
 title: "[Bug]"
 labels: ''
 assignees: Somin-DS
