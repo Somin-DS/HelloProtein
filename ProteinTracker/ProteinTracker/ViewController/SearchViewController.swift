@@ -15,7 +15,7 @@ class SearchViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
-    // 언제 show, hide
+
     let progress = JGProgressHUD()
     let localRealm = try! Realm()
     var searchHistoryRealm: Results<SearchHistory>!
@@ -28,7 +28,6 @@ class SearchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        searchBar.showsCancelButton = true
         searchBar.delegate = self
         tableView.dataSource = self
         tableView.delegate = self
@@ -61,7 +60,7 @@ class SearchViewController: UIViewController {
         } else {
             getProteinKo(keyword)
         }
-        progress.dismiss()
+        progress.dismiss(afterDelay: 1.5)
     }
     
     func getProteinEn(_ keyword: String) {
@@ -87,47 +86,65 @@ class SearchViewController: UIViewController {
     }
     
     func getProteinKo(_ keyword: String) {
-        let param: Parameters = [
-            "desc_kor" : keyword
-                 ]
-
-        let urlstring = "http://apis.data.go.kr/1470000/FoodNtrIrdntInfoService/getFoodNtrItdntList?ServiceKey=aeIT3Znjq3tXJhg0t8faoxSUHmdddOlWbO%2FM6rFqukYe%2BUBH272yyI%2Frg51RlTY6M9YfG0zjML%2FHCLmNFYSpNw%3D%3D&type=json"
-
-        let url = URL(string: urlstring)!
-
-        AF.request(url, method: .get, parameters: param).responseJSON() { response in
-          switch response.result {
-          case .success(let value):
-              let json = JSON(value)
-              let items = json["body"]["items"]
-              for i in items {
-                  let protein = i.1["NUTR_CONT3"].stringValue
-                  let food = i.1["DESC_KOR"].stringValue
-
-                  if self.resultArray.isEmpty {
-                    self.resultArray.append([food, protein])
-                  }else {
-                      var flag = false
-                      for i in self.resultArray {
-                          if i[0] == food {
-                              flag = true
-                          }
-                      }
-                      if !flag {
-                          self.resultArray.append([food, protein])
-                      }
-                  }
-              }
-              self.tableView.reloadData()
-              
-          case .failure:
-              self.errorFlag = true
-              self.tableView.reloadData()
+        guard let urlcomponents = URLComponents(string: "http://openapi.foodsafetykorea.go.kr/api/0c369ce7f0034388b63e/I2790/json/1/5/DESC_KOR=\(keyword)") else {
+            print("url틀렸다")
             return
-          }
         }
+
+        guard let requestUrl = urlcomponents.url else { return }
+
+        // URLRequest 생성
+        var request = URLRequest(url: requestUrl)
+        request.httpMethod = "GET"
+
+        // URLSession을 사용하여 데이터 요청 및 처리
+        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                print("여기")
+                print("Error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                print("Invalid response")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                return
+            }
+            
+            do {
+                let json = JSON(data)
+                  let items = json["I2790"]["row"]
+                for i in items {
+                    let protein = i.1["NUTR_CONT3"].stringValue
+                    let food = i.1["DESC_KOR"].stringValue
+                    if self.resultArray.isEmpty {
+                        self.resultArray.append([food, protein])
+                    }else {
+                        var flag = false
+                        for i in self.resultArray {
+                            if i[0] == food {
+                                flag = true
+                            }
+                        }
+                        if !flag {
+                            self.resultArray.append([food, protein])
+                        }
+                    }
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+                
+            }
+        }
+
+        task.resume()
     }
-    
 }
 
 extension SearchViewController: UISearchBarDelegate {
@@ -192,7 +209,6 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ResultSearchTableViewCell.identifier, for: indexPath) as? ResultSearchTableViewCell else {return UITableViewCell()}
                 
                 let row = resultArray[indexPath.row]
-                
                 cell.nameLabel.text = row[0]
                 cell.proteinLabel.text = "\(row[1])g"
                 cell.nameLabel.numberOfLines = 0
