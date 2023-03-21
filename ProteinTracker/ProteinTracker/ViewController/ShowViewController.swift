@@ -23,22 +23,7 @@ class ShowViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-//        print("locate-> \(localRealm.configuration.fileURL!)")
-//        var date =  Date()
-//        statProteinRealm = localRealm.objects(StatProtein.self)
-//        let yesterday = calculateDayBefore(date)
-//        let test = StatProtein(date: "2021-12-09-목", originDate: date, totalIntake: 100)
-//        let test1 = StatProtein(date: "2021-12-08-수", originDate: yesterday, totalIntake: 70)
-//        let test2 = StatProtein(date: "2021-12-07-화", originDate: calculateDayBefore(yesterday), totalIntake: 20)
-//
-//        try! localRealm.write {
-//            localRealm.add(test)
-//            localRealm.add(test1)
-//            localRealm.add(test2)
-//        }
-        
-        
+
         showTableView.delegate = self
         showTableView.dataSource = self
         
@@ -77,9 +62,7 @@ class ShowViewController: UIViewController {
         
         view.layer.addSublayer(trackLayer)
         view.layer.addSublayer(shapeLayer)
-        
-//        showTableView.backgroundColor = .white
-//        showTableView.layer.cornerRadius = 20
+
         showTableView.layer.masksToBounds = true
         
         intakeLabel.numberOfLines = 0
@@ -151,13 +134,12 @@ class ShowViewController: UIViewController {
     //Add View로 전환(show modally)
     @IBAction func addButtonClicked(_ sender: UIButton) {
         
-        //1.
         let sb = UIStoryboard(name: "Add", bundle: nil)
-        
+
         let vc = sb.instantiateViewController(withIdentifier: "AddViewController")
 
         let nav = UINavigationController(rootViewController: vc)
-        
+
         nav.modalPresentationStyle = .fullScreen
         self.present(nav, animated: true, completion: nil)
         
