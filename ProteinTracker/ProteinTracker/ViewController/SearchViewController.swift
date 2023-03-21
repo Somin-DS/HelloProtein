@@ -86,7 +86,10 @@ class SearchViewController: UIViewController {
     }
     
     func getProteinKo(_ keyword: String) {
-        guard let urlcomponents = URLComponents(string: "http://openapi.foodsafetykorea.go.kr/api/0c369ce7f0034388b63e/I2790/json/1/5/DESC_KOR=\(keyword)") else {
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String else {
+            return
+        }
+        guard let urlcomponents = URLComponents(string: "http://openapi.foodsafetykorea.go.kr/api/\(apiKey)/I2790/json/1/5/DESC_KOR=\(keyword)") else {
             print("url틀렸다")
             return
         }

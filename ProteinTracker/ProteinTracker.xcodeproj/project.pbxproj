@@ -62,6 +62,7 @@
 		37FB9854274D087800C29698 /* SettingTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9853274D087800C29698 /* SettingTableViewCell.swift */; };
 		37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9855274D0D5D00C29698 /* InitViewController.swift */; };
 		37FB9858274D0D6800C29698 /* Init.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB9857274D0D6800C29698 /* Init.storyboard */; };
+		AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -114,6 +115,7 @@
 		37FB9853274D087800C29698 /* SettingTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingTableViewCell.swift; sourceTree = "<group>"; };
 		37FB9855274D0D5D00C29698 /* InitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitViewController.swift; sourceTree = "<group>"; };
 		37FB9857274D0D6800C29698 /* Init.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Init.storyboard; sourceTree = "<group>"; };
+		AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -203,6 +205,7 @@
 				37EEADC127521A2200B06EF7 /* Calculator.swift */,
 				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
+				AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */,
 			);
 			path = ProteinTracker;
 			sourceTree = "<group>";
@@ -353,6 +356,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */,
 				375131B327678449009603A0 /* GoogleService-Info.plist in Resources */,
 				37FB9841274BEAD100C29698 /* Stats.storyboard in Resources */,
 				374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */,
@@ -570,6 +574,7 @@
 		};
 		37FB983A274BEA5F00C29698 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -605,6 +610,7 @@
 		};
 		37FB983B274BEA5F00C29698 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
