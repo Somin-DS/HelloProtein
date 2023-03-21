@@ -155,14 +155,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		37AA9E862752704500E3EFC1 /* Realm */ = {
-			isa = PBXGroup;
-			children = (
-				37AA9E872752707C00E3EFC1 /* RealmModel.swift */,
-			);
-			path = Realm;
-			sourceTree = "<group>";
-		};
 		37BEA6F6274D44EA00C0AEF7 /* Extension */ = {
 			isa = PBXGroup;
 			children = (
@@ -195,9 +187,10 @@
 		37FB9827274BEA5C00C29698 /* ProteinTracker */ = {
 			isa = PBXGroup;
 			children = (
+				AB33AF0B29C9C12300244656 /* Assets */,
+				AB33AF0A29C9C0F800244656 /* Model */,
 				375131B227678449009603A0 /* GoogleService-Info.plist */,
 				374507F827578B6E00A14A4C /* Font */,
-				37AA9E862752704500E3EFC1 /* Realm */,
 				37BEA6F6274D44EA00C0AEF7 /* Extension */,
 				37FB9848274D01FF00C29698 /* Localization */,
 				37FB9847274D01E100C29698 /* ViewController */,
@@ -209,8 +202,6 @@
 				37EEADBD275206FD00B06EF7 /* ErrorHandler.swift */,
 				37EEADC127521A2200B06EF7 /* Calculator.swift */,
 				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
-				3728B243275D0AE60098BDCF /* Protein-En.json */,
-				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
 			);
 			path = ProteinTracker;
@@ -261,6 +252,23 @@
 				37BEA6FF274D4A2300C0AEF7 /* InfoPlist.strings */,
 			);
 			path = Localization;
+			sourceTree = "<group>";
+		};
+		AB33AF0A29C9C0F800244656 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				37AA9E872752707C00E3EFC1 /* RealmModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		AB33AF0B29C9C12300244656 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
+				3728B243275D0AE60098BDCF /* Protein-En.json */,
+			);
+			path = Assets;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
