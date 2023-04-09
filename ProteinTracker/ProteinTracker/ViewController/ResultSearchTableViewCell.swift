@@ -15,13 +15,14 @@ class ResultSearchTableViewCell: UITableViewCell {
     @IBOutlet weak var nameLabel: UILabel!
     override func awakeFromNib() {
         super.awakeFromNib()
-        // Initialization code
+        
+        self.proteinLabel.setCommonLable(font: UIFont.systemFont(ofSize: 17))
+        self.nameLabel.setCommonLable(font: UIFont.systemFont(ofSize: 17))
     }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
+    func setText(name: String, protein: String) {
+        self.nameLabel.text = name
+        self.proteinLabel.text = protein
     }
 
 }

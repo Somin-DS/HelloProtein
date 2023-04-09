@@ -12,68 +12,48 @@ import RealmSwift
 class StatsViewController: UIViewController {
 
     @IBOutlet weak var barChartView: BarChartView!
-    
     @IBOutlet weak var backgroundView: UIView!
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var averageLabel: UILabel!
-    
-
     let localRealm = try! Realm()
-    var statRealm: Results<StatProtein>!
+    lazy var statRealm = localRealm.objects(StatProtein.self)
     var setWeeks: [String] = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
     let calendar: Calendar = Calendar.current
+    lazy var values = addChartData()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
         navigationController?.interactivePopGestureRecognizer?.isEnabled = true
-        
-       
+        setUI()
+        setChart()
+
+    }
+    
+    func setUI() {
         title = "Stats"
-        titleLabel.text = LocalizeStrings.stats_averagelabel.localized
-        titleLabel.textAlignment = .center
-        titleLabel.font = UIFont().bodyFont
-        titleLabel.numberOfLines = 0
-        averageLabel.font = UIFont().headFont
-        averageLabel.textAlignment = .center
-        averageLabel.numberOfLines = 0
-        backgroundView.layer.cornerRadius = 20
-        backgroundView.layer.masksToBounds = true
-        averageLabel.layer.cornerRadius = 20
-        averageLabel.layer.masksToBounds = true
-        barChartView.layer.masksToBounds = true
-        barChartView.layer.cornerRadius = 10
         navigationItem.backButtonTitle = ""
         navigationItem.backBarButtonItem?.tintColor = .black
-        
-        
-        
-        statRealm = localRealm.objects(StatProtein.self)
-        
+        titleLabel.setText(text: LocalizeStrings.stats_averagelabel.localized, font: UIFont().bodyFont)
+        titleLabel.textAlignment = .center
+        averageLabel.setCommonLable(font: UIFont().headFont)
+        averageLabel.setCornerRadius(cornerRadius: 20)
+        averageLabel.text = "\(calculateAverageProtein(values)) g"
+        backgroundView.setCornerRadius(cornerRadius: 20)
+        barChartView.setCornerRadius(cornerRadius: 10)
         barChartView.noDataText = LocalizeStrings.stats_empty.localized
         barChartView.noDataFont = UIFont().bodyFont
         barChartView.noDataTextColor = .lightGray
         barChartView.backgroundColor = .white
-
-        
-        let values = addChartData()
-        setChart(values)
-        
-        averageLabel.text = "\(calculateAverageProtein(values)) g"
-        
     }
     
-    func setChart(_ Values: [Double]){
-        
-
-        if Values.isEmpty {
+    func setChart(){
+        if values.isEmpty {
             return ;
         }
         
         var dataEntries: [BarChartDataEntry] = []
         for i in 0..<setWeeks.count {
-            let dataEntry = BarChartDataEntry(x: Double(i), y: Values[i])
+            let dataEntry = BarChartDataEntry(x: Double(i), y: values[i])
             dataEntries.append(dataEntry)
         }
         //Double -> Int로 formatter

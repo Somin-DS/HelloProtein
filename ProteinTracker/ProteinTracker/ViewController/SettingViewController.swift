@@ -35,7 +35,6 @@ class SettingViewController: UIViewController, MFMailComposeViewControllerDelega
                     
             let compseVC = MFMailComposeViewController()
             compseVC.mailComposeDelegate = self
-            
             compseVC.setToRecipients(["ramgoods2@gmail.com"])
             compseVC.setSubject("[Hello, Protein!] QnA")
             compseVC.setMessageBody("Content", isHTML: false)
@@ -91,26 +90,15 @@ extension SettingViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         guard let cell = settingTableView.dequeueReusableCell(withIdentifier: SettingTableViewCell.identifier, for: indexPath) as? SettingTableViewCell else { return UITableViewCell()}
-        
-        cell.titleLabel.textAlignment = .center
-        cell.titleLabel.numberOfLines = 0
-        cell.titleLabel.font = UIFont().bodyFont
-        cell.detailLabel.textAlignment = .center
-        cell.detailLabel.numberOfLines = 0
-        cell.detailLabel.font = UIFont().bodyFont
-        
+
         if indexPath.section == 0 {
             let row = settings[indexPath.row]
-            cell.titleLabel.text = row[0]
-            cell.detailLabel.text = row[1]
+            cell.setText(title: row[0], detail: row[1])
             
         }else {
             let row = info[indexPath.row]
-            cell.titleLabel.text = row
-            cell.detailLabel.text = ""
+            cell.setText(title: row, detail: "")
         }
-        
-        
         return cell
     }
     
@@ -132,12 +120,9 @@ extension SettingViewController: UITableViewDelegate, UITableViewDataSource {
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         }
-        
-        
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 48
     }
-    
 }

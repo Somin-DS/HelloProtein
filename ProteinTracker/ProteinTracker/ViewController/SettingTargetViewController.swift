@@ -6,28 +6,21 @@
 //
 
 import UIKit
-import Toast
 import TextFieldEffects
 
 
 class SettingTargetViewController: UIViewController {
 
-    
     @IBOutlet weak var calculatorTitleLabel: UILabel!
     @IBOutlet weak var weightTextField: UITextField!
     @IBOutlet weak var targetProteinTextField: UITextField!
-
     @IBOutlet weak var weightTitleLabel: UILabel!
-    
     @IBOutlet weak var activityTitleLabel: UILabel!
     @IBOutlet weak var activityTextField: UITextField!
     @IBOutlet weak var calculateButton: UIButton!
-    
     @IBOutlet weak var recommendResultLabel: UILabel!
     @IBOutlet weak var editButton: UIButton!
-    
     @IBOutlet weak var calculatorView: UIView!
-    
     
     var weightMeasure = "kg"
     var activityLevel = "Light"
@@ -40,111 +33,63 @@ class SettingTargetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
-        
+        setDelegate()
+        configurePickerView()
+        setUI()
+        title = "Daily Target"
+   
+    }
+    
+    func setDelegate() {
         weightPickerView.delegate = self
-        activityPickerView.delegate = self
         weightPickerView.dataSource = self
+        activityPickerView.delegate = self
         activityPickerView.dataSource = self
         activityTextField.delegate = self
-        
-        title = "Daily Target"
-        
+    }
+    
+    func configurePickerView() {
         self.weightTextField.inputView = weightPickerView
         self.activityTextField.inputView = activityPickerView
-        
         let toolBar = UIToolbar()
         toolBar.frame = CGRect(x: 0, y: 0, width: 0, height: 40)
         toolBar.backgroundColor = .darkGray
         self.weightTextField.inputAccessoryView = toolBar
         self.activityTextField.inputAccessoryView = toolBar
-        
         let barButton = UIBarButtonItem()
         barButton.title = LocalizeStrings.init_barbutton.localized
         barButton.target = self
         barButton.action = #selector(doneButtonClicked(_:))
-        
         let space = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
-        
         toolBar.setItems([space, barButton], animated: true)
-        
-        calculatorView.layer.cornerRadius = 20
-        calculatorView.layer.masksToBounds = true
-        calculatorTitleLabel.text = LocalizeStrings.init_cacultitle.localized
-        calculatorTitleLabel.font = UIFont().subFont
-        
-        
-        weightTitleLabel.text = LocalizeStrings.init_weigthTitle.localized
-        weightTitleLabel.font = UIFont().labelFont
-        weightTitleLabel.backgroundColor = .white
-        weightTitleLabel.layer.masksToBounds = true
-        weightTitleLabel.layer.cornerRadius = 10
-        weightTitleLabel.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        weightTitleLabel.layer.borderWidth = 2
-        
-        activityTitleLabel.text = LocalizeStrings.init_activelabel.localized
-        activityTitleLabel.font = UIFont().labelFont
-        activityTitleLabel.backgroundColor = .white
-        activityTitleLabel.layer.masksToBounds = true
-        activityTitleLabel.layer.cornerRadius = 10
-        activityTitleLabel.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        activityTitleLabel.layer.borderWidth = 2
-        
-        weightTextField.placeholder = LocalizeStrings.init_weightfield.localized
-        weightTextField.textAlignment = .center
-        weightTextField.font = UIFont().strFont
-        weightTextField.backgroundColor = .white
-        weightTextField.layer.masksToBounds = true
-        weightTextField.layer.cornerRadius = 10
-        weightTextField.layer.borderWidth = 2
-        weightTextField.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        
-        activityTextField.placeholder = LocalizeStrings.init_activityfield.localized
-        activityTextField.textAlignment = .center
-        activityTextField.font = UIFont().strFont
-        activityTextField.backgroundColor = .white
-        activityTextField.layer.masksToBounds = true
-        activityTextField.layer.cornerRadius = 10
-        activityTextField.layer.borderWidth = 2
-        activityTextField.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        
-        
-        targetProteinTextField.placeholder = LocalizeStrings.init_targetfield.localized
-        targetProteinTextField.textAlignment = .center
-        targetProteinTextField.font = UIFont().bodyFont
-        targetProteinTextField.backgroundColor = .white
-        targetProteinTextField.layer.masksToBounds = true
-        targetProteinTextField.layer.cornerRadius = 10
-        targetProteinTextField.layer.borderWidth = 2
-        targetProteinTextField.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        
-
-        
-        editButton.tintColor = .black
-        editButton.setTitle(LocalizeStrings.setting_edit.localized, for: .normal)
-        editButton.titleLabel?.font = UIFont().bodyFont
-        editButton.layer.masksToBounds = true
-        editButton.layer.cornerRadius = 25
-        editButton.backgroundColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 0.8)
-        
-        calculateButton.tintColor = .black
-        calculateButton.setTitle(LocalizeStrings.init_callabel.localized, for: .normal)
-        calculateButton.titleLabel?.font = UIFont().bodyFont
-        calculateButton.layer.masksToBounds = true
-        calculateButton.layer.cornerRadius = 15
-        calculateButton.backgroundColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 0.8)
-        
-        recommendResultLabel.textAlignment = .center
-        recommendResultLabel.text = ""
-        recommendResultLabel.numberOfLines = 0
-        recommendResultLabel.font = UIFont().bodyFont
-        recommendResultLabel.layer.masksToBounds = true
-        recommendResultLabel.backgroundColor = .white
-        recommendResultLabel.layer.cornerRadius = 20
-   
-        
     }
 
+    func setUI() {
+        calculatorView.setCornerRadius(cornerRadius: 20)
+        calculateButton.setCornerRadius(cornerRadius: 15)
+        calculateButton.backgroundColor = UIColor().buttonGreen
+        recommendResultLabel.setCornerRadius(cornerRadius: 20)
+        recommendResultLabel.setText(text: "", font: UIFont().bodyFont)
+        recommendResultLabel.numberOfLines = 0
+        recommendResultLabel.backgroundColor = .white
+        calculateButton.setText(text: LocalizeStrings.init_callabel.localized, font: UIFont().bodyFont, textColor: .black)
+        calculatorTitleLabel.setText(text: LocalizeStrings.init_cacultitle.localized, font: UIFont().subFont)
+        weightTitleLabel.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        weightTitleLabel.setText(text: LocalizeStrings.init_weigthTitle.localized, font: UIFont().labelFont)
+        activityTitleLabel.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        activityTitleLabel.setText(text: LocalizeStrings.init_activelabel.localized, font: UIFont().labelFont)
+        weightTextField.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        weightTextField.setText(placeholder: LocalizeStrings.init_weightfield.localized, font: UIFont().strFont, textAlignment: .center)
+        activityTextField.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        activityTextField.setText(placeholder: LocalizeStrings.init_activityfield.localized, font: UIFont().strFont, textAlignment: .center)
+        targetProteinTextField.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        targetProteinTextField.setText(placeholder: LocalizeStrings.init_targetfield.localized, font: UIFont().bodyFont, textAlignment: .center)
+        editButton.setText(text: LocalizeStrings.setting_edit.localized, font: UIFont().bodyFont, textColor: .black)
+        editButton.setCornerRadius(cornerRadius: 25)
+        editButton.backgroundColor = UIColor().buttonGreen
+
+    }
+    
     @objc func doneButtonClicked(_ sender: Any) {
         self.view.endEditing(true)
     }
@@ -157,9 +102,8 @@ class SettingTargetViewController: UIViewController {
     
     @IBAction func calculButtonClicked(_ sender: UIButton) {
         
-       
         let weightValid = isValidNumber(weightTextField.text)
-        
+
         if weightValid == 0 {
             let weight = Double(weightTextField.text!)!
             var activity: Activity
@@ -173,49 +117,35 @@ class SettingTargetViewController: UIViewController {
             let recommendProtein = calculateTargetProtein(weight, weightMeasure, activity)
             recommendResultLabel.text = String(format: NSLocalizedString("init_recommendlabel", comment: ""), recommendProtein)
             targetProteinTextField.text = String(Int(Double(recommendProtein) ?? 0.0))
-            
         }else {
-            let windows = UIApplication.shared.windows
             if weightValid == ErrorString.EmptyString.rawValue {
-                
-                windows.last?.makeToast(LocalizeStrings.empty_weight.localized)
+                present(Alert().setOnlyMessageAlert(message: LocalizeStrings.empty_weight.localized), animated: true,completion: nil)
             }
             if weightValid == ErrorString.NotNumber.rawValue {
-                windows.last?.makeToast(LocalizeStrings.error_number.localized)
+                present(Alert().setOnlyMessageAlert(message: LocalizeStrings.error_number.localized), animated: true,completion: nil)
             }
-        }
-    }
+        }    }
     
     @IBAction func editButtonClicked(_ sender: UIButton) {
         
-        let windows = UIApplication.shared.windows
         let valid = isValidNumber(targetProteinTextField.text)
-        if valid == 0 {
+        switch valid {
+        case ErrorString.EmptyString.rawValue:
+            present(Alert().setOnlyMessageAlert(message: LocalizeStrings.empty_protein.localized), animated: true,completion: nil)
+        case ErrorString.NotNumber.rawValue:
+            present(Alert().setOnlyMessageAlert(message: LocalizeStrings.error_number.localized), animated: true,completion: nil)
+        case ErrorString.Zero.rawValue:
+            present(Alert().setOnlyMessageAlert(message: LocalizeStrings.error_zero.localized), animated: true,completion: nil)
+        default:
             Storage.saveTargetProtein(targetProteinTextField.text)
             let alert = UIAlertController(title: LocalizeStrings.alert_editTitle.localized, message: LocalizeStrings.alert_editContent.localized, preferredStyle: .alert)
             let cancelAction = UIAlertAction(title: LocalizeStrings.close_button.localized, style: .cancel, handler: nil)
             alert.addAction(cancelAction)
             self.present(alert, animated: false)
-        }else {
-            if valid == ErrorString.EmptyString.rawValue {
-                windows.last?.makeToast(LocalizeStrings.empty_protein.localized)
-//                self.view.makeToast(LocalizeStrings.empty_protein.localized)
-            }else if valid == ErrorString.NotNumber.rawValue{
-                windows.last?.makeToast(LocalizeStrings.error_number.localized)
-//                self.view.makeToast(LocalizeStrings.error_number.localized)
-            }else {
-                windows.last?.makeToast(LocalizeStrings.error_zero.localized)
-//                self.view.makeToast(LocalizeStrings.error_zero.localized)
-            }
         }
     }
 }
 extension SettingTargetViewController: UITextFieldDelegate {
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        guard let text = textField.text else { return true }
-//        let newLength = text.count + string.count - range.length
-//        return newLength <= 4
-//    }
     func textFieldDidBeginEditing(_ textField: UITextField) {
         self.activityTextField.text = activityRange[0]
     }

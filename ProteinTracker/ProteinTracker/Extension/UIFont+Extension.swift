@@ -10,7 +10,6 @@
                 Binggrae-Bold
         */
 
-import Foundation
 import UIKit
 
 extension UIFont {

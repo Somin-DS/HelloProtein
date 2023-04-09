@@ -10,18 +10,14 @@ import UIKit
 class SettingLanguageViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
-    
     let languageSet: [String] = ["Korean(한글)", "English(영어)"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
         tableView.dataSource = self
-       
         title = "Search Language"
     }
-    
-
 }
 
 extension SettingLanguageViewController: UITableViewDelegate, UITableViewDataSource {
@@ -31,11 +27,7 @@ extension SettingLanguageViewController: UITableViewDelegate, UITableViewDataSou
     }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SettingLanguageTableViewCell.identifier, for: indexPath) as? SettingLanguageTableViewCell else {return UITableViewCell()}
-        
-        cell.titleLabel.text = languageSet[indexPath.row]
-        
-        cell.titleLabel.font = UIFont().bodyFont
-        cell.titleLabel.textColor = .black
+        cell.setText(text: languageSet[indexPath.row])
         return cell
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

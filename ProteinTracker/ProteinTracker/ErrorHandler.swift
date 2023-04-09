@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Toast
 
 enum ErrorString: Int {
     case EmptyString = 1

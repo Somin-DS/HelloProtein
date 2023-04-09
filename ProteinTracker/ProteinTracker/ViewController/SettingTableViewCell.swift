@@ -12,23 +12,17 @@ class SettingTableViewCell: UITableViewCell {
     static let identifier = "SettingTableViewCell"
     
     @IBOutlet weak var titleLabel: UILabel!
-    
     @IBOutlet weak var detailLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        self.layer.borderColor = UIColor(red: 172.0/255.0, green: 221.0/255.0, blue: 173.0/255.0, alpha: 1.0).cgColor
-        self.layer.cornerRadius = 10
-        self.layer.masksToBounds = true
-        self.layer.borderWidth = 2
-
-
+        self.setCommonLayout(cornerRadius: 10, borderWidth: 2)
+        titleLabel.setCommonLable(font: UIFont().bodyFont)
+        detailLabel.setCommonLable(font: UIFont().bodyFont)
     }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        
+    func setText(title: String, detail: String) {
+        self.titleLabel.text = title
+        self.detailLabel.text = detail
     }
-
 }

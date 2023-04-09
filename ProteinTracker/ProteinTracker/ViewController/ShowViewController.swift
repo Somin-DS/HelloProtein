@@ -64,14 +64,9 @@ class ShowViewController: UIViewController {
         UINavigationBar.appearance().titleTextAttributes = [NSAttributedString.Key.font: UIFont().headFont]
         self.navigationController?.navigationBar.topItem?.title = "Today" //Q - 이거 왜 두개냐
         self.navigationController?.navigationBar.tintColor = .black
-        
-        //섭취단백질량 라벨 ui
-        intakeLabel.numberOfLines = 0
-        intakeLabel.textAlignment = .center
-        intakeLabel.font = UIFont().subFont
-        intakeLabel.layer.cornerRadius = 20
-        intakeLabel.layer.masksToBounds = true
-        
+
+        intakeLabel.setCommonLable(font: UIFont().subFont)
+        intakeLabel.setCornerRadius(cornerRadius: 20)
         // 버튼 ui
         addButton.tintColor = .black
         
@@ -92,6 +87,7 @@ class ShowViewController: UIViewController {
         view.layer.addSublayer(trackLayer)
         view.layer.addSublayer(shapeLayer)
     }
+    
     func setTableViewUI() {
         //테이블뷰 레이아웃
         showTableView.layer.masksToBounds = true
@@ -99,6 +95,7 @@ class ShowViewController: UIViewController {
         showTableView.rowHeight = UITableView.automaticDimension
         showTableView.estimatedRowHeight = 44.0
     }
+    
     func configureShapeLayer(layer: CAShapeLayer, path: CGPath, strokeColor: CGColor, lineWidth: CGFloat, filColor: CGColor, lineCap: CAShapeLayerLineCap, strokeEnd: CGFloat?) {
         layer.path = path
         layer.strokeColor = strokeColor
@@ -164,10 +161,7 @@ extension ShowViewController: UITableViewDelegate, UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: ShowTableViewCell.identifier, for: indexPath) as? ShowTableViewCell else { return UITableViewCell() }
         
         let row = dailyProteinRealm[indexPath.row]
-        //테이블뷰 ui
-        cell.nameLabel.text = row.proteinName
-        cell.intakeLabel.text = "\(row.proteinIntake)g"
-
+        cell.setText(name: row.proteinName, intake: "\(row.proteinIntake)g")
         return cell
     }
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {

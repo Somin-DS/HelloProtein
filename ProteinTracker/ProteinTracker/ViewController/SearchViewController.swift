@@ -18,7 +18,7 @@ class SearchViewController: UIViewController {
 
     let progress = JGProgressHUD()
     let localRealm = try! Realm()
-    var searchHistoryRealm: Results<SearchHistory>!
+    lazy var searchHistoryRealm = localRealm.objects(SearchHistory.self)
     var resultArray = [[String]]()
     var errorFlag = false
     var searchFlag = false
@@ -36,8 +36,6 @@ class SearchViewController: UIViewController {
         tableView.estimatedRowHeight = 100
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "xmark"), style: .plain, target: self, action: #selector(closeButtonClicked))
         navigationItem.rightBarButtonItem?.tintColor = .black
-        
-        searchHistoryRealm = localRealm.objects(SearchHistory.self)
     }
                                                             
     @objc func closeButtonClicked() {
@@ -45,7 +43,6 @@ class SearchViewController: UIViewController {
     }
     
     @IBAction func addTapGesture(_ sender: UITapGestureRecognizer) {
-        
         view.endEditing(true)
     }
     
@@ -60,7 +57,6 @@ class SearchViewController: UIViewController {
         } else {
             getProteinKo(keyword)
         }
-        progress.dismiss(afterDelay: 1.5)
     }
     
     func getProteinEn(_ keyword: String) {
@@ -75,6 +71,7 @@ class SearchViewController: UIViewController {
                     }
                 }
                 self.tableView.reloadData()
+                progress.dismiss()
             } catch {
                 errorFlag = true
                 self.tableView.reloadData()
@@ -140,6 +137,7 @@ class SearchViewController: UIViewController {
                     }
                 }
                 DispatchQueue.main.async {
+                    self.progress.dismiss()
                     self.tableView.reloadData()
                 }
                 
@@ -152,7 +150,6 @@ class SearchViewController: UIViewController {
 
 extension SearchViewController: UISearchBarDelegate {
     
-    //검색버튼 눌렀을때
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if let text = searchBar.text {
             searchProtein(text)
@@ -201,33 +198,25 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
         if !searchFlag {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: RecentSearchTableViewCell.identifier, for: indexPath) as? RecentSearchTableViewCell else {return UITableViewCell()}
             let row = searchHistoryRealm[indexPath.row]
-            cell.recentLabel.text = row.proteinName
+            cell.setText(text: row.proteinName)
             cell.deleteButton.tag = indexPath.row
-            
             cell.deleteButton.addTarget(self, action: #selector(deleteButtonClicked(_:)), for: .touchUpInside)
-            
             return cell
         }else {
             if !errorFlag && resultArray.count != 0 {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ResultSearchTableViewCell.identifier, for: indexPath) as? ResultSearchTableViewCell else {return UITableViewCell()}
                 
                 let row = resultArray[indexPath.row]
-                cell.nameLabel.text = row[0]
-                cell.proteinLabel.text = "\(row[1])g"
-                cell.nameLabel.numberOfLines = 0
-                cell.nameLabel.lineBreakMode = .byWordWrapping
-                cell.proteinLabel.numberOfLines = 0
-                cell.proteinLabel.lineBreakMode = .byWordWrapping
-                
+                cell.setText(name: row[0], protein: "\(row[1])g")
                 return cell
         
             } else {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: EmptyTableViewCell.identifier, for: indexPath) as? EmptyTableViewCell else {return UITableViewCell()}
                 
                 if errorFlag {
-                    cell.titleLabel.text = LocalizeStrings.search_error.localized
+                    cell.setText(text: LocalizeStrings.search_error.localized)
                 }else {
-                    cell.titleLabel.text = LocalizeStrings.search_empty.localized
+                    cell.setText(text: LocalizeStrings.search_empty.localized)
                 }
                 return cell
             }

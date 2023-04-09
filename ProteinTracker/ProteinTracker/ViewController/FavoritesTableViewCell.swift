@@ -10,21 +10,17 @@ import UIKit
 class FavoritesTableViewCell: UITableViewCell {
 
     static let identifier = "FavoritesTableViewCell"
-    
-   
     @IBOutlet weak var nameLabel: UILabel!
-    
     @IBOutlet weak var intakeLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
-      
+        self.nameLabel.setCommonLable(font: UIFont().bodyFont)
+        self.intakeLabel.setCommonLable(font: UIFont().bodyFont)
     }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-      
+    
+    func setText(name: String, intake: String) {
+        self.nameLabel.text = name
+        self.intakeLabel.text = intake
     }
-
 }
