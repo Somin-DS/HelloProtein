@@ -19,7 +19,7 @@ class SearchViewController: UIViewController {
     let progress = JGProgressHUD()
     let localRealm = try! Realm()
     lazy var searchHistoryRealm = localRealm.objects(SearchHistory.self)
-    var resultArray = [[String]]()
+    var resultArray = [Food]()
     var errorFlag = false
     var searchFlag = false
     var proteinName: String!
@@ -67,7 +67,7 @@ class SearchViewController: UIViewController {
                 let jsonObj = try JSON(data: data)
                 for (_, subJson):(String, JSON) in jsonObj {
                     if subJson["Food"].stringValue.lowercased().contains(keyword.lowercased()) {
-                        self.resultArray.append([subJson["Food"].stringValue, subJson["Protein"].stringValue])
+                        self.resultArray.append(Food(name: subJson["Food"].stringValue, proteinContent: subJson["Protein"].stringValue))
                     }
                 }
                 self.tableView.reloadData()
@@ -83,67 +83,38 @@ class SearchViewController: UIViewController {
     }
     
     func getProteinKo(_ keyword: String) {
-        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String else {
-            return
-        }
-        guard let urlcomponents = URLComponents(string: "http://openapi.foodsafetykorea.go.kr/api/\(apiKey)/I2790/json/1/5/DESC_KOR=\(keyword)") else {
-            print("url틀렸다")
-            return
-        }
-
+        //테스트
+        let startDate = Date()
+        
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String else { return }
+        guard let urlcomponents = URLComponents(string: "http://openapi.foodsafetykorea.go.kr/api/\(apiKey)/I2790/json/1/5/DESC_KOR=\(keyword)") else { return }
+        
         guard let requestUrl = urlcomponents.url else { return }
-
+        
         // URLRequest 생성
         var request = URLRequest(url: requestUrl)
         request.httpMethod = "GET"
-
-        // URLSession을 사용하여 데이터 요청 및 처리
-        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                print("여기")
-                print("Error: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                print("Invalid response")
-                return
-            }
-            
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data else {
-                print("No data received")
+                print("Error: No data returned from API")
                 return
             }
             
             do {
-                let json = JSON(data)
-                  let items = json["I2790"]["row"]
-                for i in items {
-                    let protein = i.1["NUTR_CONT3"].stringValue
-                    let food = i.1["DESC_KOR"].stringValue
-                    if self.resultArray.isEmpty {
-                        self.resultArray.append([food, protein])
-                    }else {
-                        var flag = false
-                        for i in self.resultArray {
-                            if i[0] == food {
-                                flag = true
-                            }
-                        }
-                        if !flag {
-                            self.resultArray.append([food, protein])
-                        }
-                    }
-                }
+                let apiResponse = try JSONDecoder().decode(APIData.self, from: data)
+                self.resultArray = apiResponse.I2790.row
                 DispatchQueue.main.async {
                     self.progress.dismiss()
                     self.tableView.reloadData()
+                    print("소요시간:\(Date().timeIntervalSince(startDate))")
                 }
                 
+            } catch {
+                print("Error decoding API response: \(error)")
             }
+            
         }
-
         task.resume()
     }
 }
@@ -207,7 +178,7 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ResultSearchTableViewCell.identifier, for: indexPath) as? ResultSearchTableViewCell else {return UITableViewCell()}
                 
                 let row = resultArray[indexPath.row]
-                cell.setText(name: row[0], protein: "\(row[1])g")
+                cell.setText(name: row.name, protein: "\(row.proteinContent)g")
                 return cell
         
             } else {
@@ -237,8 +208,8 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
         }else {
             if !errorFlag && !resultArray.isEmpty {
                 let row = resultArray[indexPath.row]
-                NotificationCenter.default.post(name: .proteinName, object: nil, userInfo: ["name" : row[0]])
-                NotificationCenter.default.post(name: .proteinIntake, object: nil, userInfo: ["intake" : row[1]])
+                NotificationCenter.default.post(name: .proteinName, object: nil, userInfo: ["name" : row.name])
+                NotificationCenter.default.post(name: .proteinIntake, object: nil, userInfo: ["intake" : row.proteinContent])
                 self.dismiss(animated: true, completion: nil)
             }
         }

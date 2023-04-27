@@ -65,6 +65,7 @@
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
+		ABCA62DE29E2BD9C00B0E7C1 /* ProteinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DD29E2BD9C00B0E7C1 /* ProteinModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -121,6 +122,7 @@
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
+		ABCA62DD29E2BD9C00B0E7C1 /* ProteinModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProteinModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -268,6 +270,7 @@
 			isa = PBXGroup;
 			children = (
 				37AA9E872752707C00E3EFC1 /* RealmModel.swift */,
+				ABCA62DD29E2BD9C00B0E7C1 /* ProteinModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -388,6 +391,7 @@
 				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,
 				37AA9E882752707C00E3EFC1 /* RealmModel.swift in Sources */,
+				ABCA62DE29E2BD9C00B0E7C1 /* ProteinModel.swift in Sources */,
 				ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */,
 				3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */,
 				37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */,
