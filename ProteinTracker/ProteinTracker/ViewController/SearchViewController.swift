@@ -64,15 +64,12 @@ class SearchViewController: UIViewController {
         if let path = Bundle.main.path(forResource: "Protein-En", ofType: "json") {
             do {
                 let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .alwaysMapped)
-                let jsonObj = try JSON(data: data)
-                for (_, subJson):(String, JSON) in jsonObj {
-                    if subJson["Food"].stringValue.lowercased().contains(keyword.lowercased()) {
-                        self.resultArray.append(Food(name: subJson["Food"].stringValue, proteinContent: subJson["Protein"].stringValue))
-                    }
-                }
+                let apiResponse = try JSONDecoder().decode([Food].self, from: data)
+                self.resultArray = apiResponse
                 self.tableView.reloadData()
                 progress.dismiss()
             } catch {
+                print(error)
                 errorFlag = true
                 self.tableView.reloadData()
             }
@@ -178,7 +175,15 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
                 guard let cell = tableView.dequeueReusableCell(withIdentifier: ResultSearchTableViewCell.identifier, for: indexPath) as? ResultSearchTableViewCell else {return UITableViewCell()}
                 
                 let row = resultArray[indexPath.row]
-                cell.setText(name: row.name, protein: "\(row.proteinContent)g")
+                
+                if let name = row.name, let protein = row.proteinContent {
+                    cell.setText(name: name, protein: protein + "g")
+                }else if let name = row.name2, let protein = row.proteinContent2 {
+                    cell.setText(name: name, protein: "\(protein)g")
+                }else {
+                    cell.setText(name: "", protein: "g")
+                }
+                
                 return cell
         
             } else {

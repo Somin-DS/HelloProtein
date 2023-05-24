@@ -16,11 +16,15 @@ struct Row: Codable {
 }
 
 struct Food: Codable {
-    let name: String
-    let proteinContent: String
+    let name: String?
+    let proteinContent: String?
+    let name2: String?
+    let proteinContent2: Double?
     
     enum CodingKeys: String, CodingKey {
         case name = "DESC_KOR"
         case proteinContent = "NUTR_CONT3"
+        case name2 = "Food"
+        case proteinContent2 = "Protein"
     }
 }
