@@ -64,6 +64,8 @@
 		AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */; };
 		AB873D8B2A2C40B500859E0F /* FocusingTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */; };
 		AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB873D992A2C476E00859E0F /* SnapKit */; };
+		AB873DA42A2C66A300859E0F /* DailyTargetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */; };
+		AB873DA72A2C66EC00859E0F /* DailyTarget.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */; };
 		AB873DAA2A2C75B600859E0F /* ActivateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA92A2C75B600859E0F /* ActivateButton.swift */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
@@ -123,6 +125,8 @@
 		37FB9857274D0D6800C29698 /* Init.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Init.storyboard; sourceTree = "<group>"; };
 		AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusingTextField.swift; sourceTree = "<group>"; };
+		AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetViewController.swift; sourceTree = "<group>"; };
+		AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = DailyTarget.storyboard; sourceTree = "<group>"; };
 		AB873DA92A2C75B600859E0F /* ActivateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivateButton.swift; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
@@ -303,6 +307,7 @@
 			isa = PBXGroup;
 			children = (
 				AB873DA82A2C758E00859E0F /* ActivateButton */,
+				AB873DA02A2C667900859E0F /* DailyTargetView */,
 				AB873D8C2A2C40C700859E0F /* TextField */,
 			);
 			path = Common;
@@ -314,6 +319,23 @@
 				AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */,
 			);
 			path = TextField;
+			sourceTree = "<group>";
+		};
+		AB873DA02A2C667900859E0F /* DailyTargetView */ = {
+			isa = PBXGroup;
+			children = (
+				AB873DA12A2C668800859E0F /* View */,
+			);
+			path = DailyTargetView;
+			sourceTree = "<group>";
+		};
+		AB873DA12A2C668800859E0F /* View */ = {
+			isa = PBXGroup;
+			children = (
+				AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */,
+				AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */,
+			);
+			path = View;
 			sourceTree = "<group>";
 		};
 		AB873DA82A2C758E00859E0F /* ActivateButton */ = {
@@ -411,6 +433,7 @@
 				37FB9841274BEAD100C29698 /* Stats.storyboard in Resources */,
 				374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */,
 				3728B244275D0AE60098BDCF /* Protein-En.json in Resources */,
+				AB873DA72A2C66EC00859E0F /* DailyTarget.storyboard in Resources */,
 				378A79692758CEA9008ECDE1 /* Binggrae-Bold.ttf in Resources */,
 				37FB9858274D0D6800C29698 /* Init.storyboard in Resources */,
 				37FB9835274BEA5F00C29698 /* LaunchScreen.storyboard in Resources */,
@@ -461,6 +484,7 @@
 				37FB984A274D021900C29698 /* SettingViewController.swift in Sources */,
 				37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */,
 				37FB9852274D085D00C29698 /* ShowTableViewCell.swift in Sources */,
+				AB873DA42A2C66A300859E0F /* DailyTargetViewController.swift in Sources */,
 				3752AD89274FEBBB001C5079 /* Storage.swift in Sources */,
 				3728B25127608EB60098BDCF /* NSNotification+Extension.swift in Sources */,
 				3728B248275D37280098BDCF /* SettingLanguageViewController.swift in Sources */,
