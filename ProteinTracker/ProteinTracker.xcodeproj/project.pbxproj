@@ -62,6 +62,7 @@
 		37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9855274D0D5D00C29698 /* InitViewController.swift */; };
 		37FB9858274D0D6800C29698 /* Init.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB9857274D0D6800C29698 /* Init.storyboard */; };
 		AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */; };
+		AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB873D992A2C476E00859E0F /* SnapKit */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
@@ -140,6 +141,7 @@
 				37AA9E9B275383E500E3EFC1 /* Algorithms in Frameworks */,
 				37AA9E7A27526B8C00E3EFC1 /* Realm in Frameworks */,
 				37EEADC5275229F000B06EF7 /* TextFieldEffects in Frameworks */,
+				AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -310,6 +312,7 @@
 				37AA9E9A275383E500E3EFC1 /* Algorithms */,
 				37AA9EA02753856900E3EFC1 /* Charts */,
 				3728B24C275E58420098BDCF /* JGProgressHUD */,
+				AB873D992A2C476E00859E0F /* SnapKit */,
 			);
 			productName = ProteinTracker;
 			productReference = 37FB9825274BEA5C00C29698 /* ProteinTracker.app */;
@@ -349,6 +352,7 @@
 				37AA9E99275383E500E3EFC1 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
 				37AA9E9F2753856800E3EFC1 /* XCRemoteSwiftPackageReference "Charts" */,
 				3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */,
+				AB873D982A2C476E00859E0F /* XCRemoteSwiftPackageReference "SnapKit" */,
 			);
 			productRefGroup = 37FB9826274BEA5C00C29698 /* Products */;
 			projectDirPath = "";
@@ -744,6 +748,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		AB873D982A2C476E00859E0F /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -791,6 +803,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 37EEADC3275229F000B06EF7 /* XCRemoteSwiftPackageReference "TextFieldEffects" */;
 			productName = TextFieldEffects;
+		};
+		AB873D992A2C476E00859E0F /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB873D982A2C476E00859E0F /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
