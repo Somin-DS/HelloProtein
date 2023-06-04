@@ -62,9 +62,8 @@
 		37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9855274D0D5D00C29698 /* InitViewController.swift */; };
 		37FB9858274D0D6800C29698 /* Init.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB9857274D0D6800C29698 /* Init.storyboard */; };
 		AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */; };
-		AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB873D992A2C476E00859E0F /* SnapKit */; };
 		AB873D8B2A2C40B500859E0F /* FocusingTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */; };
-		AB873D922A2C412C00859E0F /* View.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB873D912A2C412C00859E0F /* View.xib */; };
+		AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB873D992A2C476E00859E0F /* SnapKit */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
@@ -123,7 +122,6 @@
 		37FB9857274D0D6800C29698 /* Init.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Init.storyboard; sourceTree = "<group>"; };
 		AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusingTextField.swift; sourceTree = "<group>"; };
-		AB873D912A2C412C00859E0F /* View.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = View.xib; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
@@ -311,7 +309,6 @@
 			isa = PBXGroup;
 			children = (
 				AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */,
-				AB873D912A2C412C00859E0F /* View.xib */,
 			);
 			path = TextField;
 			sourceTree = "<group>";
@@ -399,7 +396,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */,
-				AB873D922A2C412C00859E0F /* View.xib in Resources */,
 				375131B327678449009603A0 /* GoogleService-Info.plist in Resources */,
 				37FB9841274BEAD100C29698 /* Stats.storyboard in Resources */,
 				374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */,

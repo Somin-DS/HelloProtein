@@ -26,6 +26,9 @@ extension UIView {
         self.layer.masksToBounds = true
         self.layer.cornerRadius = 10
         self.backgroundColor = .gray10
+        self.snp.makeConstraints { make in
+            make.height.equalTo(44)
+        }
     }
     
 }
