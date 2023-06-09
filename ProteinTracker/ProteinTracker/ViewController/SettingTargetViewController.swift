@@ -72,7 +72,7 @@ class SettingTargetViewController: UIViewController {
         recommendResultLabel.setText(text: "", font: UIFont().bodyFont)
         recommendResultLabel.numberOfLines = 0
         recommendResultLabel.backgroundColor = .white
-        calculateButton.setText(text: LocalizeStrings.init_callabel.localized, font: UIFont().bodyFont, textColor: .black)
+        calculateButton.setButtonColorText(text: LocalizeStrings.init_callabel.localized, font: UIFont().bodyFont, textColor: .black)
         calculatorTitleLabel.setText(text: LocalizeStrings.init_cacultitle.localized, font: UIFont().subFont)
         weightTitleLabel.setCommonLayout(cornerRadius: 10, borderWidth: 2)
         weightTitleLabel.setText(text: LocalizeStrings.init_weigthTitle.localized, font: UIFont().labelFont)
@@ -84,7 +84,7 @@ class SettingTargetViewController: UIViewController {
         activityTextField.setText(placeholder: LocalizeStrings.init_activityfield.localized, font: UIFont().strFont, textAlignment: .center)
         targetProteinTextField.setCommonLayout(cornerRadius: 10, borderWidth: 2)
         targetProteinTextField.setText(placeholder: LocalizeStrings.init_targetfield.localized, font: UIFont().bodyFont, textAlignment: .center)
-        editButton.setText(text: LocalizeStrings.setting_edit.localized, font: UIFont().bodyFont, textColor: .black)
+        editButton.setButtonColorText(text: LocalizeStrings.setting_edit.localized, font: UIFont().bodyFont, textColor: .black)
         editButton.setCornerRadius(cornerRadius: 25)
         editButton.backgroundColor = UIColor().buttonGreen
 

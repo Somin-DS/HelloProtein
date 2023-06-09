@@ -83,7 +83,7 @@ class InitViewController: UIViewController {
         recommendResultLabel.setText(text: "", font: UIFont().bodyFont)
         recommendResultLabel.numberOfLines = 0
         recommendResultLabel.backgroundColor = .white
-        calculateButton.setText(text: LocalizeStrings.init_callabel.localized, font: UIFont().bodyFont, textColor: .black)
+        calculateButton.setButtonColorText(text: LocalizeStrings.init_callabel.localized, font: UIFont().bodyFont, textColor: .black)
         calculatorTitleLabel.setText(text: LocalizeStrings.init_cacultitle.localized, font: UIFont().subFont)
         weightTitleLabel.setCommonLayout(cornerRadius: 10, borderWidth: 2)
         weightTitleLabel.setText(text: LocalizeStrings.init_weigthTitle.localized, font: UIFont().labelFont)
@@ -96,7 +96,7 @@ class InitViewController: UIViewController {
         targetProteinTextField.setCommonLayout(cornerRadius: 10, borderWidth: 2)
         targetProteinTextField.setText(placeholder: LocalizeStrings.init_targetfield.localized, font: UIFont().bodyFont, textAlignment: .center)
         startButton.setCommonLayout(cornerRadius: 20, borderWidth: 8)
-        startButton.setText(text: LocalizeStrings.init_startbutton.localized, font: UIFont().subFont, textColor: .black)
+        startButton.setButtonColorText(text: LocalizeStrings.init_startbutton.localized, font: UIFont().subFont, textColor: .black)
     }
     
    // 계산버튼 눌렀을때

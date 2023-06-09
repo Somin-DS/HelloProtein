@@ -66,12 +66,12 @@ class AddViewController: UIViewController {
         proteinNameTextField.setCommonLayout(cornerRadius: 20, borderWidth: 2)
         intakeTextField.font = UIFont().bodyFont
         intakeTextField.setCommonLayout(cornerRadius: 20, borderWidth: 2)
-        customerAddButton.setText(text: LocalizeStrings.add_button.localized, font: UIFont().bodyFont, textColor: .black)
+        customerAddButton.setButtonColorText(text: LocalizeStrings.add_button.localized, font: UIFont().bodyFont, textColor: .black)
         customerAddButton.setCornerRadius(cornerRadius: 10)
         customerAddButton.backgroundColor = UIColor().buttonGreen
         favoriteTitleLabel.setText(text: LocalizeStrings.add_favoritelabel.localized, font: UIFont().subFont)
         favoriteAddButton.setCornerRadius(cornerRadius: 10)
-        favoriteAddButton.setText(text: LocalizeStrings.add_button.localized, font: UIFont().bodyFont, textColor: .black)
+        favoriteAddButton.setButtonColorText(text: LocalizeStrings.add_button.localized, font: UIFont().bodyFont, textColor: .black)
         favoriteAddButton.backgroundColor = UIColor().buttonGreen
         searchButton.setCommonLayout(cornerRadius: 15, borderWidth: 2)
     }

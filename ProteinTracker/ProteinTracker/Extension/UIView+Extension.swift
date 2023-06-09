@@ -57,9 +57,9 @@ extension UILabel {
 }
 
 extension UIButton {
-    func setText(text: String, font: UIFont, textColor: UIColor) {
+    func setButtonColorText(text: String, font: UIFont, textColor: UIColor) {
         self.setTitle(text, for: .normal)
         self.titleLabel?.font = font
-        self.tintColor = textColor
+        self.setTitleColor(textColor, for: .normal)
     }
 }
