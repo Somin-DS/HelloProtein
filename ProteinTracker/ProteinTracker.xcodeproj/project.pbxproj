@@ -67,6 +67,7 @@
 		AB873DA42A2C66A300859E0F /* DailyTargetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */; };
 		AB873DA72A2C66EC00859E0F /* DailyTarget.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */; };
 		AB873DAA2A2C75B600859E0F /* ActivateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA92A2C75B600859E0F /* ActivateButton.swift */; };
+		AB873DAE2A33732B00859E0F /* FocusingTextField.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB873DAD2A33732B00859E0F /* FocusingTextField.xib */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
@@ -128,6 +129,7 @@
 		AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetViewController.swift; sourceTree = "<group>"; };
 		AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = DailyTarget.storyboard; sourceTree = "<group>"; };
 		AB873DA92A2C75B600859E0F /* ActivateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivateButton.swift; sourceTree = "<group>"; };
+		AB873DAD2A33732B00859E0F /* FocusingTextField.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FocusingTextField.xib; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
@@ -317,6 +319,7 @@
 			isa = PBXGroup;
 			children = (
 				AB873D8A2A2C40B500859E0F /* FocusingTextField.swift */,
+				AB873DAD2A33732B00859E0F /* FocusingTextField.xib */,
 			);
 			path = TextField;
 			sourceTree = "<group>";
@@ -441,6 +444,7 @@
 				37FB983F274BEAC600C29698 /* Add.storyboard in Resources */,
 				37BEA6F2274D34BC00C0AEF7 /* Localizable.strings in Resources */,
 				37FB9830274BEA5C00C29698 /* Show.storyboard in Resources */,
+				AB873DAE2A33732B00859E0F /* FocusingTextField.xib in Resources */,
 				37BEA6FD274D4A2300C0AEF7 /* InfoPlist.strings in Resources */,
 				37FB983D274BEAAD00C29698 /* Setting.storyboard in Resources */,
 			);

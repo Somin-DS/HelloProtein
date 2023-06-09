@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="21507" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21505"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="FocusingTextField" customModule="ProteinTracker" customModuleProvider="target">
+            <connections>
+                <outlet property="highlightView" destination="7NZ-FQ-YjZ" id="QYu-XJ-XYe"/>
+                <outlet property="textField" destination="Jsz-QB-vfd" id="Qga-w1-2MS"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7NZ-FQ-YjZ">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                </view>
+                <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Jsz-QB-vfd">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <textInputTraits key="textInputTraits"/>
+                </textField>
+            </subviews>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="Jsz-QB-vfd" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="8WC-OX-013"/>
+                <constraint firstAttribute="trailing" secondItem="7NZ-FQ-YjZ" secondAttribute="trailing" id="CDV-H7-J2B"/>
+                <constraint firstAttribute="bottom" secondItem="Jsz-QB-vfd" secondAttribute="bottom" id="Cp6-cv-Zoq"/>
+                <constraint firstItem="7NZ-FQ-YjZ" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="GtU-Bi-BjQ"/>
+                <constraint firstAttribute="trailing" secondItem="Jsz-QB-vfd" secondAttribute="trailing" id="JOe-Cd-F9Y"/>
+                <constraint firstItem="7NZ-FQ-YjZ" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="VqO-oh-0nH"/>
+                <constraint firstItem="Jsz-QB-vfd" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="b2H-NQ-aO9"/>
+                <constraint firstAttribute="bottom" secondItem="7NZ-FQ-YjZ" secondAttribute="bottom" id="fIO-sb-a26"/>
+            </constraints>
+            <point key="canvasLocation" x="82" y="20"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
