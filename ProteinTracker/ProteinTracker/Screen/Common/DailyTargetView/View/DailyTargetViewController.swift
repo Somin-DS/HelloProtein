@@ -12,6 +12,7 @@ enum DailyTargetType {
 }
 class DailyTargetViewController: UIViewController {
 
+final class DailyTargetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
