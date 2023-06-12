@@ -71,3 +71,29 @@
 "search_error" = "오류가 발생했습니다. 다시 시도해주세요";
 "search_empty" = "검색결과가 없습니다";
 "search_button" = "추가";
+
+
+//V.2
+
+//Daily Target
+
+"DT_weightTitle" = "체중";
+"DT_activityLevelTitle" = "활동 수준";
+"DT_activityLevelOption1" = "비활동적";
+"DT_activityLevelOption2" = "가벼운 활동";
+"DT_activityLevelOption3" = "보통 활동";
+"DT_activityLevelOption4" = "매우 활동적";
+
+"DT_activityLevelOptionDesc1" = "비활동적인 생활, 운동 거의 없음";
+"DT_activityLevelOptionDesc2" = "가벼운 운동 또는 일상적인 활동";
+"DT_activityLevelOptionDesc3" = "적극적인 운동 또는 일상적인 활동과 강도 높은 운동을 조합";
+"DT_activityLevelOptionDesc4" = "매우 높은 강도의 운동, 체력 향상 운동, 체력 스포츠 등";
+
+"DT_optionalTitle" = "선택 사항";
+"DT_optionalOption1" = "임신 중";
+"DT_optionalOption2" = "수유 중";
+"DT_optionalOption3" = "노인";
+
+"DT_targetProteinTitle" = "목표 단백질(g/일)";
+"DT_targetProteinDesc" = "목표 단백질(g/일)을 직접 변경할 수 있습니다.";
+

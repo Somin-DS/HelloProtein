@@ -68,6 +68,7 @@
 		AB873DA72A2C66EC00859E0F /* DailyTarget.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */; };
 		AB873DAA2A2C75B600859E0F /* ActivateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA92A2C75B600859E0F /* ActivateButton.swift */; };
 		AB873DAE2A33732B00859E0F /* FocusingTextField.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB873DAD2A33732B00859E0F /* FocusingTextField.xib */; };
+		AB873DB22A37560900859E0F /* Protein-Jp.json in Resources */ = {isa = PBXBuildFile; fileRef = AB873DB12A37560900859E0F /* Protein-Jp.json */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
@@ -130,6 +131,9 @@
 		AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = DailyTarget.storyboard; sourceTree = "<group>"; };
 		AB873DA92A2C75B600859E0F /* ActivateButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivateButton.swift; sourceTree = "<group>"; };
 		AB873DAD2A33732B00859E0F /* FocusingTextField.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FocusingTextField.xib; sourceTree = "<group>"; };
+		AB873DB12A37560900859E0F /* Protein-Jp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "Protein-Jp.json"; sourceTree = "<group>"; };
+		AB873DC32A375C2D00859E0F /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AB873DC42A375C3400859E0F /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
@@ -293,6 +297,7 @@
 			children = (
 				37FB9831274BEA5F00C29698 /* Assets.xcassets */,
 				3728B243275D0AE60098BDCF /* Protein-En.json */,
+				AB873DB12A37560900859E0F /* Protein-Jp.json */,
 			);
 			path = Assets;
 			sourceTree = "<group>";
@@ -404,6 +409,7 @@
 				en,
 				Base,
 				ko,
+				ja,
 			);
 			mainGroup = 37FB981C274BEA5C00C29698;
 			packageReferences = (
@@ -439,6 +445,7 @@
 				AB873DA72A2C66EC00859E0F /* DailyTarget.storyboard in Resources */,
 				378A79692758CEA9008ECDE1 /* Binggrae-Bold.ttf in Resources */,
 				37FB9858274D0D6800C29698 /* Init.storyboard in Resources */,
+				AB873DB22A37560900859E0F /* Protein-Jp.json in Resources */,
 				37FB9835274BEA5F00C29698 /* LaunchScreen.storyboard in Resources */,
 				37FB9832274BEA5F00C29698 /* Assets.xcassets in Resources */,
 				37FB983F274BEAC600C29698 /* Add.storyboard in Resources */,
@@ -506,6 +513,7 @@
 			children = (
 				37BEA6F3274D34BC00C0AEF7 /* en */,
 				37BEA6F5274D34CC00C0AEF7 /* ko */,
+				AB873DC32A375C2D00859E0F /* ja */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -515,6 +523,7 @@
 			children = (
 				37BEA6FE274D4A2300C0AEF7 /* en */,
 				37BEA700274D4A2600C0AEF7 /* ko */,
+				AB873DC42A375C3400859E0F /* ja */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

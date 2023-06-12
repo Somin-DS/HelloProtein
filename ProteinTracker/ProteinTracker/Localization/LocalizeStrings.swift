@@ -57,7 +57,25 @@ enum LocalizeStrings: String {
          search_resultTitle,
          search_error,
          search_empty,
-         search_button
+         search_button,
+         
+         DT_weightTitle,
+         DT_activityLevelTitle,
+         DT_activityLevelOption1,
+         DT_activityLevelOption2,
+         DT_activityLevelOption3,
+         DT_activityLevelOption4,
+         DT_activityLevelOptionDesc1,
+         DT_activityLevelOptionDesc2,
+         DT_activityLevelOptionDesc3,
+         DT_activityLevelOptionDesc4,
+         DT_optionalTitle,
+         DT_optionalOption1,
+         DT_optionalOption2,
+         DT_optionalOption3,
+         DT_targetProteinTitle,
+         DT_targetProteinDesc
+
     
     var localized: String {
         return self.rawValue.localized()

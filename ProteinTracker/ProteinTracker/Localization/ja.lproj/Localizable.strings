@@ -1,0 +1,30 @@
+/* 
+  Localizable.strings
+  ProteinTracker
+
+  Created by 박소민 on 2021/11/23.
+  
+*/
+
+//V.2
+
+//Daily Target
+"DT_weightTitle" = "体重";
+"DT_activityLevelTitle" = "活動レベル";
+"DT_activityLevelOption1" = "低活動";
+"DT_activityLevelOption2" = "軽度の運動";
+"DT_activityLevelOption3" = "適度な運動";
+"DT_activityLevelOption4" = "非常に活発な運動";
+
+"DT_activityLevelOptionDesc1" = "運動が少ない生活";
+"DT_activityLevelOptionDesc2" = "軽度の運動または日常活動";
+"DT_activityLevelOptionDesc3" = "定期的な運動または日常活動と激しい運動の組み合わせ";
+"DT_activityLevelOptionDesc4" = "高強度の運動、持久力トレーニング、スポーツ";
+
+"DT_optionalTitle" = "オプション";
+"DT_optionalOption1" = "妊娠中";
+"DT_optionalOption2" = "授乳中";
+"DT_optionalOption3" = "高齢者";
+
+"DT_targetProteinTitle" = "目標タンパク質（g/日）";
+"DT_targetProteinDesc" = "目標タンパク質（g/日）を手動で変更できます。";

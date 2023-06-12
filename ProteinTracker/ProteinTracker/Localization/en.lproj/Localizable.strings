@@ -73,3 +73,27 @@
 "search_error" = "Error. Please Try again";
 "search_empty" = "No Match Found";
 "search_button" = "add";
+
+//V.2
+
+//Daily Target
+
+"DT_weightTitle" = "Weight";
+"DT_activityLevelTitle" = "Activity Level";
+"DT_activityLevelOption1" = "Sedentary";
+"DT_activityLevelOption2" = "Light";
+"DT_activityLevelOption3" = "Moderate";
+"DT_activityLevelOption4" = "Very Active"
+
+"DT_activityLevelOptionDesc1" = "Sedentary lifestyle, little to no exercise";
+"DT_activityLevelOptionDesc2" = "Light exercise or daily activities";
+"DT_activityLevelOptionDesc3" = "Regular exercise or a combination of daily activities and intense exercise";
+"DT_activityLevelOptionDesc4" = "High-intensity exercise, endurance training, sports";
+
+"DT_optionalTitle" = "Optional";
+"DT_optionalOption1" = "Pregnant";
+"DT_optionalOption2" = "Breastfeeding";
+"DT_optionalOption3" = "Elderly";
+
+"DT_targetProteinTitle" = "Target Protein(g/day)";
+"DT_targetProteinDesc" = "You can change Target Protein(g/day) manually.";
