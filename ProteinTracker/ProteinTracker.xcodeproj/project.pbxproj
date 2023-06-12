@@ -69,6 +69,8 @@
 		AB873DAA2A2C75B600859E0F /* ActivateButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DA92A2C75B600859E0F /* ActivateButton.swift */; };
 		AB873DAE2A33732B00859E0F /* FocusingTextField.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB873DAD2A33732B00859E0F /* FocusingTextField.xib */; };
 		AB873DB22A37560900859E0F /* Protein-Jp.json in Resources */ = {isa = PBXBuildFile; fileRef = AB873DB12A37560900859E0F /* Protein-Jp.json */; };
+		AB873DC72A37665D00859E0F /* ActivityLevelTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */; };
+		AB873DC92A37666F00859E0F /* OptionalTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */; };
 		AB873DCF2A376B1200859E0F /* DailyTargetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
@@ -135,6 +137,8 @@
 		AB873DB12A37560900859E0F /* Protein-Jp.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "Protein-Jp.json"; sourceTree = "<group>"; };
 		AB873DC32A375C2D00859E0F /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AB873DC42A375C3400859E0F /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLevelTableViewCell.swift; sourceTree = "<group>"; };
+		AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalTableViewCell.swift; sourceTree = "<group>"; };
 		AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetModel.swift; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
@@ -344,6 +348,7 @@
 		AB873DA12A2C668800859E0F /* View */ = {
 			isa = PBXGroup;
 			children = (
+				AB873DC52A37661900859E0F /* Cell */,
 				AB873DA22A2C66A300859E0F /* DailyTargetViewController.swift */,
 				AB873DA62A2C66EC00859E0F /* DailyTarget.storyboard */,
 			);
@@ -356,6 +361,15 @@
 				AB873DA92A2C75B600859E0F /* ActivateButton.swift */,
 			);
 			path = ActivateButton;
+			sourceTree = "<group>";
+		};
+		AB873DC52A37661900859E0F /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */,
+				AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */,
+			);
+			path = Cell;
 			sourceTree = "<group>";
 		};
 		AB873DCA2A376A9000859E0F /* Model */ = {
@@ -504,6 +518,7 @@
 				3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */,
 				37EEADBE275206FD00B06EF7 /* ErrorHandler.swift in Sources */,
 				37FB9845274BECA600C29698 /* ShowViewController.swift in Sources */,
+				AB873DC72A37665D00859E0F /* ActivityLevelTableViewCell.swift in Sources */,
 				3788AFF32754F9DD0043E9D7 /* SettingTargetViewController.swift in Sources */,
 				ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */,
 				ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */,
@@ -513,6 +528,7 @@
 				37F3B8662755F81300641C80 /* Calendar+Extension.swift in Sources */,
 				3728B24A275D373F0098BDCF /* SettingLanguageTableViewCell.swift in Sources */,
 				37FB984A274D021900C29698 /* SettingViewController.swift in Sources */,
+				AB873DC92A37666F00859E0F /* OptionalTableViewCell.swift in Sources */,
 				37BEA6FA274D452300C0AEF7 /* LocalizeStrings.swift in Sources */,
 				37FB9852274D085D00C29698 /* ShowTableViewCell.swift in Sources */,
 				AB873DA42A2C66A300859E0F /* DailyTargetViewController.swift in Sources */,
