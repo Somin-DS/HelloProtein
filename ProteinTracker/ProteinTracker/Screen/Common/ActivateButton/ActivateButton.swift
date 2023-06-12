@@ -37,7 +37,7 @@ class ActivateButton: UIButton {
         self.setCornerRadius(cornerRadius: 24)
         self.backgroundColor = .gray50
         self.snp.makeConstraints { make in
-            make.height.equalTo(44)
+            make.height.equalTo(46)
         }
         self.isEnabled = false
     }
@@ -55,7 +55,7 @@ class ActivateButton: UIButton {
            }
         
         //TODO - font extension
-        self.setButtonColorText(text: title, font: UIFont(name: "SFProRounded-Semibold", size: 20) ?? UIFont(), textColor: .white)
+        self.setButtonColorText(text: title, font: .rounded(ofSize: 17, weight: .medium), textColor: .white)
        }
     
 }
