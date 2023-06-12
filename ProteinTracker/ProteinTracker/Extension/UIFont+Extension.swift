@@ -29,4 +29,16 @@ extension UIFont {
     var labelFont: UIFont {
         return UIFont(name: "Binggrae-Bold", size: 14)!
     }
+    
+    class func rounded(ofSize size: CGFloat, weight: UIFont.Weight) -> UIFont {
+        let systemFont = UIFont.systemFont(ofSize: size, weight: weight)
+        let font: UIFont
+        
+        if let descriptor = systemFont.fontDescriptor.withDesign(.rounded) {
+            font = UIFont(descriptor: descriptor, size: size)
+        } else {
+            font = systemFont
+        }
+        return font
+    }
 }
