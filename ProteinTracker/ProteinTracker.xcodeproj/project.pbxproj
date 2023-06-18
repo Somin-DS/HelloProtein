@@ -72,6 +72,8 @@
 		AB873DC72A37665D00859E0F /* ActivityLevelTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */; };
 		AB873DC92A37666F00859E0F /* OptionalTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */; };
 		AB873DCF2A376B1200859E0F /* DailyTargetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */; };
+		AB873DD32A3EBB5600859E0F /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD22A3EBB5600859E0F /* BaseViewController.swift */; };
+		AB873DD52A3EBB7600859E0F /* BaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD42A3EBB7600859E0F /* BaseViewModel.swift */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
@@ -140,6 +142,8 @@
 		AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLevelTableViewCell.swift; sourceTree = "<group>"; };
 		AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalTableViewCell.swift; sourceTree = "<group>"; };
 		AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetModel.swift; sourceTree = "<group>"; };
+		AB873DD22A3EBB5600859E0F /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
+		AB873DD42A3EBB7600859E0F /* BaseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewModel.swift; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
@@ -322,6 +326,8 @@
 				AB873DA82A2C758E00859E0F /* ActivateButton */,
 				AB873DA02A2C667900859E0F /* DailyTargetView */,
 				AB873D8C2A2C40C700859E0F /* TextField */,
+				AB873DD22A3EBB5600859E0F /* BaseViewController.swift */,
+				AB873DD42A3EBB7600859E0F /* BaseViewModel.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -508,6 +514,7 @@
 				3728B24F275E618F0098BDCF /* EmptyTableViewCell.swift in Sources */,
 				37FB984C274D022000C29698 /* AddViewController.swift in Sources */,
 				374508022757928B00A14A4C /* UIFont+Extension.swift in Sources */,
+				AB873DD32A3EBB5600859E0F /* BaseViewController.swift in Sources */,
 				378A796B2758D750008ECDE1 /* UIAlert+Extension.swift in Sources */,
 				37BEA6F8274D44FF00C0AEF7 /* String+Extension.swift in Sources */,
 				37FB9829274BEA5C00C29698 /* AppDelegate.swift in Sources */,
@@ -535,6 +542,7 @@
 				3752AD89274FEBBB001C5079 /* Storage.swift in Sources */,
 				3728B25127608EB60098BDCF /* NSNotification+Extension.swift in Sources */,
 				3728B248275D37280098BDCF /* SettingLanguageViewController.swift in Sources */,
+				AB873DD52A3EBB7600859E0F /* BaseViewModel.swift in Sources */,
 				37FB9850274D084E00C29698 /* FavoritesTableViewCell.swift in Sources */,
 				37EEADC027520E0D00B06EF7 /* CheckValid.swift in Sources */,
 				3728B2552760DB210098BDCF /* InfoOpenSourceViewController.swift in Sources */,
