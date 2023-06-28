@@ -83,7 +83,7 @@
 "DT_activityLevelOption1" = "Sedentary";
 "DT_activityLevelOption2" = "Light";
 "DT_activityLevelOption3" = "Moderate";
-"DT_activityLevelOption4" = "Very Active"
+"DT_activityLevelOption4" = "Very Active";
 
 "DT_activityLevelOptionDesc1" = "Sedentary lifestyle, little to no exercise";
 "DT_activityLevelOptionDesc2" = "Light exercise or daily activities";

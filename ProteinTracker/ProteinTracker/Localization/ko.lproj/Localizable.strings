@@ -90,9 +90,9 @@
 "DT_activityLevelOptionDesc4" = "매우 높은 강도의 운동, 체력 향상 운동, 체력 스포츠 등";
 
 "DT_optionalTitle" = "선택 사항";
-"DT_optionalOption1" = "임신 중";
-"DT_optionalOption2" = "수유 중";
-"DT_optionalOption3" = "노인";
+"DT_optionalOption1" = "임산부";
+"DT_optionalOption2" = "수유중";
+"DT_optionalOption3" = "노년층";
 
 "DT_targetProteinTitle" = "목표 단백질(g/일)";
 "DT_targetProteinDesc" = "목표 단백질(g/일)을 직접 변경할 수 있습니다.";
