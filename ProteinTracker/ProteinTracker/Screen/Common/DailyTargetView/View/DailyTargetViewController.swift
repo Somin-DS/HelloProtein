@@ -87,3 +87,21 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
         }
     }
 }
+
+extension DailyTargetViewController: UITextFieldDelegate, UIGestureRecognizerDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        if textField == weightTextField.textField {
+            weightTextField.isFocusing = true
+        } else {
+            targetProteinTextField.isFocusing = true
+        }
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        if textField == weightTextField.textField {
+            weightTextField.isFocusing = false
+        } else {
+            targetProteinTextField.isFocusing = false
+        }
+    }
+}
