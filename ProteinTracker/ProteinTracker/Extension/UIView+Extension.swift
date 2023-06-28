@@ -54,6 +54,13 @@ extension UILabel {
         self.font = font
         self.lineBreakMode = .byWordWrapping
     }
+    
+    func setTitleText(_ text: String?) {
+        guard let text = text else { return }
+        self.text = text
+        self.textColor = .secondaryLabel
+        self.font = .rounded(ofSize: 20, weight: .medium)
+    }
 }
 
 extension UIButton {
