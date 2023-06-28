@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class FocusingTextField: UIView {
+class FocusingTextField: BaseView {
 
     @IBOutlet weak var highlightView: UIView!
     @IBOutlet weak var textField: UITextField!
@@ -21,35 +21,27 @@ class FocusingTextField: UIView {
     
     var isFocusing = false {
         didSet {
-            highlightView.isHidden = isFocusing
+            highlightView.isHidden = !isFocusing
             setNeedsLayout()
         }
     }
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setView()
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setView()
-    }
-    
-    private func setView() {
-        guard let view = Bundle.main.loadNibNamed(
-            String(describing: type(of: self)), owner: self, options: nil)?.first as? UIView else {
-            return
-        }
-        view.frame = self.bounds
-        self.addSubview(view)
-        self.backgroundColor = .clear
+
+    override func initView() {
+        self.backgroundColor = .white
         self.setCornerRadius(cornerRadius: 10)
-        self.layer.borderColor = UIColor.pLBlue10?.cgColor
-        self.layer.borderWidth = 2
         self.snp.makeConstraints { make in
             make.height.equalTo(44)
         }
+        setHighlightView()
     }
     
+    private func setHighlightView() {
+        highlightView.setCornerRadius(cornerRadius: 10)
+        highlightView.layer.borderColor = UIColor.pLBlue10?.cgColor
+        highlightView.layer.borderWidth = 2
+        highlightView.backgroundColor = .clear
+        highlightView.isHidden = true
+    }
     func configureKeyboard(_ type: UIKeyboardType) {
         textField.textAlignment = .center
         textField.keyboardType = type
