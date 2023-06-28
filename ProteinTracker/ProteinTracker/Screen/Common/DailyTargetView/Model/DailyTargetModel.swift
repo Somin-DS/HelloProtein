@@ -11,17 +11,18 @@ enum ActivityLevel {
     case sedentary, light, moderate, veryActive
 }
 
-enum targetOption {
+enum TargetOption {
     case pregnant, breastfeeding, elderly
 }
 
-enum Unit {
-    case kg, pound
+enum Unit: String {
+    case kg, lb
 }
+
 struct DailyTargetModel {
-    var weight: Double
-    var weightUnit: Unit
-    var activityLevel: ActivityLevel
-    var optional: targetOption
-    var targetProtein: Int
+    var weight: Double?
+    var weightUnit: Unit?
+    var activityLevel: ActivityLevel?
+    var optional: TargetOption?
+    var targetProtein: Int = 0
 }
