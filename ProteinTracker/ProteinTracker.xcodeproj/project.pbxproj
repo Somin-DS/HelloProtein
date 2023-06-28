@@ -72,6 +72,7 @@
 		AB873DC72A37665D00859E0F /* ActivityLevelTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */; };
 		AB873DC92A37666F00859E0F /* OptionalTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */; };
 		AB873DCF2A376B1200859E0F /* DailyTargetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */; };
+		AB873DD12A376DD700859E0F /* DailyTargetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD02A376DD700859E0F /* DailyTargetViewModel.swift */; };
 		AB873DD32A3EBB5600859E0F /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD22A3EBB5600859E0F /* BaseViewController.swift */; };
 		AB873DD52A3EBB7600859E0F /* BaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD42A3EBB7600859E0F /* BaseViewModel.swift */; };
 		AB873DD72A4C5FF100859E0F /* BaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB873DD62A4C5FF100859E0F /* BaseView.swift */; };
@@ -143,6 +144,7 @@
 		AB873DC62A37665D00859E0F /* ActivityLevelTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLevelTableViewCell.swift; sourceTree = "<group>"; };
 		AB873DC82A37666F00859E0F /* OptionalTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalTableViewCell.swift; sourceTree = "<group>"; };
 		AB873DCE2A376B1200859E0F /* DailyTargetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetModel.swift; sourceTree = "<group>"; };
+		AB873DD02A376DD700859E0F /* DailyTargetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTargetViewModel.swift; sourceTree = "<group>"; };
 		AB873DD22A3EBB5600859E0F /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		AB873DD42A3EBB7600859E0F /* BaseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewModel.swift; sourceTree = "<group>"; };
 		AB873DD62A4C5FF100859E0F /* BaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseView.swift; sourceTree = "<group>"; };
@@ -392,6 +394,7 @@
 		AB873DCB2A376A9700859E0F /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				AB873DD02A376DD700859E0F /* DailyTargetViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -516,6 +519,7 @@
 				37EEADC227521A2200B06EF7 /* Calculator.swift in Sources */,
 				3728B24F275E618F0098BDCF /* EmptyTableViewCell.swift in Sources */,
 				37FB984C274D022000C29698 /* AddViewController.swift in Sources */,
+				AB873DD12A376DD700859E0F /* DailyTargetViewModel.swift in Sources */,
 				374508022757928B00A14A4C /* UIFont+Extension.swift in Sources */,
 				AB873DD32A3EBB5600859E0F /* BaseViewController.swift in Sources */,
 				378A796B2758D750008ECDE1 /* UIAlert+Extension.swift in Sources */,
