@@ -9,7 +9,7 @@ import UIKit
 
 class BaseViewController<T: BaseViewModel>: UIViewController {
 
-    private var viewModel: T?
+    var viewModel: T?
     
     var keyboardDelegate: KeyboardDelegate? {
         didSet {
@@ -35,7 +35,7 @@ class BaseViewController<T: BaseViewModel>: UIViewController {
         }
     }
 
-    private func initViewModel(_ viewModel: T?) {
+    func initViewModel(_ viewModel: T?) {
         self.viewModel = viewModel
     }
     
