@@ -15,7 +15,6 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
 
     @IBOutlet weak var weightLabel: UILabel!
     @IBOutlet weak var weightTextField: FocusingTextField!
-    @IBOutlet weak var weightSegementControl: UISegmentedControl!
     @IBOutlet weak var activeLabel: UILabel!
     @IBOutlet weak var activeTableView: UITableView!
     @IBOutlet weak var optionalLabel: UILabel!
@@ -24,6 +23,7 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
     @IBOutlet weak var targetProteinTextField: FocusingTextField!
     @IBOutlet weak var targetDescLabel: UILabel!
     private var activeButton = ActivateButton()
+    private var weightSegementControl: CustomSegmentedControl!
 
     private var type: DailyTargetType = .onboarding
     
@@ -32,6 +32,7 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
         initViewModel(DailyTargetViewModel())
         configureButton()
         setupUI()
+        setSegmentedControl()
         activeTableView.delegate = self
         activeTableView.dataSource = self
         optionalTableView.delegate = self
@@ -57,6 +58,20 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
         fatalError("init(coder:) has not been implemented")
     }
     
+    private func setSegmentedControl() {
+        if weightSegementControl == nil {
+            weightSegementControl = CustomSegmentedControl(items: [viewModel?.weightSegmentTitle[0], viewModel?.weightSegmentTitle[1]])
+            view.addSubview(weightSegementControl)
+            weightSegementControl.snp.makeConstraints { make in
+                make.height.equalTo(40)
+                make.top.equalTo(weightTextField.snp.top)
+                make.trailing.equalToSuperview().inset(16)
+                make.leading.equalTo(weightTextField.snp.trailing).offset(10)
+            }
+            weightSegementControl.selectedSegmentIndex = 0
+        }
+
+    }
     
     private func setupUI() {
         view.backgroundColor = .secondarySystemBackground
