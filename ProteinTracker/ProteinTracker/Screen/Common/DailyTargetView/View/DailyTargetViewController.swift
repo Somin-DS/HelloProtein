@@ -52,25 +52,25 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
     
     private func setupUI() {
         view.backgroundColor = .secondarySystemBackground
-        weightLabel.setTitleText(viewModel?.weightTitle)
+        weightLabel.setTitleText(viewModel?.weightTitle, color: .secondaryLabel, size: 17, weight: .semibold)
         weightTextField.configureKeyboard(.numberPad)
-        weightSegementControl.setTitle(viewModel?.weightSegmentTitle[0], forSegmentAt: 0)
-        weightSegementControl.setTitle(viewModel?.weightSegmentTitle[1], forSegmentAt: 1)
+        weightTextField.setPlaceholder("0")
         
-        activeLabel.setTitleText(viewModel?.activeTitle)
+        activeLabel.setTitleText(viewModel?.activeTitle, color: .secondaryLabel, size: 17, weight: .semibold)
         activeTableView.setCornerRadius(cornerRadius: 10)
         activeTableView.backgroundColor = .white
         
-        optionalLabel.setTitleText(viewModel?.optionalTitle)
+        optionalLabel.setTitleText(viewModel?.optionalTitle, color: .secondaryLabel, size: 17, weight: .semibold)
         optionalTableView.setCornerRadius(cornerRadius: 10)
         optionalTableView.backgroundColor = .white
         
-        targetProteinLabel.setTitleText(viewModel?.targetProteinTitle)
+        targetProteinLabel.setTitleText(viewModel?.targetProteinTitle, color: .secondaryLabel, size: 20)
         targetProteinTextField.configureKeyboard(.numberPad)
+        targetProteinTextField.setPlaceholder("0")
         
-        targetDescLabel.text = viewModel?.targetDescTitle
-        targetDescLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        targetDescLabel.textColor = .tertiaryLabel
+        targetDescLabel.setTitleText(viewModel?.targetDescTitle, color: .tertiaryLabel, size: 16)
+        
+        activeButton.tintColor = .secondaryLabel
     }
     
     private func configureButton() {

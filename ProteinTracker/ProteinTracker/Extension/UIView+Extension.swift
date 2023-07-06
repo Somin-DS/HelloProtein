@@ -55,11 +55,16 @@ extension UILabel {
         self.lineBreakMode = .byWordWrapping
     }
     
-    func setTitleText(_ text: String?) {
-        guard let text = text else { return }
+    func setTitleText(_ text: String?, color: UIColor? = .black, size: CGFloat? = nil, weight: UIFont.Weight? = nil) {
+        guard let text else { return }
         self.text = text
-        self.textColor = .secondaryLabel
-        self.font = .rounded(ofSize: 20, weight: .medium)
+        self.text = text
+        if let color = color {
+            self.textColor = color
+        }
+        let size = size ?? self.font.pointSize
+        let weight = weight ?? .regular
+        self.font = .rounded(ofSize: size, weight: weight)
     }
 }
 
