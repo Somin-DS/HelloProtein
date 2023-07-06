@@ -38,6 +38,14 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
         optionalTableView.dataSource = self
         weightTextField.textField.delegate = self
         targetProteinTextField.textField.delegate = self
+        
+        viewModel?.reloadTableView = { type in
+            if type == .activityLevel {
+                self.activeTableView.reloadData()
+            } else {
+                self.optionalTableView.reloadData()
+            }
+        }
     }
     
     init?(type: DailyTargetType, corder: NSCoder) {
@@ -84,6 +92,49 @@ final class DailyTargetViewController: BaseViewController<DailyTargetViewModel> 
             activeButton.setButton(.start)
         case .setting:
             activeButton.setButton(.update)
+        }
+    }
+}
+
+extension DailyTargetViewController: UITableViewDelegate, UITableViewDataSource {
+//    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+//        if tableView == activeTableView {
+//            activeTableView.cellForRow(at: indexPath as IndexPath)?.accessoryType = .checkmark
+//            viewModel?.selectCell(type: .activityLevel, at: indexPath)
+//        } else {
+//            optionalTableView.cellForRow(at: indexPath as IndexPath)?.accessoryType = .checkmark
+//            viewModel?.selectCell(type: .optiontional, at: indexPath)
+//        }
+//    }
+//
+//    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+//        if tableView == activeTableView {
+//            activeTableView.cellForRow(at: indexPath as IndexPath)?.accessoryType = .none
+//            viewModel?.selectCell(type: .activityLevel, at: indexPath)
+//        } else {
+//            optionalTableView.cellForRow(at: indexPath as IndexPath)?.accessoryType = .none
+//            viewModel?.selectCell(type: .optiontional, at: indexPath)
+//        }
+//    }
+//
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == activeTableView {
+            return viewModel?.numberOfActivityLevel ?? 0
+        } else {
+            return viewModel?.numberOfOptional ?? 0
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let viewModel = viewModel else { return UITableViewCell() }
+        if tableView == activeTableView {
+            guard let cell = activeTableView.dequeueReusableCell(withIdentifier: ActivityLevelTableViewCell.identifier, for: indexPath) as? ActivityLevelTableViewCell else { return UITableViewCell()}
+            cell.configureCell(viewModel: viewModel.getCellViewModel(type: .activityLevel, at: indexPath))
+            return cell
+        } else {
+            guard let cell = optionalTableView.dequeueReusableCell(withIdentifier: OptionalTableViewCell.identifier, for: indexPath) as? OptionalTableViewCell else { return UITableViewCell()}
+            cell.configureCell(viewModel: viewModel.getCellViewModel(type: .optiontional, at: indexPath))
+            return cell
         }
     }
 }
