@@ -29,9 +29,6 @@ class FocusingTextField: BaseView {
     override func initView() {
         self.backgroundColor = .white
         self.setCornerRadius(cornerRadius: 10)
-        self.snp.makeConstraints { make in
-            make.height.equalTo(44)
-        }
         setHighlightView()
     }
     
@@ -42,9 +39,14 @@ class FocusingTextField: BaseView {
         highlightView.backgroundColor = .clear
         highlightView.isHidden = true
     }
+    
     func configureKeyboard(_ type: UIKeyboardType) {
         textField.textAlignment = .center
         textField.keyboardType = type
+    }
+    
+    func setPlaceholder(_ text: String) {
+        textField.placeholder = text
     }
     
 }
