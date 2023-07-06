@@ -17,12 +17,6 @@ class BaseViewController<T: BaseViewModel>: UIViewController {
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setConstraints()
-        configureView()
-    }
-    
     override func viewWillAppear(_ animated: Bool) {
         if let keyboardDelegate {
             addKeyboardObserver()
@@ -37,14 +31,6 @@ class BaseViewController<T: BaseViewModel>: UIViewController {
 
     func initViewModel(_ viewModel: T?) {
         self.viewModel = viewModel
-    }
-    
-    func setConstraints() {
-        
-    }
-    
-    func configureView() {
-        
     }
     
     //TODO: 에러처리
