@@ -100,4 +100,12 @@ iOSInjectionProject/
 
 # End of https://www.toptal.com/developers/gitignore/api/xcode,swift
 *.xcconfig
+!ProteinTracker/ProteinTracker/Config.xcconfig
 GoogleService-Info.plist
+
+# Local headquarters reviews and working notes
+/agents/reports/
+/_INDEX.md
+
+# OMC runtime state
+/.omc/

@@ -6,72 +6,94 @@
 //
 
 import UIKit
+import MigrationCore
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-
+    private var launchGate: RenewalLaunchGate?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
-                setRootViewController(scene)
+        // No storyboard is named in Info.plist or the target settings, so
+        // nothing (in particular no `try! Realm()` in a storyboard-created
+        // view controller) runs before this method decides the route.
+        guard let windowScene = scene as? UIWindowScene else { return }
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
+
+        let paths = RenewalPaths.standard()
+        #if DEBUG
+        LegacyFixtureSeeder.seedIfRequested(arguments: ProcessInfo.processInfo.arguments, paths: paths)
+        #endif
+
+        let gate = RenewalLaunchGate(paths: paths)
+        launchGate = gate
+        switch gate.route() {
+        case .legacy:
+            setRootViewController()
+        case .renewal:
+            startRenewal()
+        case .renewalUnsupportedOS:
+            window.rootViewController = RecoveryViewController(presentation: .unsupportedOS, retry: nil)
+        }
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
-        // Called as the scene is being released by the system.
-        // This occurs shortly after the scene enters the background, or when its session is discarded.
-        // Release any resources associated with this scene that can be re-created the next time the scene connects.
-        // The scene may re-connect later, as its session was not necessarily discarded (see `application:didDiscardSceneSessions` instead).
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        // Called when the scene has moved from an inactive state to an active state.
-        // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
-        // Called when the scene will move from an active state to an inactive state.
-        // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        // Called as the scene transitions from the background to the foreground.
-        // Use this method to undo the changes made on entering the background.
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
-        // Called as the scene transitions from the foreground to the background.
-        // Use this method to save data, release shared resources, and store enough scene-specific state information
-        // to restore the scene back to its current state.
     }
 
 }
 
-//Onboarding Page 구현
+// MARK: - Renewal flow (explicit opt-in, see RenewalLaunchPolicy)
 extension SceneDelegate {
-    private func setRootViewController(_ scene: UIScene){
-        if Storage.isSetDefaut() {
-            setRootView(scene, name: "Show", identifier: "ShowViewController")
-        } else {
-            setRootView(scene, name: "Init", identifier: "InitViewController")
+    private func startRenewal() {
+        guard let gate = launchGate, let window else { return }
+        window.rootViewController = LaunchLoadingViewController()
+        gate.run { [weak self] outcome in
+            guard let self, let window = self.window else { return }
+            switch outcome {
+            case .ready(let state):
+                if let root = RenewalRootFactory.makeRecordHome(store: gate.store, state: state) {
+                    window.rootViewController = root
+                } else {
+                    window.rootViewController = RecoveryViewController(presentation: .unsupportedOS, retry: nil)
+                }
+            case .recovery(let recovery):
+                window.rootViewController = RecoveryViewController(presentation: .recovery(recovery)) { [weak self] in
+                    self?.startRenewal()
+                }
+            }
         }
     }
-    
-    private func setRootView(_ scene: UIScene, name: String, identifier: String) {
-        if let windowScene = scene as? UIWindowScene {
-            let window = UIWindow(windowScene: windowScene)
-            let storyBoard = UIStoryboard(name: name, bundle: nil)
-            let viewController = storyBoard.instantiateViewController(withIdentifier: identifier)
-            let navigationController = UINavigationController(rootViewController: viewController)
-            window.rootViewController = navigationController
-            self.window = window
-            window.makeKeyAndVisible()
-
-        }
-    }
-    
 }
 
+// MARK: - Legacy flow (unchanged behaviour, now created explicitly)
+extension SceneDelegate {
+    private func setRootViewController() {
+        if Storage.isSetDefaut() {
+            setRootView(name: "Show", identifier: "ShowViewController")
+        } else {
+            setRootView(name: "Init", identifier: "InitViewController")
+        }
+    }
+
+    private func setRootView(name: String, identifier: String) {
+        guard let window else { return }
+        let storyBoard = UIStoryboard(name: name, bundle: nil)
+        let viewController = storyBoard.instantiateViewController(withIdentifier: identifier)
+        let navigationController = UINavigationController(rootViewController: viewController)
+        window.rootViewController = navigationController
+    }
+}
