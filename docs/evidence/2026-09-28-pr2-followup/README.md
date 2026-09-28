@@ -29,13 +29,15 @@
 | S3b-pending-section-in-sheet.png | 경고를 닫아도 시트와 입력(tuna, 15)이 유지되고 "This save couldn't be confirmed…" 안내와 `Check saved result` 버튼만 활성. 이 시점 디스크의 `app-state.json`에는 이미 `lastOperationID 8332095D-…`와 09-28 `('tuna', 1500)`이 있으나 화면은 마지막 확정 상태(0g)를 유지 |
 | S3c-after-reconfirm-one-row.png | `Check saved result` 누름: 저장소를 다시 읽어 pending 작업 ID 일치 → 시트 닫힘, 홈 15g / `tuna, 15g` 한 행. 자동 재저장 없음 |
 | S3d-relaunch-one-row.png | 주입 인자 없이 재실행: 15g / `tuna, 15g` 한 행, `lastOperationID` 동일, 중복 행 없음 |
+| S3e-inputs-locked-while-unconfirmed.png | (2차 리뷰 반영 빌드 `app-build-8-debug.log`) egg / 10 저장이 미확정된 뒤 접근성 트리에서 두 입력란이 `text field (disabled)`로 바뀌고, 단백질을 20으로 바꾸려는 AXSetValue가 `value_not_settable`로 거부됨. 재확인 후 `egg, 10g` 한 행, 디스크도 동일 |
 
 ## 자동 테스트 (같은 변경 기준)
 | 대상 | 결과 | 로그 |
 | --- | --- | --- |
 | HelloProteinCore `swift test` | 45개 통과, exit 0 | `/private/tmp/helloprotein-next/core-tests-5.log` |
-| MigrationCore `swift test` | 63개 통과, exit 0 | `/private/tmp/helloprotein-next/migration-tests-5.log` |
-| ProteinTrackerTests (iOS 시뮬레이터) | 30개 통과, TEST SUCCEEDED, exit 0 | `/private/tmp/helloprotein-next/app-test-8.log`, `test-8.xcresult` |
+| MigrationCore `swift test` | 64개 통과, exit 0 | `/private/tmp/helloprotein-next/migration-tests-6.log` |
+| ProteinTrackerTests (iOS 시뮬레이터) | 30개 통과, TEST SUCCEEDED, exit 0 | `/private/tmp/helloprotein-next/app-test-10.log`, `test-10.xcresult` |
+| 앱 Debug / Release 빌드 (2차 리뷰 반영) | 둘 다 성공, exit 0, Release에 주입 문자열 없음 | `app-build-8-debug.log`, `app-build-8-release.log` |
 
 리뷰 반영 전 수치는 43 / 61 / 28(`core-tests-4.log`, `migration-tests-4.log`, `app-test-6.log`)이었다.
 
@@ -52,6 +54,10 @@
 - m9: 백업의 `captureFormatVersion` 상위 버전을 본문 디코드 뒤에만 잡았다 → 버전 프로브에서 함께 확인(`testNewerCaptureFormatInsideBackupIsUnsupported…`).
 - nit: `-HelloProteinFailAfterReplaceOnce`가 `YES`만 받았다 → 다른 플래그와 같은 truthy 판정.
 - 남긴 것: 유효한 백업을 다른 fingerprint의 새 캡처로 덮어쓰는 기존 동작(이번 범위 밖), `latestBackup()/completionEvidence()` 던지는 API의 잔존(테스트만 사용), `fileExists` 직후 삭제된 파일을 `unreadable`로 보고.
+
+## 2차 리뷰(PR #3)에서 고친 것
+- P2 손상된 백업을 정상으로 판정: 백업은 JSON 디코드만으로 `.valid`가 됐다. 본문(음식 값)이 바뀌었는데 fingerprint가 구 원본과 같은 백업이 있으면 구 원본 이관이 그 백업을 "같은 원본의 백업"으로 두고 완료했고, 나중에 백업 복구 시에만 지문 불일치로 실패했다. 이제 코디네이터가 백업 본문의 SHA-256을 다시 계산해 fingerprint와 다르면 `corrupt`로 판정한다. 구 원본이 있어도 멈추고(`evidenceCorrupt`, 캡처 전), 파일은 보존하며, `backupAvailable`은 false다(`testBackupWithEditedContentsUnderTheOldFingerprintStopsALegacyMigration`, `testTamperedBackupIsNotUsed` 기대값을 `legacyCaptureFailed`에서 `evidenceCorrupt`로 수정).
+- P2 미확정 중 변경한 입력이 사라짐: 미확정 상태에서도 입력란을 고칠 수 있었고, 재확인이 앞선 저장을 확인하면 시트가 닫히며 새 입력이 버려졌다. 이제 저장 중과 미확정 중에는 이름·단백질·총량 입력란을 잠근다. `notApplied`로 돌아오면 다시 풀린다(S3e).
 
 ## 미검증
 - 실제 사용자 파일, 실기기, iOS 13/14, 전원 차단 중 rename, 디스크 가득 참.

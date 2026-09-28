@@ -253,8 +253,26 @@ public final class MigrationCoordinator {
         }
     }
 
-    /// True only for a backup that exists *and* can be decoded.
-    private var backupAvailable: Bool { evidence.inspectBackup().value != nil }
+    /// True only for a backup that exists, decodes *and* hashes to its own fingerprint.
+    private var backupAvailable: Bool { inspectBackup().value != nil }
+
+    /// A backup is trusted only when its contents still hash to the fingerprint
+    /// it carries. Decoding alone is not enough: an edited body under an old
+    /// fingerprint would otherwise be accepted as a valid backup during a
+    /// legacy migration and only fail later, when it is actually needed.
+    private func inspectBackup() -> EvidenceInspection<BackupRecord> {
+        let inspection = evidence.inspectBackup()
+        guard case .valid(let record) = inspection else { return inspection }
+        do {
+            let actual = try LegacyFingerprint.sha256Hex(of: record.capture)
+            guard actual == record.fingerprint else {
+                return .corrupt("fingerprint mismatch: file says \(record.fingerprint), contents hash to \(actual)")
+            }
+        } catch {
+            return .corrupt("fingerprint: \(error)")
+        }
+        return inspection
+    }
 
     /// Maps an unusable evidence file to the recovery state that stops the
     /// launch. `backupAvailable` is the real inspection result unless the
@@ -288,7 +306,7 @@ public final class MigrationCoordinator {
                 canRetry: false
             ))
         }
-        let backup = evidence.inspectBackup()
+        let backup = inspectBackup()
         if let problem = evidenceProblem(backup, label: "backup") { return .recovery(problem) }
 
         let probe: LegacyProbe
@@ -372,7 +390,7 @@ public final class MigrationCoordinator {
             catch { return .recovery(.init(kind: .legacyCaptureFailed, detail: "fingerprint: \(error)", backupAvailable: backupAvailable, canRetry: true)) }
             // An existing backup is only ever replaced when it is valid and
             // describes a different source; an unusable one stops the launch.
-            let existing = evidence.inspectBackup()
+            let existing = inspectBackup()
             if let problem = evidenceProblem(existing, label: "backup") { return .recovery(problem) }
             do {
                 if existing.value?.fingerprint != fingerprint {
@@ -382,14 +400,14 @@ public final class MigrationCoordinator {
                         capture: capture
                     ))
                 }
-                guard evidence.inspectBackup().value?.fingerprint == fingerprint else {
+                guard inspectBackup().value?.fingerprint == fingerprint else {
                     throw StoreError.verificationMismatch(.finalFile)
                 }
             } catch {
                 return .recovery(.init(kind: .backupFailed, detail: String(describing: error), backupAvailable: false, canRetry: true))
             }
         case .backup:
-            let inspection = evidence.inspectBackup()
+            let inspection = inspectBackup()
             if let problem = evidenceProblem(inspection, label: "backup") { return .recovery(problem) }
             guard let record = inspection.value else {
                 return .recovery(.init(kind: .legacyCaptureFailed, detail: "backup vanished", backupAvailable: false, canRetry: true))

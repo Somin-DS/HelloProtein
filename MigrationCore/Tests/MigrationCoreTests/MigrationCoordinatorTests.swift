@@ -49,7 +49,7 @@ final class MigrationCoordinatorTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
-    private func legacyCapture() -> LegacyCapture {
+    private func legacyCapture(milkProtein: Int = 10) -> LegacyCapture {
         LegacyCapture(
             realmFilePresent: true,
             defaults: [
@@ -59,7 +59,7 @@ final class MigrationCoordinatorTests: XCTestCase {
                 "targetProtein": .string("120"),
                 "searchLanguage": .string("Korean(한글)"),
             ],
-            foods: [.init(id: "f1", name: "우유", protein: 10), .init(id: "f2", name: "계란", protein: 35)],
+            foods: [.init(id: "f1", name: "우유", protein: milkProtein), .init(id: "f2", name: "계란", protein: 35)],
             history: [.init(id: "s1", dayLabel: "2026-09-20-Sun", storedDate: Date(timeIntervalSince1970: 1_758_326_400), total: 70)],
             favorites: [.init(id: "v1", name: "Protein", protein: 25)],
             searchHistory: [.init(id: "q1", value: "egg")]
@@ -330,8 +330,31 @@ final class MigrationCoordinatorTests: XCTestCase {
         let evidence = FileMigrationEvidenceStore(directory: evidenceDirectory)
         try evidence.writeBackup(BackupRecord(fingerprint: "wrong", capturedAt: "x", capture: legacyCapture()))
         let recovery = try recovery(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
-        XCTAssertEqual(recovery.kind, .legacyCaptureFailed)
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt, "contents that do not hash to the fingerprint are not a backup")
         XCTAssertFalse(recovery.canRetry)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+    }
+
+    func testBackupWithEditedContentsUnderTheOldFingerprintStopsALegacyMigration() throws {
+        // A backup whose body was changed (a food value) while its fingerprint
+        // still matches the live legacy source. Decoding succeeds, so without a
+        // content check it would be kept as "the" backup and only fail later.
+        let live = legacyCapture()
+        let fingerprint = try LegacyFingerprint.sha256Hex(of: live)
+        let edited = legacyCapture(milkProtein: 99)
+        XCTAssertNotEqual(try LegacyFingerprint.sha256Hex(of: edited), fingerprint)
+        let evidence = FileMigrationEvidenceStore(directory: evidenceDirectory)
+        try evidence.writeBackup(BackupRecord(fingerprint: fingerprint, capturedAt: "x", capture: edited))
+        let before = try snapshot(evidenceDirectory)
+
+        let gateway = FakeLegacyGateway(capture: live)
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertEqual(gateway.captureCount, 0, "stops before capturing")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path), "no migration completes on top of an untrusted backup")
+        XCTAssertEqual(try snapshot(evidenceDirectory), before, "the tampered file is preserved, not silently replaced")
     }
 
     // MARK: Schema 1

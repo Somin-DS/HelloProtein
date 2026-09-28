@@ -314,10 +314,16 @@ private struct RecordEditorSheet: View {
             Form {
                 Section {
                     Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
+                    // Input is locked while a save is running or unconfirmed:
+                    // the reconfirm decides about the values that were sent,
+                    // so an edit typed in the meantime would be lost with the
+                    // sheet. The fields unlock again on `.notApplied`.
                     TextField(RenewalStrings.text("renewal_name_placeholder"), text: $name)
+                        .disabled(model.isBusy || saveUnconfirmed)
                     TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
                         .keyboardType(.decimalPad)
                         .accessibilityLabel(Text("renewal_protein_placeholder"))
+                        .disabled(model.isBusy || saveUnconfirmed)
                 }
                 if saveUnconfirmed {
                     PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
@@ -431,6 +437,7 @@ private struct LegacyTotalSheet: View {
                     TextField(RenewalStrings.text("renewal_total_placeholder"), text: $total)
                         .keyboardType(.decimalPad)
                         .accessibilityLabel(Text("renewal_total_placeholder"))
+                        .disabled(model.isBusy || saveUnconfirmed)
                 } footer: {
                     Text("renewal_edit_total_footer")
                 }
