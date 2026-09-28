@@ -38,6 +38,7 @@
 
 - `AppState` 봉투: logs/favorites/searchHistory/settings/goals/migration을 한 문서로 저장하고, 디코딩 뒤에도 `validate()`로 중복 날짜·중복 ID·목표 이력 충돌을 거부한다.
 - `FileAppStateStore`: 검증 → 같은 디렉터리 임시 파일(POSIX write+fsync, 실패는 예외가 아닌 오류로 보고) → 디코드/비교 → `rename` → 디코드/비교. 경로별 재귀 락, 파일 보호 `.completeUntilFirstUserAuthentication`, 실패 주입용 `StoreFileWriter`/`StoreCommitHooks`, 1시간 이상 지난 임시 파일만 정리. 디렉터리 fsync는 하지 않으므로 전원 차단 내구성은 보장하지 않는다.
+- 커밋 결과 계약(`StoreCommitError`): `rename` 이전 실패는 `notCommitted`(이전 파일 그대로, 같은 작업 재시도 가능), `rename` 이후 확인 실패는 `indeterminate`(교체는 됐을 수 있음, 되돌리지 않음). `indeterminate` 뒤에는 `load()`가 성공할 때까지 모든 쓰기를 거부한다. 각 사용자 저장은 operation ID를 문서의 `lastOperationID`에 남기므로 다시 읽었을 때 그 작업이 반영됐는지 판단할 수 있다. 값이 없는 기존 schema 2 파일은 nil로 읽는다.
 - 입력 검증(`ProteinInput`): 음식 입력은 양수만, 구버전 날짜의 일일 총량 편집은 0과 음수를 허용한다(삭제로 음수가 된 보정값을 그대로 다시 저장할 수 있어야 하므로). 빈 값, 숫자 아님, 자릿수 초과, 범위 초과를 구분한다.
 - `LegacyAggregate`로 원본 총량·원본 라벨·시각·사용자 수정 총량을 보정값과 별도로 보존한다. 총량 = 상세 합계 + 보정값.
 
@@ -46,6 +47,7 @@
 - 캡처는 검증 전에 백업하고, UserDefaults 값의 누락/0/형식 오류를 구분해 기록한다. 지문은 정렬 키 JSON의 SHA-256.
 - 결정적 ID(`legacy:daily:<id>` 등), 0.01g 정수 변환과 범위 초과 검사, 0 이하 음식은 복구 화면으로, 잘못된 목표는 원문 보존 + `goalNeedsReview`, 목표는 이관 당일부터 적용.
 - `MigrationCoordinator` 시작 판정: ready / corrupt / unsupported / unreadable / schema1 승격 / missing(완료 증거 → storeLost, 레거시 → 이관, 백업만 → 백업에서 이관, 없음 → 명시적 새 설치). 완료 마커는 보조 증거다.
+- 증거 파일 판정(`EvidenceInspection`): missing / valid / corrupt / unreadable / unsupported를 구분한다. 목적 저장소가 없을 때 완료 마커나 백업이 존재하지만 읽거나 해독할 수 없으면 구 원본을 조사하지도 않고 `evidenceCorrupt`/`evidenceUnreadable`/`evidenceUnsupported` 복구 상태로 멈춘다. 새 저장소·재이관·빈 설치를 만들지 않고 파일 바이트를 바꾸지 않는다. 목적 저장소가 정상이면 손상된 보조 증거는 사용자 기록을 막지 않지만 자동으로 덮어쓰지도 않는다(정말 없을 때만 다시 쓴다). 백업·완료 파일에는 `evidenceFormatVersion`이 있고, 필드가 없는 기존 파일은 1로 읽는다.
 
 iOS 앱 연결
 
@@ -53,6 +55,8 @@ iOS 앱 연결
 - `RealmLegacySourceGateway`: 원본 Realm을 열지 않는다. 닫힌 원본을 증거 디렉터리로 복사하고, 별도 사본을 읽기 전용으로 연다.
 - `SceneDelegate`가 창을 직접 만들고(스토리보드 자동 생성 제거) 로딩 → 기록 화면/복구 화면으로 분기한다. 복구 화면에는 재시도만 있고 초기화·삭제가 없다.
 - SwiftUI 기록 화면: 주간 날짜 띠, 달력 시트, 추가/수정/삭제, 과거 합계만 있는 날짜 표시, 일일 총량 편집, 저장 실패 시 시트 유지와 경고.
+- 저장 결과 미확정 처리: `rename` 이후 확인 실패는 "저장 결과 미확인" 경고와 함께 시트를 유지하고, 저장 버튼을 비활성화하며, "저장 결과 확인" 동작으로 저장소를 다시 읽는다. 반영됐으면 시트를 닫고, 반영되지 않았으면 입력을 유지한 채 다시 저장하게 한다. 확인 전에는 홈 화면 배너가 뜨고 모든 저장이 거부된다. 편집 세션은 같은 record ID를 유지하므로 재시도로 중복 행이 생기지 않는다. 저장 중에는 취소도 비활성화한다.
+- DEBUG 전용 `-HelloProteinFailAfterReplaceOnce YES`: 시작 후 첫 사용자 저장을 `rename` 직후 실패시켜 미확정 경로를 시뮬레이터에서 재현한다. 권한을 바꾸지 않는다.
 - DEBUG 전용 실행 인자: `-HelloProteinSeedLegacyFixture YES`(합성 구버전 데이터), `-HelloProteinInterruptAt <beforeBackup|afterBackup|afterMapping|afterTemporaryWrite|beforeReplace|afterReplace|beforeFirstScreen>`(SIGKILL).
 
 ## 아직 해결할 사항
@@ -81,3 +85,5 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 ```
 
 2026-09-28 결과: `HelloProteinCore` 40개, `MigrationCore` 53개, 앱 테스트 타깃 25개 통과(로그 `/private/tmp/helloprotein-next/core-tests-3.log`, `migration-tests-3.log`, `app-test-5.log`, 모두 exit 0). 앱 Debug 빌드 성공(`/private/tmp/helloprotein-next/app-build-5-debug.log`, exit 0). 별도 코드 리뷰 패스에서 나온 상위/중간 지적(예외로 죽는 FileHandle 쓰기, 실패한 이관이 기존 앱을 막는 증거 판정, 빈 이름 검산 오류, 임시 파일 중단 지점 누락, 0/음수 총량 편집 불가, 목표 이력 오류를 빈 상태로 표시, 복구 화면의 원시 상세 노출, 임시 파일 일괄 삭제, 픽스처 시더 보호, 달력 범위)은 반영했고, 시트 3개 체인·`FileRecordRepository` 잔존·보정값 0인 날의 안내 표시는 남겨 두었다. 시뮬레이터 시나리오(정상 업그레이드, 교체 직전/직후 강제 종료 후 재실행, 과거 날짜 추가·총량 편집, 저장 실패, 기본 경로 유지, 손상 저장소 복구 화면)는 `docs/evidence/2026-09-28-simulator/README.md`에 정리했다. 실제 사용자 파일·실기기·Android는 미검증.
+
+2026-09-28 후속(PR #2 리뷰 R1·R2) 결과: 증거 파일 판정 계약과 커밋 결과 계약(`notCommitted`/`indeterminate`, 경로 단위 쓰기 차단, 읽기 재확인, operation ID)을 넣고 회귀 테스트를 먼저 추가했다. 별도 코드 리뷰 패스의 지적(미확정 차단이 인스턴스에만 있고 `inspect()`가 풀지 않아 이관 미확정 뒤 저장이 영구 실패, 배너의 `notApplied` 무시, 증거 문제 시 백업 유무 오보, `afterReplace` 중단 분류, `commit()`의 검증 오류 포장, 플래그 읽기 락, 미확정 중 행 편집, 캡처 버전 프로브, 인자 truthy 판정)을 반영했다. 2차 리뷰에서 백업 본문의 SHA-256을 fingerprint와 대조하지 않던 판정과 미확정 중 입력란이 열려 있던 문제를 고쳤다. `HelloProteinCore` 45개, `MigrationCore` 64개, 앱 테스트 타깃 30개 통과(로그 `/private/tmp/helloprotein-next/core-tests-5.log`, `migration-tests-6.log`, `app-test-10.log`, 모두 exit 0). 앱 Debug/Release 빌드 성공(`app-build-8-debug.log`, `app-build-8-release.log`, exit 0)이며 Release 바이너리에는 실패 주입·픽스처 인자 문자열이 없다. 시뮬레이터 시나리오(정상 이관 후 과거 날짜 추가, 손상 완료 마커의 복구 화면과 파일 보존, `rename` 이후 읽기 실패 → 재확인 → 재실행에서 한 행)는 `docs/evidence/2026-09-28-pr2-followup/README.md`에 정리했다. `notApplied` 경로, 권한 없음/상위 버전 증거, 실제 사용자 파일·실기기는 미검증.

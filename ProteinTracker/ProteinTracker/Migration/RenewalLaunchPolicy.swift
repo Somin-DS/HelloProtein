@@ -50,7 +50,7 @@ enum RenewalLaunchPolicy {
         return arguments[index + 1]
     }
 
-    private static func isTruthy(_ value: String) -> Bool {
+    static func isTruthy(_ value: String) -> Bool {
         ["1", "YES", "yes", "true", "TRUE"].contains(value)
     }
 }

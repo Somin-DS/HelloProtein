@@ -12,7 +12,10 @@ final class FakeLegacyGateway: LegacySourceGateway {
 
     init(capture: LegacyCapture?) { self.stored = capture }
 
+    var onProbe: (() -> Void)?
+
     func probe() throws -> LegacyProbe {
+        onProbe?()
         if let probeError { throw probeError }
         guard let stored else { return LegacyProbe(realmFilePresent: false, presentDefaultsKeys: []) }
         return LegacyProbe(
@@ -46,7 +49,7 @@ final class MigrationCoordinatorTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
-    private func legacyCapture() -> LegacyCapture {
+    private func legacyCapture(milkProtein: Int = 10) -> LegacyCapture {
         LegacyCapture(
             realmFilePresent: true,
             defaults: [
@@ -56,7 +59,7 @@ final class MigrationCoordinatorTests: XCTestCase {
                 "targetProtein": .string("120"),
                 "searchLanguage": .string("Korean(한글)"),
             ],
-            foods: [.init(id: "f1", name: "우유", protein: 10), .init(id: "f2", name: "계란", protein: 35)],
+            foods: [.init(id: "f1", name: "우유", protein: milkProtein), .init(id: "f2", name: "계란", protein: 35)],
             history: [.init(id: "s1", dayLabel: "2026-09-20-Sun", storedDate: Date(timeIntervalSince1970: 1_758_326_400), total: 70)],
             favorites: [.init(id: "v1", name: "Protein", protein: 25)],
             searchHistory: [.init(id: "q1", value: "egg")]
@@ -182,7 +185,8 @@ final class MigrationCoordinatorTests: XCTestCase {
             }
             let first = makeCoordinator(gateway: gateway, interrupt: interrupt, storeHooks: hooks).launch()
             let recovery = try self.recovery(first)
-            XCTAssertEqual(recovery.kind, .interrupted, "\(point)")
+            // A crash after the rename is an unconfirmed commit, not a pre-commit interruption.
+            XCTAssertEqual(recovery.kind, point == .afterReplace ? .verificationFailed : .interrupted, "\(point)")
             XCTAssertTrue(recovery.canRetry)
 
             let storeExistsAfterCrash = FileManager.default.fileExists(atPath: storeURL.path)
@@ -326,8 +330,31 @@ final class MigrationCoordinatorTests: XCTestCase {
         let evidence = FileMigrationEvidenceStore(directory: evidenceDirectory)
         try evidence.writeBackup(BackupRecord(fingerprint: "wrong", capturedAt: "x", capture: legacyCapture()))
         let recovery = try recovery(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
-        XCTAssertEqual(recovery.kind, .legacyCaptureFailed)
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt, "contents that do not hash to the fingerprint are not a backup")
         XCTAssertFalse(recovery.canRetry)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+    }
+
+    func testBackupWithEditedContentsUnderTheOldFingerprintStopsALegacyMigration() throws {
+        // A backup whose body was changed (a food value) while its fingerprint
+        // still matches the live legacy source. Decoding succeeds, so without a
+        // content check it would be kept as "the" backup and only fail later.
+        let live = legacyCapture()
+        let fingerprint = try LegacyFingerprint.sha256Hex(of: live)
+        let edited = legacyCapture(milkProtein: 99)
+        XCTAssertNotEqual(try LegacyFingerprint.sha256Hex(of: edited), fingerprint)
+        let evidence = FileMigrationEvidenceStore(directory: evidenceDirectory)
+        try evidence.writeBackup(BackupRecord(fingerprint: fingerprint, capturedAt: "x", capture: edited))
+        let before = try snapshot(evidenceDirectory)
+
+        let gateway = FakeLegacyGateway(capture: live)
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertEqual(gateway.captureCount, 0, "stops before capturing")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path), "no migration completes on top of an untrusted backup")
+        XCTAssertEqual(try snapshot(evidenceDirectory), before, "the tampered file is preserved, not silently replaced")
     }
 
     // MARK: Schema 1
@@ -353,6 +380,164 @@ final class MigrationCoordinatorTests: XCTestCase {
         XCTAssertEqual(recovery.kind, .schema1Conflict)
         XCTAssertFalse(recovery.canRetry)
         XCTAssertTrue(String(decoding: try Data(contentsOf: storeURL), as: UTF8.self).contains(#""schemaVersion":1"#), "schema 1 file untouched")
+    }
+
+    // MARK: Evidence files that exist but cannot be trusted (R1)
+
+    private var completionURL: URL { evidenceDirectory.appendingPathComponent("migration-completed.json") }
+    private var backupURL: URL { evidenceDirectory.appendingPathComponent("legacy-capture.json") }
+
+    private func writeEvidenceBytes(_ text: String, to url: URL) throws {
+        try FileManager.default.createDirectory(at: evidenceDirectory, withIntermediateDirectories: true)
+        try Data(text.utf8).write(to: url)
+    }
+
+    private func snapshot(_ directory: URL) throws -> [String: Data] {
+        var result: [String: Data] = [:]
+        guard FileManager.default.fileExists(atPath: directory.path) else { return result }
+        for name in try FileManager.default.contentsOfDirectory(atPath: directory.path) {
+            result[name] = try Data(contentsOf: directory.appendingPathComponent(name))
+        }
+        return result
+    }
+
+    func testCorruptCompletionWithoutStoreOrLegacyStopsInsteadOfFreshInstall() throws {
+        try writeEvidenceBytes(#"{"migration": {"origin": "legacyImport""#, to: completionURL)
+        let before = try snapshot(evidenceDirectory)
+        let gateway = FakeLegacyGateway(capture: nil)
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertFalse(recovery.canRetry)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path), "no fresh install over a damaged marker")
+        XCTAssertEqual(try snapshot(evidenceDirectory), before, "evidence bytes untouched")
+        XCTAssertEqual(gateway.captureCount, 0)
+    }
+
+    func testUnreadableCompletionWithLegacyPresentDoesNotReMigrate() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let gateway = FakeLegacyGateway(capture: legacyCapture())
+        // Complete a migration, then lose the store and make the marker unreadable.
+        _ = try readyState(makeCoordinator(gateway: gateway).launch())
+        try FileManager.default.removeItem(at: storeURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: completionURL.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: completionURL.path) }
+        let capturesBefore = gateway.captureCount
+        var probed = false
+        gateway.onProbe = { probed = true }
+
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceUnreadable)
+        XCTAssertTrue(recovery.canRetry)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path), "no re-import: the new records are not in the old source")
+        XCTAssertEqual(gateway.captureCount, capturesBefore, "old source not captured")
+        XCTAssertFalse(probed, "old source not even probed")
+
+        // Access restored: the marker is valid again and the launch reports the loss, not a fresh install.
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: completionURL.path)
+        XCTAssertEqual(try self.recovery(makeCoordinator(gateway: gateway).launch()).kind, .storeLost)
+    }
+
+    func testCorruptOnlyBackupWithoutStoreNeverCreatesAFreshInstall() throws {
+        try writeEvidenceBytes(#"{"fingerprint": "abc", "capturedAt": "x", "capture": {"broken": true}}"#, to: backupURL)
+        let before = try snapshot(evidenceDirectory)
+        let gateway = FakeLegacyGateway(capture: nil)
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertFalse(recovery.backupAvailable, "a damaged file is not an available backup")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+        XCTAssertEqual(try snapshot(evidenceDirectory), before)
+    }
+
+    func testCorruptBackupWithLegacyPresentStopsBeforeCaptureAndDoesNotOverwriteIt() throws {
+        try writeEvidenceBytes("not json", to: backupURL)
+        let before = try snapshot(evidenceDirectory)
+        let gateway = FakeLegacyGateway(capture: legacyCapture())
+        let recovery = try recovery(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertEqual(gateway.captureCount, 0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+        XCTAssertEqual(try snapshot(evidenceDirectory), before, "the damaged backup is preserved, not replaced")
+    }
+
+    func testUnsupportedEvidenceFormatStopsExplicitly() throws {
+        try writeEvidenceBytes(#"{"evidenceFormatVersion": 99, "migration": {}, "writtenAt": "x"}"#, to: completionURL)
+        let recovery = try recovery(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
+        XCTAssertEqual(recovery.kind, .evidenceUnsupported)
+        XCTAssertFalse(recovery.canRetry)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+    }
+
+    func testCorruptCompletionNextToAValidBackupStillReportsTheBackup() throws {
+        // A real migration leaves a valid backup behind; then the store is lost and the marker damaged.
+        _ = try readyState(makeCoordinator(gateway: FakeLegacyGateway(capture: legacyCapture())).launch())
+        try FileManager.default.removeItem(at: storeURL)
+        try writeEvidenceBytes("{", to: completionURL)
+        let before = try snapshot(evidenceDirectory)
+        let recovery = try recovery(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
+        XCTAssertEqual(recovery.kind, .evidenceCorrupt)
+        XCTAssertTrue(recovery.backupAvailable, "the damaged marker must not hide a decodable backup")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+        XCTAssertEqual(try snapshot(evidenceDirectory), before)
+    }
+
+    func testNewerCaptureFormatInsideBackupIsUnsupportedEvenWhenItsBodyDoesNotDecode() throws {
+        try writeEvidenceBytes(#"{"evidenceFormatVersion": 1, "fingerprint": "abc", "capturedAt": "x", "capture": {"captureFormatVersion": 99, "shape": "unknown"}}"#, to: backupURL)
+        let before = try snapshot(evidenceDirectory)
+        let recovery = try recovery(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
+        XCTAssertEqual(recovery.kind, .evidenceUnsupported)
+        XCTAssertFalse(recovery.canRetry)
+        XCTAssertFalse(recovery.backupAvailable)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storeURL.path))
+        XCTAssertEqual(try snapshot(evidenceDirectory), before)
+    }
+
+    func testNothingAtAllStillCreatesAFreshInstall() throws {
+        XCTAssertFalse(FileManager.default.fileExists(atPath: evidenceDirectory.path))
+        let state = try readyState(makeCoordinator(gateway: FakeLegacyGateway(capture: nil)).launch())
+        XCTAssertEqual(state.migration.origin, .freshInstall)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: storeURL.path))
+        XCTAssertEqual(FileMigrationEvidenceStore(directory: evidenceDirectory).inspectCompletion().value?.migration, state.migration)
+    }
+
+    func testReadyStoreWithCorruptCompletionKeepsRecordsAndLeavesTheMarkerAlone() throws {
+        let gateway = FakeLegacyGateway(capture: legacyCapture())
+        let migrated = try readyState(makeCoordinator(gateway: gateway).launch())
+        // The user keeps working after migration.
+        let store = FileAppStateStore(fileURL: storeURL)
+        let day = try CalendarDay(iso8601: "2026-09-27")
+        try store.modify(operationID: "op-1") { state in
+            var log = try DailyLog(day: day)
+            try log.add(FoodRecord(id: "new-1", day: day, name: "두부", quantity: nil, protein: ProteinAmount(centigrams: 900), source: .manual))
+            try state.upsert(log)
+        }
+        try writeEvidenceBytes("{corrupt", to: completionURL)
+        let markerBefore = try Data(contentsOf: completionURL)
+
+        let state = try readyState(makeCoordinator(gateway: gateway).launch())
+        XCTAssertEqual(state.log(for: day)?.records.map(\.id), ["new-1"], "user records preserved")
+        XCTAssertEqual(state.migration, migrated.migration)
+        XCTAssertEqual(try Data(contentsOf: completionURL), markerBefore, "a damaged marker is never overwritten by a launch")
+        guard case .corrupt = FileMigrationEvidenceStore(directory: evidenceDirectory).inspectCompletion() else {
+            return XCTFail("marker should still be reported as corrupt")
+        }
+    }
+
+    func testEvidenceWrittenBeforeFormatVersionsStillReads() throws {
+        let capture = legacyCapture()
+        let fingerprint = try LegacyFingerprint.sha256Hex(of: capture)
+        let evidence = FileMigrationEvidenceStore(directory: evidenceDirectory)
+        try evidence.writeBackup(BackupRecord(fingerprint: fingerprint, capturedAt: "2026-09-28T00:00:00.000Z", capture: capture))
+        // Strip the version fields the way an older build would have written the files.
+        var json = try JSONSerialization.jsonObject(with: Data(contentsOf: backupURL)) as! [String: Any]
+        json.removeValue(forKey: "evidenceFormatVersion")
+        try JSONSerialization.data(withJSONObject: json).write(to: backupURL)
+        let backup = try XCTUnwrap(evidence.inspectBackup().value)
+        XCTAssertEqual(backup.evidenceFormatVersion, 1)
+        XCTAssertEqual(backup.capture, capture)
+
+        try writeEvidenceBytes(#"{"migration": {"origin": "freshInstall", "migrationVersion": 1, "completedAt": "x"}, "writtenAt": "x"}"#, to: completionURL)
+        XCTAssertEqual(evidence.inspectCompletion().value?.evidenceFormatVersion, 1)
     }
 }
 

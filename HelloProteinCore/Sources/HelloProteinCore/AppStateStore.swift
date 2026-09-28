@@ -22,6 +22,30 @@ public enum StoreError: Error, Equatable {
     case replaceFailed(String)
     case verificationMismatch(StoreCommitStage)
     case interrupted(StoreCommitStage)
+    /// A previous commit replaced the file but its result was never confirmed.
+    /// Writes stay refused until a successful `load()` (or `inspect()` that
+    /// finds a ready file) re-establishes the state. Reported as
+    /// `StoreCommitError.indeterminate`: the on-disk state is unknown, so the
+    /// caller must re-read before deciding anything.
+    case previousCommitUnconfirmed(operationID: String?)
+}
+
+/// Result contract of a commit. The two cases must never be conflated: after
+/// `notCommitted` the previous file is intact and the same operation can simply
+/// be retried; after `indeterminate` the replacement happened (or may have) and
+/// the caller must re-read the store before deciding anything.
+public enum StoreCommitError: Error, Equatable {
+    /// Failed before the rename. The previous file is untouched.
+    case notCommitted(StoreError)
+    /// The rename succeeded (or was interrupted right after it) but the final
+    /// file could not be confirmed. The file is never rolled back.
+    case indeterminate(StoreError)
+
+    public var underlying: StoreError {
+        switch self {
+        case .notCommitted(let error), .indeterminate(let error): return error
+        }
+    }
 }
 
 public enum StoreCommitStage: String, Equatable, Sendable {
@@ -85,37 +109,92 @@ public struct StoreCommitHooks {
 }
 
 public protocol AppStateStore: AnyObject {
+    /// Throws `StoreError`. A successful load confirms the on-disk state and
+    /// lifts the write block left by an indeterminate commit.
     func load() throws -> AppState
+    /// Throws `StoreCommitError` for storage failures; errors thrown by
+    /// `change` or by validation are rethrown unchanged. `operationID` is
+    /// stored in the document so a retry can tell whether it already landed.
     @discardableResult
-    func modify(_ change: (inout AppState) throws -> Void) throws -> AppState
+    func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState
+    /// Operation ID of the commit whose result is still unconfirmed, if any.
+    var unconfirmedOperationID: String? { get }
+    /// True while a commit's outcome is unknown; `modify`/`commit` are refused.
+    var hasUnconfirmedCommit: Bool { get }
+}
+
+public extension AppStateStore {
+    @discardableResult
+    func modify(_ change: (inout AppState) throws -> Void) throws -> AppState {
+        try modify(operationID: nil, change)
+    }
 }
 
 /// The single write owner for the schema 2 document.
 ///
 /// Commit order: validate in memory → write a temporary file next to the target
 /// → decode the temporary file and compare → atomically rename over the target
-/// → decode the final file and compare. A failure at any point leaves the
-/// previous file untouched. Read→modify→commit is serialized per file path
-/// across all instances in the process.
+/// → decode the final file and compare.
+///
+/// Failure boundary: anything before the rename leaves the previous file
+/// untouched and is reported as `StoreCommitError.notCommitted`. Once the
+/// rename returned success the new document is on disk; a failure after that
+/// is `StoreCommitError.indeterminate`, the file is not rolled back, and every
+/// store on that path refuses further writes until a `load()` succeeds (or an
+/// `inspect()` finds a ready file). Read→modify→commit and the write block are
+/// both kept per file path, shared by all instances in the process.
 public final class FileAppStateStore: AppStateStore {
     public let fileURL: URL
     private let fileManager: FileManager
     private let writer: StoreFileWriter
     private let hooks: StoreCommitHooks
     private let directoryAttributes: [FileAttributeKey: Any]?
+    private let shared: PathState
+
+    public var hasUnconfirmedCommit: Bool { shared.unconfirmed().blocked }
+
+    public var unconfirmedOperationID: String? {
+        let unconfirmed = shared.unconfirmed()
+        return unconfirmed.blocked ? unconfirmed.operationID : nil
+    }
+
+    /// Process-wide state of one file path: the commit lock and the "outcome
+    /// unknown" flag. The flag has its own short lock so the UI can read it
+    /// while a commit (fsync included) is running.
+    private final class PathState {
+        let commitLock = NSRecursiveLock()
+        private let flagLock = NSLock()
+        private var blocked = false
+        private var operationID: String?
+
+        func unconfirmed() -> (blocked: Bool, operationID: String?) {
+            flagLock.lock()
+            defer { flagLock.unlock() }
+            return (blocked, operationID)
+        }
+
+        func setUnconfirmed(_ blocked: Bool, operationID: String?) {
+            flagLock.lock()
+            defer { flagLock.unlock() }
+            self.blocked = blocked
+            self.operationID = blocked ? operationID : nil
+        }
+    }
 
     private static let registryLock = NSLock()
-    private static var locks: [String: NSRecursiveLock] = [:]
+    private static var states: [String: PathState] = [:]
 
-    private static func lock(for url: URL) -> NSRecursiveLock {
+    private static func state(for url: URL) -> PathState {
         let key = url.standardizedFileURL.path
         registryLock.lock()
         defer { registryLock.unlock() }
-        if let existing = locks[key] { return existing }
-        let lock = NSRecursiveLock()
-        locks[key] = lock
-        return lock
+        if let existing = states[key] { return existing }
+        let state = PathState()
+        states[key] = state
+        return state
     }
+
+    private static func lock(for url: URL) -> NSRecursiveLock { state(for: url).commitLock }
 
     public init(
         fileURL: URL,
@@ -129,6 +208,7 @@ public final class FileAppStateStore: AppStateStore {
         self.writer = writer
         self.directoryAttributes = directoryAttributes
         self.hooks = hooks
+        self.shared = Self.state(for: fileURL)
     }
 
     // MARK: Inspection
@@ -166,11 +246,22 @@ public final class FileAppStateStore: AppStateStore {
         }
     }
 
+    /// A `.ready` result confirms the on-disk state exactly as `load()` does
+    /// and lifts the write block.
     public func inspect() -> StoreInspection {
         let lock = Self.lock(for: fileURL)
         lock.lock()
         defer { lock.unlock() }
-        return Self.inspect(fileURL: fileURL, fileManager: fileManager)
+        return inspectLocked()
+    }
+
+    private func inspectLocked() -> StoreInspection {
+        let inspection = Self.inspect(fileURL: fileURL, fileManager: fileManager)
+        if case .ready = inspection {
+            // The on-disk state is known again; writes may resume.
+            shared.setUnconfirmed(false, operationID: nil)
+        }
+        return inspection
     }
 
     // MARK: Reading
@@ -183,8 +274,9 @@ public final class FileAppStateStore: AppStateStore {
     }
 
     private func loadLocked() throws -> AppState {
-        switch Self.inspect(fileURL: fileURL, fileManager: fileManager) {
-        case .ready(let state): return state
+        switch inspectLocked() {
+        case .ready(let state):
+            return state
         case .missing: throw StoreError.missing
         case .legacySchema1: throw StoreError.unsupportedSchema(1)
         case .unsupportedSchema(let version): throw StoreError.unsupportedSchema(version)
@@ -196,28 +288,76 @@ public final class FileAppStateStore: AppStateStore {
     // MARK: Writing
 
     /// Writes `state` as the whole document. Used for the initial commit and
-    /// for full replacements produced by migration.
+    /// for full replacements produced by migration. Throws `StoreCommitError`
+    /// for storage failures; validation errors are rethrown unchanged.
     public func commit(_ state: AppState) throws {
         let lock = Self.lock(for: fileURL)
         lock.lock()
         defer { lock.unlock() }
-        try commitLocked(state)
+        try state.validate()
+        try commitLocked(state, operationID: nil)
     }
 
     @discardableResult
-    public func modify(_ change: (inout AppState) throws -> Void) throws -> AppState {
+    public func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
         let lock = Self.lock(for: fileURL)
         lock.lock()
         defer { lock.unlock() }
-        var state = try loadLocked()
+        try refuseIfUnconfirmed()
+        var state: AppState
+        do { state = try loadLocked() }
+        catch let error as StoreError { throw StoreCommitError.notCommitted(error) }
         try change(&state)
+        state.lastOperationID = operationID
         try state.validate()
-        try commitLocked(state)
+        try commitLocked(state, operationID: operationID)
         return state
     }
 
-    private func commitLocked(_ state: AppState) throws {
-        try state.validate()
+    /// The state on disk is unknown, so this is reported as `indeterminate`
+    /// even though the new operation itself was never attempted: "retry the
+    /// same operation" would be the wrong advice until a read has succeeded.
+    private func refuseIfUnconfirmed() throws {
+        let unconfirmed = shared.unconfirmed()
+        if unconfirmed.blocked {
+            throw StoreCommitError.indeterminate(.previousCommitUnconfirmed(operationID: unconfirmed.operationID))
+        }
+    }
+
+    private func commitLocked(_ state: AppState, operationID: String?) throws {
+        try refuseIfUnconfirmed()
+        let temporaryURL: URL
+        do {
+            temporaryURL = try prepareTemporaryFile(for: state)
+        } catch let error as StoreError {
+            throw StoreCommitError.notCommitted(error)
+        } catch {
+            throw StoreCommitError.notCommitted(.writeFailed(String(describing: error)))
+        }
+        defer { try? fileManager.removeItem(at: temporaryURL) }
+
+        do { try fire(.beforeReplace) }
+        catch let error as StoreError { throw StoreCommitError.notCommitted(error) }
+        guard rename(temporaryURL.path, fileURL.path) == 0 else {
+            throw StoreCommitError.notCommitted(.replaceFailed(String(cString: strerror(errno))))
+        }
+        // From here on the new document is on disk. Never roll it back: a later
+        // successful change could be lost with it.
+        shared.setUnconfirmed(true, operationID: operationID)
+        do {
+            try fire(.afterReplace)
+            let final: AppState
+            do { final = try JSONDecoder().decode(AppState.self, from: Data(contentsOf: fileURL)) }
+            catch { throw StoreError.verificationMismatch(.finalFile) }
+            guard final == state else { throw StoreError.verificationMismatch(.finalFile) }
+        } catch let error as StoreError {
+            throw StoreCommitError.indeterminate(error)
+        }
+        shared.setUnconfirmed(false, operationID: nil)
+    }
+
+    /// Everything that can fail without touching the target file.
+    private func prepareTemporaryFile(for state: AppState) throws -> URL {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(state)
@@ -234,29 +374,21 @@ public final class FileAppStateStore: AppStateStore {
         let temporaryURL = directory.appendingPathComponent(
             ".\(fileURL.lastPathComponent).tmp-\(UUID().uuidString)"
         )
-        defer { try? fileManager.removeItem(at: temporaryURL) }
+        do {
+            do { try writer.write(data, to: temporaryURL) }
+            catch let error as StoreError { throw error }
+            catch { throw StoreError.writeFailed(String(describing: error)) }
+            try fire(.temporaryFile)
 
-        do { try writer.write(data, to: temporaryURL) }
-        catch let error as StoreError { throw error }
-        catch { throw StoreError.writeFailed(String(describing: error)) }
-        try fire(.temporaryFile)
-
-        let reread: AppState
-        do { reread = try JSONDecoder().decode(AppState.self, from: Data(contentsOf: temporaryURL)) }
-        catch { throw StoreError.verificationMismatch(.temporaryFile) }
-        guard reread == state else { throw StoreError.verificationMismatch(.temporaryFile) }
-
-        try fire(.beforeReplace)
-        let result = rename(temporaryURL.path, fileURL.path)
-        guard result == 0 else {
-            throw StoreError.replaceFailed(String(cString: strerror(errno)))
+            let reread: AppState
+            do { reread = try JSONDecoder().decode(AppState.self, from: Data(contentsOf: temporaryURL)) }
+            catch { throw StoreError.verificationMismatch(.temporaryFile) }
+            guard reread == state else { throw StoreError.verificationMismatch(.temporaryFile) }
+        } catch {
+            try? fileManager.removeItem(at: temporaryURL)
+            throw error
         }
-        try fire(.afterReplace)
-
-        let final: AppState
-        do { final = try JSONDecoder().decode(AppState.self, from: Data(contentsOf: fileURL)) }
-        catch { throw StoreError.verificationMismatch(.finalFile) }
-        guard final == state else { throw StoreError.verificationMismatch(.finalFile) }
+        return temporaryURL
     }
 
     /// A process killed between the temporary write and the rename leaves a

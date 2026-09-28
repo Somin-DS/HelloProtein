@@ -141,3 +141,13 @@
 "recovery_kind_commitFailed" = "The new log file couldn't be saved.";
 "recovery_kind_verificationFailed" = "Re-reading and verifying the saved log failed.";
 "recovery_kind_interrupted" = "Migration was interrupted.";
+"renewal_error_unconfirmed_title" = "Save result unconfirmed";
+"renewal_error_unconfirmed_message" = "The file was replaced, but it couldn't be read back. Your input is kept. Nothing else will be saved until the saved result has been checked.";
+"renewal_error_not_applied_title" = "Not saved";
+"renewal_error_not_applied_message" = "The saved file doesn't contain this change. Your input is kept; tap Save again.";
+"renewal_reconfirm" = "Check saved result";
+"renewal_pending_banner" = "A save couldn't be confirmed. Check the saved result before making more changes.";
+"renewal_pending_sheet" = "This save couldn't be confirmed. Check the saved result to see whether it was stored.";
+"recovery_kind_evidenceCorrupt" = "The migration record file is damaged. Nothing was re-imported, created or overwritten.";
+"recovery_kind_evidenceUnreadable" = "The migration record file can't be accessed. Unlock the device and try again.";
+"recovery_kind_evidenceUnsupported" = "The migration record file uses a newer format than this app version.";

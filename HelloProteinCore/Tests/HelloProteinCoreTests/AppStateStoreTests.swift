@@ -111,7 +111,7 @@ final class AppStateStoreTests: XCTestCase {
             try state.upsert(DailyLog(day: self.day, records: [self.record("new")], legacyAdjustmentCentigrams: 1_000,
                                       legacyAggregate: state.logs[0].legacyAggregate))
         }) {
-            XCTAssertEqual($0 as? StoreError, .writeFailed("disk full"))
+            XCTAssertEqual(($0 as? StoreCommitError)?.underlying, .writeFailed("disk full"))
         }
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load(), original)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["app-state.json"])
@@ -125,7 +125,7 @@ final class AppStateStoreTests: XCTestCase {
         }
         let store = FileAppStateStore(fileURL: fileURL, writer: TruncatingWriter())
         XCTAssertThrowsError(try store.modify { $0.settings.goalNeedsReview = true }) {
-            XCTAssertEqual($0 as? StoreError, .verificationMismatch(.temporaryFile))
+            XCTAssertEqual(($0 as? StoreCommitError)?.underlying, .verificationMismatch(.temporaryFile))
         }
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load(), original)
     }
@@ -139,16 +139,18 @@ final class AppStateStoreTests: XCTestCase {
             if stage == .beforeReplace { throw Crash() }
         })
         XCTAssertThrowsError(try before.modify { $0.settings.goalNeedsReview = true }) {
-            XCTAssertEqual($0 as? StoreError, .interrupted(.beforeReplace))
+            XCTAssertEqual(($0 as? StoreCommitError)?.underlying, .interrupted(.beforeReplace))
         }
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load(), original)
 
         let after = FileAppStateStore(fileURL: fileURL, hooks: StoreCommitHooks { stage in
             if stage == .afterReplace { throw Crash() }
         })
-        XCTAssertThrowsError(try after.modify { $0.settings.goalNeedsReview = true }) {
-            XCTAssertEqual($0 as? StoreError, .interrupted(.afterReplace))
+        XCTAssertThrowsError(try after.modify(operationID: "op-1") { $0.settings.goalNeedsReview = true }) {
+            XCTAssertEqual($0 as? StoreCommitError, .indeterminate(.interrupted(.afterReplace)))
         }
+        XCTAssertTrue(after.hasUnconfirmedCommit)
+        XCTAssertEqual(after.unconfirmedOperationID, "op-1")
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load().settings.goalNeedsReview, true)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["app-state.json"])
     }
@@ -245,7 +247,7 @@ final class AppStateStoreTests: XCTestCase {
             if stage == .temporaryFile { throw Crash() }
         })
         XCTAssertThrowsError(try store.modify { $0.settings.goalNeedsReview = true }) {
-            XCTAssertEqual($0 as? StoreError, .interrupted(.temporaryFile))
+            XCTAssertEqual(($0 as? StoreCommitError)?.underlying, .interrupted(.temporaryFile))
         }
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load(), original)
         let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path).filter { $0.hasPrefix(".") }
@@ -274,5 +276,145 @@ final class AppStateStoreTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: fresh.path), "a recent temp file may belong to another writer")
         XCTAssertFalse(FileManager.default.fileExists(atPath: old.path), "an hour-old temp file is garbage")
         XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load().settings.goalNeedsReview, true)
+    }
+
+    // MARK: Commit outcome contract (R2)
+
+    func testFailureBeforeRenameIsNotCommittedAndRetryable() throws {
+        let original = try state()
+        try FileAppStateStore(fileURL: fileURL).commit(original)
+        struct Crash: Error {}
+        let store = FileAppStateStore(fileURL: fileURL, hooks: StoreCommitHooks { stage in
+            if stage == .beforeReplace { throw Crash() }
+        })
+        XCTAssertThrowsError(try store.modify(operationID: "op-a") { $0.settings.goalNeedsReview = true }) {
+            XCTAssertEqual($0 as? StoreCommitError, .notCommitted(.interrupted(.beforeReplace)))
+        }
+        XCTAssertFalse(store.hasUnconfirmedCommit)
+        XCTAssertEqual(try FileAppStateStore(fileURL: fileURL).load(), original, "disk still holds the previous value")
+        XCTAssertNil(try FileAppStateStore(fileURL: fileURL).load().lastOperationID)
+        // The same operation can simply be retried on the same store instance.
+        let plain = FileAppStateStore(fileURL: fileURL)
+        let committed = try plain.modify(operationID: "op-a") { $0.settings.goalNeedsReview = true }
+        XCTAssertEqual(committed.lastOperationID, "op-a")
+        XCTAssertEqual(try plain.load().settings.goalNeedsReview, true)
+    }
+
+    func testFinalReadFailureAfterRenameIsIndeterminateBlocksWritesAndConvergesOnReload() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let original = try state()
+        try FileAppStateStore(fileURL: fileURL).commit(original)
+        let fileURL = self.fileURL
+        // Make the final read-back fail for real, once: revoke read permission right after the rename.
+        var armed = true
+        let store = FileAppStateStore(fileURL: fileURL, hooks: StoreCommitHooks { stage in
+            if stage == .afterReplace && armed {
+                armed = false
+                try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: fileURL.path)
+            }
+        })
+        let record = try FoodRecord(id: "r1", day: day, name: "닭", quantity: nil, protein: ProteinAmount(centigrams: 2_000), source: .manual)
+        let day = self.day
+        XCTAssertThrowsError(try store.modify(operationID: "op-add") { state in
+            var log = try XCTUnwrap(state.log(for: day))
+            try log.add(record)
+            try state.upsert(log)
+        }) {
+            XCTAssertEqual($0 as? StoreCommitError, .indeterminate(.verificationMismatch(.finalFile)))
+        }
+        XCTAssertTrue(store.hasUnconfirmedCommit)
+        XCTAssertEqual(store.unconfirmedOperationID, "op-add")
+
+        // Every further write is refused until the state is confirmed. The
+        // refusal is `indeterminate`: the disk state is unknown, so "retry the
+        // same operation" would be wrong advice.
+        XCTAssertThrowsError(try store.modify(operationID: "op-other") { $0.settings.goalNeedsReview = true }) {
+            XCTAssertEqual($0 as? StoreCommitError, .indeterminate(.previousCommitUnconfirmed(operationID: "op-add")))
+        }
+        XCTAssertThrowsError(try store.commit(original)) {
+            XCTAssertEqual($0 as? StoreCommitError, .indeterminate(.previousCommitUnconfirmed(operationID: "op-add")))
+        }
+        // The block is per file path: another instance on the same file is refused too.
+        let other = FileAppStateStore(fileURL: fileURL)
+        XCTAssertTrue(other.hasUnconfirmedCommit)
+        XCTAssertEqual(other.unconfirmedOperationID, "op-add")
+        XCTAssertThrowsError(try other.modify(operationID: "op-third") { $0.settings.goalNeedsReview = true }) {
+            XCTAssertEqual($0 as? StoreCommitError, .indeterminate(.previousCommitUnconfirmed(operationID: "op-add")))
+        }
+        // A different file is unaffected.
+        let unrelated = FileAppStateStore(fileURL: fileURL.deletingLastPathComponent().appendingPathComponent("other.json"))
+        XCTAssertFalse(unrelated.hasUnconfirmedCommit)
+        try unrelated.commit(original)
+        // Still unreadable: reconfirmation fails and the block stays.
+        XCTAssertThrowsError(try store.load())
+        XCTAssertTrue(store.hasUnconfirmedCommit)
+
+        // Access restored: the reload shows the operation landed exactly once.
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: fileURL.path)
+        let confirmed = try store.load()
+        XCTAssertFalse(store.hasUnconfirmedCommit)
+        XCTAssertEqual(confirmed.lastOperationID, "op-add")
+        XCTAssertEqual(confirmed.log(for: day)?.records.map(\.id), ["r1"])
+        // No temp files linger and writes work again.
+        let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path).filter { $0.hasPrefix(".") }
+        XCTAssertTrue(leftovers.isEmpty, "\(leftovers)")
+        let next = try store.modify(operationID: "op-next") { $0.settings.goalNeedsReview = true }
+        XCTAssertEqual(next.lastOperationID, "op-next")
+        XCTAssertEqual(next.log(for: day)?.records.count, 1, "the retry logic never re-adds r1")
+    }
+
+    func testSchema2FileWithoutOperationIDStillDecodesAndRoundTrips() throws {
+        let original = try state()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        var json = try JSONSerialization.jsonObject(with: encoder.encode(original)) as! [String: Any]
+        json.removeValue(forKey: "lastOperationID")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONSerialization.data(withJSONObject: json).write(to: fileURL)
+        let store = FileAppStateStore(fileURL: fileURL)
+        let loaded = try store.load()
+        XCTAssertNil(loaded.lastOperationID)
+        XCTAssertEqual(loaded.logs, original.logs)
+        XCTAssertEqual(loaded.favorites, original.favorites)
+        let written = try store.modify(operationID: "op-z") { _ in }
+        XCTAssertEqual(written.lastOperationID, "op-z")
+        XCTAssertEqual(try store.load().lastOperationID, "op-z")
+        let cleared = try store.modify { _ in }
+        XCTAssertNil(cleared.lastOperationID, "a write without an operation ID clears the stale claim")
+    }
+
+    func testInspectFindingAReadyFileLiftsTheWriteBlockLikeLoad() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let original = try state()
+        try FileAppStateStore(fileURL: fileURL).commit(original)
+        let fileURL = self.fileURL
+        var armed = true
+        let store = FileAppStateStore(fileURL: fileURL, hooks: StoreCommitHooks { stage in
+            if stage == .afterReplace && armed {
+                armed = false
+                try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: fileURL.path)
+            }
+        })
+        XCTAssertThrowsError(try store.modify(operationID: "op-1") { $0.settings.goalNeedsReview = true })
+        XCTAssertTrue(store.hasUnconfirmedCommit)
+        // Still unreadable: inspect reports it and the block stays.
+        guard case .unreadable = store.inspect() else { return XCTFail("expected unreadable") }
+        XCTAssertTrue(store.hasUnconfirmedCommit)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: fileURL.path)
+        // The launch path inspects rather than loads; a ready result confirms the state.
+        guard case .ready(let confirmed) = FileAppStateStore(fileURL: fileURL).inspect() else { return XCTFail("expected ready") }
+        XCTAssertEqual(confirmed.lastOperationID, "op-1")
+        XCTAssertFalse(store.hasUnconfirmedCommit)
+        try store.modify(operationID: "op-2") { $0.settings.goalNeedsReview = false }
+        XCTAssertEqual(try store.load().lastOperationID, "op-2")
+    }
+
+    func testCommitRethrowsValidationErrorsUnchanged() throws {
+        var invalid = try state()
+        invalid.favorites.append(try FavoriteFood(id: "legacy:favorite:1", name: "dup", proteinCentigrams: 1, position: 9))
+        XCTAssertThrowsError(try FileAppStateStore(fileURL: fileURL).commit(invalid)) { error in
+            XCTAssertEqual(error as? AppStateError, .duplicateFavoriteID("legacy:favorite:1"), "not wrapped as a storage failure: \(error)")
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
     }
 }
