@@ -35,13 +35,34 @@ final class RecordHomeViewModelTests: XCTestCase {
         )
     }
 
-    private func makeModel(writer: StoreFileWriter = DefaultStoreFileWriter()) throws -> (RecordHomeViewModel, FileAppStateStore) {
-        let state = try seededState()
+    private func makeModel(writer: StoreFileWriter = DefaultStoreFileWriter(),
+                           hooks: StoreCommitHooks = StoreCommitHooks(),
+                           state: AppState? = nil) throws -> (RecordHomeViewModel, FileAppStateStore) {
+        let state = try state ?? seededState()
         try FileAppStateStore(fileURL: storeURL).commit(state)
-        let store = FileAppStateStore(fileURL: storeURL, writer: writer)
-        let model = RecordHomeViewModel(store: store, state: state, now: { self.now }, timeZone: seoul,
-                                        decimalSeparator: ".", workQueue: queue, mainQueue: queue)
-        return (model, store)
+        let store = FileAppStateStore(fileURL: storeURL, writer: writer, hooks: hooks)
+        return (makeModel(store: store, state: state), store)
+    }
+
+    private func makeModel(store: AppStateStore, state: AppState) -> RecordHomeViewModel {
+        RecordHomeViewModel(store: store, state: state, now: { self.now }, timeZone: seoul,
+                            decimalSeparator: ".", workQueue: queue, mainQueue: queue)
+    }
+
+    /// Fires the final read-back failure exactly once by revoking read access right after the rename.
+    private func unreadableAfterFirstReplace() -> StoreCommitHooks {
+        let url = storeURL
+        var armed = true
+        return StoreCommitHooks { stage in
+            if stage == .afterReplace && armed {
+                armed = false
+                try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: url.path)
+            }
+        }
+    }
+
+    private func restoreStoreAccess() throws {
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: storeURL.path)
     }
 
     enum Outcome: Equatable {
@@ -218,5 +239,161 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(log.legacyAdjustmentCentigrams, -1_500)
         XCTAssertEqual(try log.totalProteinCentigrams(), -500)
         XCTAssertEqual(log.legacyAggregate?.importedTotalCentigrams, 7_000)
+    }
+
+    // MARK: Unconfirmed saves (R2)
+
+    func testIndeterminateSaveBlocksFurtherWritesAndConvergesToOneRecordAfterReconfirm() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace())
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+
+        // rename succeeded, final read-back failed → unconfirmed, screen keeps the confirmed state.
+        let first = wait { model.addRecord(day: day, id: "rec-1", name: "닭가슴살", proteinText: "23", completion: $0) }
+        guard case .failed(.unconfirmed(let operationID)) = first else { return XCTFail("\(first)") }
+        XCTAssertEqual(sync { model.pendingSave }, .init(operationID: operationID, day: day))
+        XCTAssertEqual(sync { model.totalCentigrams }, 7_000, "screen shows the last confirmed state, not a guess")
+        XCTAssertTrue(sync { model.log.records.isEmpty })
+        XCTAssertFalse(sync { model.isBusy })
+
+        // Every further write is refused while the outcome is unknown, including a naive retry.
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "닭가슴살", proteinText: "23", completion: $0) },
+                       .failed(.unconfirmed(operationID: operationID)))
+        XCTAssertEqual(wait { model.setLegacyTotal(day: day, totalText: "80", completion: $0) },
+                       .failed(.unconfirmed(operationID: operationID)))
+
+        // Reconfirmation while the file is still unreadable fails and keeps the pending state.
+        let stillBlocked = wait { model.reconfirm(completion: $0) }
+        guard case .failed(.storage) = stillBlocked else { return XCTFail("\(stillBlocked)") }
+        XCTAssertNotNil(sync { model.pendingSave })
+
+        // Access restored: the reload shows the operation landed exactly once and the save converges.
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok)
+        XCTAssertNil(sync { model.pendingSave })
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1"])
+        XCTAssertEqual(sync { model.totalCentigrams }, 9_300, "total increased once")
+
+        // A different, later entry is a separate operation and is stored as its own row.
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-2", name: "닭가슴살", proteinText: "23", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1", "rec-2"])
+
+        // A fresh launch reads the same file: still exactly those rows.
+        let relaunched = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertEqual(relaunched.log(for: day)?.records.map(\.id), ["rec-1", "rec-2"])
+        XCTAssertEqual(try relaunched.log(for: day)?.totalProteinCentigrams(), 11_600)
+    }
+
+    func testReconfirmReportsNotAppliedWhenTheFileLacksTheOperationAndTheRetrySavesOnce() throws {
+        // A store that reports "indeterminate" once without having written anything,
+        // the shape of "rename returned but the process/OS lost the write".
+        final class IndeterminateOnceStore: AppStateStore {
+            let inner: FileAppStateStore
+            var armed = true
+            init(inner: FileAppStateStore) { self.inner = inner }
+            func load() throws -> AppState { try inner.load() }
+            var unconfirmedOperationID: String? { inner.unconfirmedOperationID }
+            var hasUnconfirmedCommit: Bool { inner.hasUnconfirmedCommit }
+            func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
+                if armed { armed = false; throw StoreCommitError.indeterminate(.verificationMismatch(.finalFile)) }
+                return try inner.modify(operationID: operationID, change)
+            }
+        }
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = IndeterminateOnceStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+
+        let first = wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) }
+        guard case .failed(.unconfirmed) = first else { return XCTFail("\(first)") }
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertNil(sync { model.pendingSave }, "the state is known again: nothing was written")
+        XCTAssertTrue(sync { model.log.records.isEmpty })
+
+        // Same editing session, same record ID: exactly one row after the retry.
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1"])
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 1)
+    }
+
+    func testDeleteAndEditWithUnknownOutcomeAreReconfirmedNotRetriedBlindly() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        var seeded = try seededState()
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        var log = try XCTUnwrap(seeded.log(for: day))
+        try log.add(FoodRecord(id: "old-1", day: day, name: "우유", quantity: nil, protein: ProteinAmount(centigrams: 1_000), source: .legacy))
+        try seeded.upsert(log)
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace(), state: seeded)
+        sync { model.select(day) }
+
+        let deletion = wait { model.deleteRecord(day: day, id: "old-1", completion: $0) }
+        guard case .failed(.unconfirmed) = deletion else { return XCTFail("\(deletion)") }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["old-1"], "screen still shows the confirmed state")
+        // Retrying the deletion blindly is refused instead of producing a notFound surprise.
+        guard case .failed(.unconfirmed) = wait({ model.deleteRecord(day: day, id: "old-1", completion: $0) }) else { return XCTFail() }
+
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok, "the deletion had landed")
+        XCTAssertTrue(sync { model.log.records.isEmpty })
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 0)
+    }
+
+    func testScreenStartedOnAnAlreadyBlockedStoreShowsThePendingStateAndReconfirmClearsIt() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        // The launch commit (no operation ID) ended unconfirmed, and the same
+        // store instance is handed to the screen, as SceneDelegate does.
+        let state = try seededState()
+        let url = storeURL
+        var armed = true
+        let store = FileAppStateStore(fileURL: url, hooks: StoreCommitHooks { stage in
+            if stage == .afterReplace && armed {
+                armed = false
+                try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: url.path)
+            }
+        })
+        XCTAssertThrowsError(try store.commit(state))
+        XCTAssertTrue(store.hasUnconfirmedCommit)
+
+        let model = makeModel(store: store, state: state)
+        XCTAssertEqual(sync { model.pendingSave }, .init(operationID: nil, day: model.today),
+                       "the blocked store is visible from the first frame")
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+        // A save is refused as unconfirmed (reconfirm reachable), never as a plain storage failure.
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) },
+                       .failed(.unconfirmed(operationID: nil)))
+
+        // Still unreadable: the pending state stays.
+        guard case .failed(.storage) = wait({ model.reconfirm(completion: $0) }) else { return XCTFail("expected storage error") }
+        XCTAssertNotNil(sync { model.pendingSave })
+
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok, "a pending save without an ID is confirmed by the read alone")
+        XCTAssertNil(sync { model.pendingSave })
+        XCTAssertFalse(store.hasUnconfirmedCommit)
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) }, .ok)
+        XCTAssertEqual(try FileAppStateStore(fileURL: url).load().log(for: day)?.records.map(\.id), ["rec-1"])
+    }
+
+    func testBlockedStoreRefusalNamesTheEarlierOperationNotTheNewOne() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let (model, store) = try makeModel(hooks: unreadableAfterFirstReplace())
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+        let first = wait { model.addRecord(day: day, id: "rec-1", name: "닭", proteinText: "23", completion: $0) }
+        guard case .failed(.unconfirmed(let earlier)) = first, earlier != nil else { return XCTFail("\(first)") }
+
+        // A second screen on the same (still blocked) store starts pending with that same ID.
+        let second = makeModel(store: store, state: sync { model.state })
+        XCTAssertEqual(sync { second.pendingSave }?.operationID, earlier)
+        XCTAssertEqual(wait { second.addRecord(day: day, id: "rec-2", name: "x", proteinText: "1", completion: $0) },
+                       .failed(.unconfirmed(operationID: earlier)))
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { second.reconfirm(completion: $0) }, .ok)
+        sync { second.select(day) }
+        XCTAssertEqual(sync { second.log.records.map(\.id) }, ["rec-1"])
     }
 }

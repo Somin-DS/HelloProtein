@@ -9,6 +9,14 @@ final class RenewalLaunchGate {
     private let arguments: [String]
     private let environment: [String: String]
     private let workQueue = DispatchQueue(label: "com.devsom.ProteinTracker.launch-gate", qos: .userInitiated)
+    #if DEBUG
+    /// `-HelloProteinFailAfterReplaceOnce YES`: the first user save after launch
+    /// fails right after the rename, which is exactly the "replaced but
+    /// unconfirmed" outcome. Armed only once the launch has finished so the
+    /// migration commit itself is never affected. Changes no file permissions.
+    static let failAfterReplaceArgument = "-HelloProteinFailAfterReplaceOnce"
+    private let finalReadFailure = FinalReadFailureInjector()
+    #endif
 
     init(paths: RenewalPaths = .standard(),
          arguments: [String] = ProcessInfo.processInfo.arguments,
@@ -17,6 +25,9 @@ final class RenewalLaunchGate {
         self.arguments = arguments
         self.environment = environment
         let interrupt = Self.interruptHandler(arguments: arguments)
+        #if DEBUG
+        let injector = finalReadFailure
+        #endif
         self.store = FileAppStateStore(
             fileURL: paths.storeFileURL,
             writer: DefaultStoreFileWriter(attributes: RenewalPaths.fileProtectionAttributes),
@@ -25,7 +36,11 @@ final class RenewalLaunchGate {
                 switch stage {
                 case .temporaryFile: try interrupt(.afterTemporaryWrite)
                 case .beforeReplace: try interrupt(.beforeReplace)
-                case .afterReplace: try interrupt(.afterReplace)
+                case .afterReplace:
+                    try interrupt(.afterReplace)
+                    #if DEBUG
+                    try injector.fireIfArmed()
+                    #endif
                 default: break
                 }
             }
@@ -66,6 +81,12 @@ final class RenewalLaunchGate {
                 environment: MigrationEnvironment(today: today, now: now, interrupt: interrupt)
             )
             let outcome = coordinator.launch()
+            #if DEBUG
+            if case .ready = outcome,
+               RenewalLaunchPolicy.value(of: Self.failAfterReplaceArgument, in: self.arguments).map(RenewalLaunchPolicy.isTruthy) == true {
+                self.finalReadFailure.arm()
+            }
+            #endif
             DispatchQueue.main.async { completion(outcome) }
         }
     }
@@ -86,3 +107,26 @@ final class RenewalLaunchGate {
         #endif
     }
 }
+
+#if DEBUG
+/// Throws once at the `.afterReplace` commit stage; the store reports the commit
+/// as indeterminate. Thread-safe because commits are serialized per path.
+final class FinalReadFailureInjector {
+    struct SimulatedFinalReadFailure: Error {}
+    private let lock = NSLock()
+    private var armed = false
+
+    func arm() {
+        lock.lock(); defer { lock.unlock() }
+        armed = true
+    }
+
+    func fireIfArmed() throws {
+        lock.lock(); defer { lock.unlock() }
+        guard armed else { return }
+        armed = false
+        NSLog("HelloProtein: simulated final read failure after replace")
+        throw SimulatedFinalReadFailure()
+    }
+}
+#endif

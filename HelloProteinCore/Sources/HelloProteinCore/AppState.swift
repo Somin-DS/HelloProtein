@@ -190,6 +190,12 @@ public struct AppState: Codable, Equatable, Sendable {
     public var settings: AppSettings
     public private(set) var goals: [ProteinGoal]
     public let migration: MigrationRecord
+    /// ID of the user operation that produced this document, or nil for
+    /// migration/fresh-install documents and files written before this field
+    /// existed. A retry after an unconfirmed commit compares this value to
+    /// decide whether its operation already landed. Only the latest value is
+    /// kept, so the field never grows.
+    public var lastOperationID: String?
 
     public init(
         logs: [DailyLog],
@@ -197,7 +203,8 @@ public struct AppState: Codable, Equatable, Sendable {
         searchHistory: [SearchTerm],
         settings: AppSettings,
         goals: [ProteinGoal],
-        migration: MigrationRecord
+        migration: MigrationRecord,
+        lastOperationID: String? = nil
     ) throws {
         self.schemaVersion = Self.currentSchemaVersion
         self.logs = logs.sorted { $0.day < $1.day }
@@ -206,6 +213,7 @@ public struct AppState: Codable, Equatable, Sendable {
         self.settings = settings
         self.goals = goals.sorted { $0.effectiveFrom < $1.effectiveFrom }
         self.migration = migration
+        self.lastOperationID = lastOperationID
         try validate()
     }
 
@@ -227,7 +235,7 @@ public struct AppState: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case schemaVersion, logs, favorites, searchHistory, settings, goals, migration
+        case schemaVersion, logs, favorites, searchHistory, settings, goals, migration, lastOperationID
     }
 
     public init(from decoder: Decoder) throws {
@@ -243,6 +251,8 @@ public struct AppState: Codable, Equatable, Sendable {
         self.settings = try container.decode(AppSettings.self, forKey: .settings)
         self.goals = try container.decode([ProteinGoal].self, forKey: .goals)
         self.migration = try container.decode(MigrationRecord.self, forKey: .migration)
+        // Absent in files written before operation IDs existed; nil must not change any record.
+        self.lastOperationID = try container.decodeIfPresent(String.self, forKey: .lastOperationID)
         try validate()
     }
 

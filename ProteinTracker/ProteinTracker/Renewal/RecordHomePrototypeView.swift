@@ -7,6 +7,7 @@ struct RecordHomeView: View {
     @State private var editorTarget: EditorTarget?
     @State private var legacyTotalTarget: LegacyTotalTarget?
     @State private var showingDatePicker = false
+    @State private var homeError: RecordHomeViewModel.ActionError?
     @Environment(\.scenePhase) private var scenePhase
 
     init(model: RecordHomeViewModel) {
@@ -17,6 +18,7 @@ struct RecordHomeView: View {
         NavigationView {
             VStack(spacing: 0) {
                 dayStrip
+                if model.pendingSave != nil { pendingBanner }
                 summary
                 recordList
             }
@@ -44,9 +46,11 @@ struct RecordHomeView: View {
                         .padding()
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(model.pendingSave != nil)
                 .padding(.horizontal, 24)
                 .background(.ultraThinMaterial)
             }
+            .actionErrorAlert($homeError)
             .sheet(item: $editorTarget) { target in
                 RecordEditorSheet(target: target, model: model)
             }
@@ -63,6 +67,29 @@ struct RecordHomeView: View {
         .onChange(of: scenePhase) { phase in
             if phase == .active { model.refreshToday() }
         }
+    }
+
+    // MARK: Unconfirmed save
+
+    /// Shown while a save's outcome is unknown. No write is accepted until the
+    /// store has been re-read; the user triggers that explicitly.
+    private var pendingBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label { Text("renewal_pending_banner") } icon: { Image(systemName: "exclamationmark.arrow.circlepath") }
+                .font(.footnote)
+            Button {
+                model.reconfirm { result in
+                    // `.notApplied` is shown too: the entry the user typed was
+                    // never stored and the banner is about to disappear.
+                    if case .failure(let failure) = result { homeError = failure }
+                }
+            } label: { Text("renewal_reconfirm").font(.footnote.weight(.semibold)) }
+            .disabled(model.isBusy)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.orange.opacity(0.15))
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: Day strip
@@ -177,7 +204,7 @@ struct RecordHomeView: View {
             } label: {
                 Text("renewal_edit_total").font(.caption.weight(.semibold))
             }
-            .disabled(model.totalCentigrams == nil)
+            .disabled(model.totalCentigrams == nil || model.pendingSave != nil)
         }
         .padding(.top, 6)
     }
@@ -210,6 +237,9 @@ struct RecordHomeView: View {
                         }
                     }
                     .accessibilityHint(Text("renewal_edit"))
+                    // No editor opens while a save is unconfirmed: its Save
+                    // would only be refused with another operation's ID.
+                    .disabled(model.pendingSave != nil)
                 }
             }
         }
@@ -244,6 +274,9 @@ struct EditorTarget: Identifiable {
     let id = UUID()
     let day: CalendarDay
     let record: FoodRecord?
+    /// Record ID used by every save attempt of this editing session, so a retry
+    /// after a failed or unconfirmed save can never add a second record.
+    let newRecordID = UUID().uuidString
 }
 
 @available(iOS 15.0, *)
@@ -263,6 +296,9 @@ private struct RecordEditorSheet: View {
     @State private var name: String
     @State private var protein: String
     @State private var error: RecordHomeViewModel.ActionError?
+    /// Set when this sheet's own save ended unconfirmed; saving stays disabled
+    /// until the store has been re-read.
+    @State private var saveUnconfirmed = false
 
     init(target: EditorTarget, model: RecordHomeViewModel) {
         self.target = target
@@ -283,10 +319,16 @@ private struct RecordEditorSheet: View {
                         .keyboardType(.decimalPad)
                         .accessibilityLabel(Text("renewal_protein_placeholder"))
                 }
+                if saveUnconfirmed {
+                    PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
+                        saveUnconfirmed = false
+                        error = .notApplied
+                    }, onError: { error = $0 })
+                }
                 if target.record != nil {
                     Section {
                         Button(role: .destructive) { delete() } label: { Text("renewal_delete") }
-                            .disabled(model.isBusy)
+                            .disabled(model.isBusy || saveUnconfirmed)
                     }
                 }
             }
@@ -294,11 +336,14 @@ private struct RecordEditorSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
+                    // Cancel is unavailable while a save is running so the sheet
+                    // cannot close with a write still in flight behind it.
                     Button { dismiss() } label: { Text("renewal_cancel") }
+                        .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button { save() } label: { Text("renewal_save") }
-                        .disabled(model.isBusy)
+                        .disabled(model.isBusy || saveUnconfirmed)
                 }
             }
             .interactiveDismissDisabled(model.isBusy)
@@ -306,30 +351,57 @@ private struct RecordEditorSheet: View {
         }
     }
 
+    private func handle(_ result: Result<Void, RecordHomeViewModel.ActionError>) {
+        switch result {
+        case .success:
+            dismiss()
+        case .failure(.unconfirmed(let operationID)):
+            saveUnconfirmed = true
+            error = .unconfirmed(operationID: operationID)
+        case .failure(let failure):
+            error = failure
+        }
+    }
+
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let handler: (Result<Void, RecordHomeViewModel.ActionError>) -> Void = { result in
-            switch result {
-            case .success: dismiss()
-            case .failure(let failure): error = failure
-            }
-        }
         if let record = target.record {
             model.updateRecord(day: target.day, id: record.id, name: trimmed.isEmpty ? nil : trimmed,
-                               proteinText: protein, completion: handler)
+                               proteinText: protein, completion: handle)
         } else {
-            model.addRecord(day: target.day, name: trimmed.isEmpty ? nil : trimmed,
-                            proteinText: protein, completion: handler)
+            model.addRecord(day: target.day, id: target.newRecordID, name: trimmed.isEmpty ? nil : trimmed,
+                            proteinText: protein, completion: handle)
         }
     }
 
     private func delete() {
         guard let record = target.record else { return }
-        model.deleteRecord(day: target.day, id: record.id) { result in
-            switch result {
-            case .success: dismiss()
-            case .failure(let failure): error = failure
-            }
+        model.deleteRecord(day: target.day, id: record.id, completion: handle)
+    }
+}
+
+/// Form section offered while a save's outcome is unknown: explains the state
+/// and lets the user re-read the store. It never retries the write by itself.
+@available(iOS 15.0, *)
+private struct PendingSaveSection: View {
+    @ObservedObject var model: RecordHomeViewModel
+    let onConfirmed: () -> Void
+    let onNotApplied: () -> Void
+    let onError: (RecordHomeViewModel.ActionError) -> Void
+
+    var body: some View {
+        Section {
+            Text("renewal_pending_sheet").font(.footnote).foregroundStyle(.secondary)
+            Button {
+                model.reconfirm { result in
+                    switch result {
+                    case .success: onConfirmed()
+                    case .failure(.notApplied): onNotApplied()
+                    case .failure(let failure): onError(failure)
+                    }
+                }
+            } label: { Text("renewal_reconfirm") }
+            .disabled(model.isBusy)
         }
     }
 }
@@ -341,6 +413,7 @@ private struct LegacyTotalSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var total: String
     @State private var error: RecordHomeViewModel.ActionError?
+    @State private var saveUnconfirmed = false
 
     init(target: LegacyTotalTarget, model: RecordHomeViewModel) {
         self.target = target
@@ -361,23 +434,33 @@ private struct LegacyTotalSheet: View {
                 } footer: {
                     Text("renewal_edit_total_footer")
                 }
+                if saveUnconfirmed {
+                    PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
+                        saveUnconfirmed = false
+                        error = .notApplied
+                    }, onError: { error = $0 })
+                }
             }
             .navigationTitle(Text("renewal_edit_total"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: { Text("renewal_cancel") }
+                        .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         model.setLegacyTotal(day: target.day, totalText: total) { result in
                             switch result {
                             case .success: dismiss()
+                            case .failure(.unconfirmed(let operationID)):
+                                saveUnconfirmed = true
+                                error = .unconfirmed(operationID: operationID)
                             case .failure(let failure): error = failure
                             }
                         }
                     } label: { Text("renewal_save") }
-                    .disabled(model.isBusy)
+                    .disabled(model.isBusy || saveUnconfirmed)
                 }
             }
             .interactiveDismissDisabled(model.isBusy)
@@ -458,6 +541,8 @@ enum ActionErrorText {
         case .storage: return RenewalStrings.text("renewal_error_storage_title")
         case .integrity, .notFound: return RenewalStrings.text("renewal_error_integrity_title")
         case .busy: return RenewalStrings.text("renewal_error_busy_title")
+        case .unconfirmed: return RenewalStrings.text("renewal_error_unconfirmed_title")
+        case .notApplied: return RenewalStrings.text("renewal_error_not_applied_title")
         }
     }
 
@@ -476,6 +561,8 @@ enum ActionErrorText {
         case .integrity(let detail): return RenewalStrings.format("renewal_error_integrity_message", detail)
         case .notFound: return RenewalStrings.text("renewal_error_not_found")
         case .busy: return RenewalStrings.text("renewal_error_busy")
+        case .unconfirmed: return RenewalStrings.text("renewal_error_unconfirmed_message")
+        case .notApplied: return RenewalStrings.text("renewal_error_not_applied_message")
         }
     }
 }

@@ -139,3 +139,13 @@
 "recovery_kind_commitFailed" = "새 기록 파일을 저장하지 못했어요.";
 "recovery_kind_verificationFailed" = "저장한 기록을 다시 읽어 검산하는 데 실패했어요.";
 "recovery_kind_interrupted" = "이관이 중간에 중단됐어요.";
+"renewal_error_unconfirmed_title" = "저장 결과 미확인";
+"renewal_error_unconfirmed_message" = "파일은 교체됐지만 다시 읽지 못했습니다. 입력은 그대로 남아 있습니다. 저장 결과를 확인하기 전에는 다른 내용을 저장하지 않습니다.";
+"renewal_error_not_applied_title" = "저장되지 않음";
+"renewal_error_not_applied_message" = "저장된 파일에 이 변경이 없습니다. 입력은 그대로이니 다시 저장해 주세요.";
+"renewal_reconfirm" = "저장 결과 확인";
+"renewal_pending_banner" = "저장 결과를 확인하지 못했습니다. 다른 변경 전에 저장 결과를 확인해 주세요.";
+"renewal_pending_sheet" = "이 저장의 결과를 확인하지 못했습니다. 저장 결과를 확인해 실제로 저장됐는지 살펴보세요.";
+"recovery_kind_evidenceCorrupt" = "이관 기록 파일이 손상됐습니다. 다시 가져오거나 새로 만들거나 덮어쓰지 않았습니다.";
+"recovery_kind_evidenceUnreadable" = "이관 기록 파일에 접근할 수 없습니다. 기기 잠금을 해제하고 다시 시도해 주세요.";
+"recovery_kind_evidenceUnsupported" = "이관 기록 파일이 이 앱 버전보다 새로운 형식입니다.";
