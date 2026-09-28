@@ -7,6 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A30000000000000000000101 /* RenewalPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* RenewalPaths.swift */; };
+		A30000000000000000000102 /* RealmLegacySourceGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* RealmLegacySourceGateway.swift */; };
+		A30000000000000000000103 /* RenewalLaunchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* RenewalLaunchPolicy.swift */; };
+		A30000000000000000000104 /* RenewalLaunchGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* RenewalLaunchGate.swift */; };
+		A30000000000000000000105 /* LaunchLoadingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000005 /* LaunchLoadingViewController.swift */; };
+		A30000000000000000000106 /* RecoveryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* RecoveryViewController.swift */; };
+		A30000000000000000000107 /* LegacyFixtureSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* LegacyFixtureSeeder.swift */; };
+		A30000000000000000000108 /* RenewalStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* RenewalStrings.swift */; };
+		A40000000000000000000101 /* RealmLegacySourceGatewayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* RealmLegacySourceGatewayTests.swift */; };
+		A40000000000000000000102 /* RecordHomeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* RecordHomeViewModelTests.swift */; };
+		A40000000000000000000103 /* RenewalLaunchPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000003 /* RenewalLaunchPolicyTests.swift */; };
+		A40000000000000000000104 /* MigrationRealmEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */; };
+		A40000000000000000000201 /* RealmModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AA9E872752707C00E3EFC1 /* RealmModel.swift */; };
+		A40000000000000000000202 /* LegacyRealmSnapshotReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* LegacyRealmSnapshotReader.swift */; };
+		A40000000000000000000203 /* RealmLegacySourceGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* RealmLegacySourceGateway.swift */; };
+		A40000000000000000000204 /* RenewalLaunchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* RenewalLaunchPolicy.swift */; };
+		A40000000000000000000205 /* RenewalPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* RenewalPaths.swift */; };
+		A40000000000000000000206 /* RecordHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* RecordHomeViewModel.swift */; };
+		A40000000000000000000311 /* Realm in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000301 /* Realm */; };
+		A40000000000000000000312 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000302 /* RealmSwift */; };
+		A40000000000000000000313 /* HelloProteinCore in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000303 /* HelloProteinCore */; };
+		A40000000000000000000314 /* MigrationCore in Frameworks */ = {isa = PBXBuildFile; productRef = A40000000000000000000304 /* MigrationCore */; };
+		A20000000000000000000003 /* HelloProteinCore in Frameworks */ = {isa = PBXBuildFile; productRef = A20000000000000000000002 /* HelloProteinCore */; };
+		A20000000000000000000006 /* RecordHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* RecordHomeViewModel.swift */; };
+		A20000000000000000000008 /* RecordHomePrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* RecordHomePrototypeView.swift */; };
+		A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* RenewalPrototypeFactory.swift */; };
+		A10000000000000000000002 /* LegacyRealmSnapshotReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* LegacyRealmSnapshotReader.swift */; };
+		A10000000000000000000005 /* MigrationCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000004 /* MigrationCore */; };
 		3728B244275D0AE60098BDCF /* Protein-En.json in Resources */ = {isa = PBXBuildFile; fileRef = 3728B243275D0AE60098BDCF /* Protein-En.json */; };
 		3728B248275D37280098BDCF /* SettingLanguageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B247275D37280098BDCF /* SettingLanguageViewController.swift */; };
 		3728B24A275D373F0098BDCF /* SettingLanguageTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3728B249275D373F0098BDCF /* SettingLanguageTableViewCell.swift */; };
@@ -18,7 +46,6 @@
 		374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 374507FE2757913000A14A4C /* TmoneyRoundWindRegular.ttf */; };
 		374508022757928B00A14A4C /* UIFont+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374508012757928B00A14A4C /* UIFont+Extension.swift */; };
 		3751318727647B92009603A0 /* libswift_Concurrency.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3751318627647B92009603A0 /* libswift_Concurrency.tbd */; settings = {ATTRIBUTES = (Weak, ); }; };
-		375131B327678449009603A0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 375131B227678449009603A0 /* GoogleService-Info.plist */; };
 		3752AD80274FD1F7001C5079 /* RecentSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */; };
 		3752AD82274FD20B001C5079 /* ResultSearchTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */; };
 		3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3752AD83274FD853001C5079 /* SearchViewController.swift */; };
@@ -61,7 +88,6 @@
 		37FB9854274D087800C29698 /* SettingTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9853274D087800C29698 /* SettingTableViewCell.swift */; };
 		37FB9856274D0D5D00C29698 /* InitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37FB9855274D0D5D00C29698 /* InitViewController.swift */; };
 		37FB9858274D0D6800C29698 /* Init.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37FB9857274D0D6800C29698 /* Init.storyboard */; };
-		AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */; };
 		AB873D9A2A2C476E00859E0F /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = AB873D992A2C476E00859E0F /* SnapKit */; };
 		ABCA62D829E16C4F00B0E7C1 /* UIView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */; };
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
@@ -70,6 +96,23 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A30000000000000000000001 /* RenewalPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalPaths.swift; sourceTree = "<group>"; };
+		A30000000000000000000002 /* RealmLegacySourceGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLegacySourceGateway.swift; sourceTree = "<group>"; };
+		A30000000000000000000003 /* RenewalLaunchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalLaunchPolicy.swift; sourceTree = "<group>"; };
+		A30000000000000000000004 /* RenewalLaunchGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalLaunchGate.swift; sourceTree = "<group>"; };
+		A30000000000000000000005 /* LaunchLoadingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchLoadingViewController.swift; sourceTree = "<group>"; };
+		A30000000000000000000006 /* RecoveryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryViewController.swift; sourceTree = "<group>"; };
+		A30000000000000000000007 /* LegacyFixtureSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyFixtureSeeder.swift; sourceTree = "<group>"; };
+		A30000000000000000000008 /* RenewalStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalStrings.swift; sourceTree = "<group>"; };
+		A40000000000000000000001 /* RealmLegacySourceGatewayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLegacySourceGatewayTests.swift; sourceTree = "<group>"; };
+		A40000000000000000000002 /* RecordHomeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordHomeViewModelTests.swift; sourceTree = "<group>"; };
+		A40000000000000000000003 /* RenewalLaunchPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalLaunchPolicyTests.swift; sourceTree = "<group>"; };
+		A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationRealmEndToEndTests.swift; sourceTree = "<group>"; };
+		A40000000000000000000408 /* ProteinTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProteinTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000005 /* RecordHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordHomeViewModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* RecordHomePrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordHomePrototypeView.swift; sourceTree = "<group>"; };
+		A20000000000000000000009 /* RenewalPrototypeFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalPrototypeFactory.swift; sourceTree = "<group>"; };
+		A10000000000000000000001 /* LegacyRealmSnapshotReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyRealmSnapshotReader.swift; sourceTree = "<group>"; };
 		3728B243275D0AE60098BDCF /* Protein-En.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "Protein-En.json"; sourceTree = "<group>"; };
 		3728B247275D37280098BDCF /* SettingLanguageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingLanguageViewController.swift; sourceTree = "<group>"; };
 		3728B249275D373F0098BDCF /* SettingLanguageTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingLanguageTableViewCell.swift; sourceTree = "<group>"; };
@@ -80,7 +123,6 @@
 		374507FE2757913000A14A4C /* TmoneyRoundWindRegular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = TmoneyRoundWindRegular.ttf; sourceTree = "<group>"; };
 		374508012757928B00A14A4C /* UIFont+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+Extension.swift"; sourceTree = "<group>"; };
 		3751318627647B92009603A0 /* libswift_Concurrency.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libswift_Concurrency.tbd; path = usr/lib/swift/libswift_Concurrency.tbd; sourceTree = SDKROOT; };
-		375131B227678449009603A0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3752AD7F274FD1F7001C5079 /* RecentSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD81274FD20B001C5079 /* ResultSearchTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSearchTableViewCell.swift; sourceTree = "<group>"; };
 		3752AD83274FD853001C5079 /* SearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
@@ -119,7 +161,7 @@
 		37FB9853274D087800C29698 /* SettingTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingTableViewCell.swift; sourceTree = "<group>"; };
 		37FB9855274D0D5D00C29698 /* InitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitViewController.swift; sourceTree = "<group>"; };
 		37FB9857274D0D6800C29698 /* Init.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Init.storyboard; sourceTree = "<group>"; };
-		AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		AB33AF0C29C9CE6300244656 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		ABCA62D729E16C4F00B0E7C1 /* UIView+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
@@ -127,10 +169,23 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A40000000000000000000406 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A40000000000000000000311 /* Realm in Frameworks */,
+				A40000000000000000000312 /* RealmSwift in Frameworks */,
+				A40000000000000000000313 /* HelloProteinCore in Frameworks */,
+				A40000000000000000000314 /* MigrationCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		37FB9822274BEA5C00C29698 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000000000000000000003 /* HelloProteinCore in Frameworks */,
+				A10000000000000000000005 /* MigrationCore in Frameworks */,
 				3751318727647B92009603A0 /* libswift_Concurrency.tbd in Frameworks */,
 				37AA9E8527526C5100E3EFC1 /* IQKeyboardManagerSwift in Frameworks */,
 				37AA9E8227526C2900E3EFC1 /* SwiftyJSON in Frameworks */,
@@ -148,6 +203,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A30000000000000000000010 /* Migration */ = {
+			isa = PBXGroup;
+			children = (
+				A30000000000000000000001 /* RenewalPaths.swift */,
+				A30000000000000000000002 /* RealmLegacySourceGateway.swift */,
+				A30000000000000000000003 /* RenewalLaunchPolicy.swift */,
+				A30000000000000000000004 /* RenewalLaunchGate.swift */,
+				A30000000000000000000005 /* LaunchLoadingViewController.swift */,
+				A30000000000000000000006 /* RecoveryViewController.swift */,
+				A30000000000000000000007 /* LegacyFixtureSeeder.swift */,
+			);
+			path = Migration;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000409 /* ProteinTrackerTests */ = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000001 /* RealmLegacySourceGatewayTests.swift */,
+				A40000000000000000000002 /* RecordHomeViewModelTests.swift */,
+				A40000000000000000000003 /* RenewalLaunchPolicyTests.swift */,
+				A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */,
+			);
+			path = ProteinTrackerTests;
+			sourceTree = "<group>";
+		};
+		A20000000000000000000004 /* Renewal */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000005 /* RecordHomeViewModel.swift */,
+				A20000000000000000000007 /* RecordHomePrototypeView.swift */,
+				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
+				A30000000000000000000008 /* RenewalStrings.swift */,
+			);
+			path = Renewal;
+			sourceTree = "<group>";
+		};
 		374507F827578B6E00A14A4C /* Font */ = {
 			isa = PBXGroup;
 			children = (
@@ -183,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				37FB9827274BEA5C00C29698 /* ProteinTracker */,
+				A40000000000000000000409 /* ProteinTrackerTests */,
 				37FB9826274BEA5C00C29698 /* Products */,
 				3751318527647B92009603A0 /* Frameworks */,
 			);
@@ -192,6 +284,7 @@
 			isa = PBXGroup;
 			children = (
 				37FB9825274BEA5C00C29698 /* ProteinTracker.app */,
+				A40000000000000000000408 /* ProteinTrackerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -200,8 +293,9 @@
 			isa = PBXGroup;
 			children = (
 				AB33AF0B29C9C12300244656 /* Assets */,
+				A20000000000000000000004 /* Renewal */,
+				A30000000000000000000010 /* Migration */,
 				AB33AF0A29C9C0F800244656 /* Model */,
-				375131B227678449009603A0 /* GoogleService-Info.plist */,
 				374507F827578B6E00A14A4C /* Font */,
 				37BEA6F6274D44EA00C0AEF7 /* Extension */,
 				37FB9848274D01FF00C29698 /* Localization */,
@@ -216,7 +310,8 @@
 				37EEADC127521A2200B06EF7 /* Calculator.swift */,
 				37EEADBF27520E0D00B06EF7 /* CheckValid.swift */,
 				37FB9836274BEA5F00C29698 /* Info.plist */,
-				AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */,
+				AB33AF0C29C9CE6300244656 /* Config.xcconfig */,
+				A10000000000000000000001 /* LegacyRealmSnapshotReader.swift */,
 			);
 			path = ProteinTracker;
 			sourceTree = "<group>";
@@ -303,6 +398,8 @@
 			);
 			name = ProteinTracker;
 			packageProductDependencies = (
+				A20000000000000000000002 /* HelloProteinCore */,
+				A10000000000000000000004 /* MigrationCore */,
 				37EEADC4275229F000B06EF7 /* TextFieldEffects */,
 				37AA9E7927526B8C00E3EFC1 /* Realm */,
 				37AA9E7B27526B8C00E3EFC1 /* RealmSwift */,
@@ -318,6 +415,29 @@
 			productReference = 37FB9825274BEA5C00C29698 /* ProteinTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A40000000000000000000401 /* ProteinTrackerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A40000000000000000000402 /* Build configuration list for PBXNativeTarget "ProteinTrackerTests" */;
+			buildPhases = (
+				A40000000000000000000405 /* Sources */,
+				A40000000000000000000406 /* Frameworks */,
+				A40000000000000000000407 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ProteinTrackerTests;
+			packageProductDependencies = (
+				A40000000000000000000301 /* Realm */,
+				A40000000000000000000302 /* RealmSwift */,
+				A40000000000000000000303 /* HelloProteinCore */,
+				A40000000000000000000304 /* MigrationCore */,
+			);
+			productName = ProteinTrackerTests;
+			productReference = A40000000000000000000408 /* ProteinTrackerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -330,6 +450,9 @@
 				TargetAttributes = {
 					37FB9824274BEA5C00C29698 = {
 						CreatedOnToolsVersion = 13.1;
+					};
+					A40000000000000000000401 = {
+						CreatedOnToolsVersion = 27.1;
 					};
 				};
 			};
@@ -344,6 +467,8 @@
 			);
 			mainGroup = 37FB981C274BEA5C00C29698;
 			packageReferences = (
+				A20000000000000000000001 /* XCLocalSwiftPackageReference "../HelloProteinCore" */,
+				A10000000000000000000003 /* XCLocalSwiftPackageReference "../MigrationCore" */,
 				37EEADC3275229F000B06EF7 /* XCRemoteSwiftPackageReference "TextFieldEffects" */,
 				37AA9E7827526B8C00E3EFC1 /* XCRemoteSwiftPackageReference "realm-cocoa" */,
 				37AA9E7D27526BBE00E3EFC1 /* XCRemoteSwiftPackageReference "Alamofire" */,
@@ -359,17 +484,23 @@
 			projectRoot = "";
 			targets = (
 				37FB9824274BEA5C00C29698 /* ProteinTracker */,
+				A40000000000000000000401 /* ProteinTrackerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A40000000000000000000407 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		37FB9823274BEA5C00C29698 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB33AF0D29C9CE6300244656 /* Secrets.xcconfig in Resources */,
-				375131B327678449009603A0 /* GoogleService-Info.plist in Resources */,
 				37FB9841274BEAD100C29698 /* Stats.storyboard in Resources */,
 				374508002757913000A14A4C /* TmoneyRoundWindRegular.ttf in Resources */,
 				3728B244275D0AE60098BDCF /* Protein-En.json in Resources */,
@@ -388,10 +519,39 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A40000000000000000000405 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A40000000000000000000101 /* RealmLegacySourceGatewayTests.swift in Sources */,
+				A40000000000000000000102 /* RecordHomeViewModelTests.swift in Sources */,
+				A40000000000000000000103 /* RenewalLaunchPolicyTests.swift in Sources */,
+				A40000000000000000000104 /* MigrationRealmEndToEndTests.swift in Sources */,
+				A40000000000000000000201 /* RealmModel.swift in Sources */,
+				A40000000000000000000202 /* LegacyRealmSnapshotReader.swift in Sources */,
+				A40000000000000000000203 /* RealmLegacySourceGateway.swift in Sources */,
+				A40000000000000000000204 /* RenewalLaunchPolicy.swift in Sources */,
+				A40000000000000000000205 /* RenewalPaths.swift in Sources */,
+				A40000000000000000000206 /* RecordHomeViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		37FB9821274BEA5C00C29698 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000002 /* LegacyRealmSnapshotReader.swift in Sources */,
+				A30000000000000000000101 /* RenewalPaths.swift in Sources */,
+				A30000000000000000000102 /* RealmLegacySourceGateway.swift in Sources */,
+				A30000000000000000000103 /* RenewalLaunchPolicy.swift in Sources */,
+				A30000000000000000000104 /* RenewalLaunchGate.swift in Sources */,
+				A30000000000000000000105 /* LaunchLoadingViewController.swift in Sources */,
+				A30000000000000000000106 /* RecoveryViewController.swift in Sources */,
+				A30000000000000000000107 /* LegacyFixtureSeeder.swift in Sources */,
+				A30000000000000000000108 /* RenewalStrings.swift in Sources */,
+				A20000000000000000000006 /* RecordHomeViewModel.swift in Sources */,
+				A20000000000000000000008 /* RecordHomePrototypeView.swift in Sources */,
+				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,
 				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,
 				37AA9E882752707C00E3EFC1 /* RealmModel.swift in Sources */,
@@ -590,7 +750,7 @@
 		};
 		37FB983A274BEA5F00C29698 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */;
+			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -602,7 +762,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Hello Protein";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Show;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
@@ -626,7 +785,7 @@
 		};
 		37FB983B274BEA5F00C29698 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Secrets.xcconfig */;
+			baseConfigurationReference = AB33AF0C29C9CE6300244656 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -638,7 +797,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Hello Protein";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Show;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
@@ -657,6 +815,50 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A40000000000000000000403 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devsom.ProteinTrackerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A40000000000000000000404 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.devsom.ProteinTrackerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -681,7 +883,27 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		A40000000000000000000402 /* Build configuration list for PBXNativeTarget "ProteinTrackerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A40000000000000000000403 /* Debug */,
+				A40000000000000000000404 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A20000000000000000000001 /* XCLocalSwiftPackageReference "../HelloProteinCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../HelloProteinCore;
+		};
+		A10000000000000000000003 /* XCLocalSwiftPackageReference "../MigrationCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../MigrationCore;
+		};
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */ = {
@@ -759,6 +981,36 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A40000000000000000000301 /* Realm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37AA9E7827526B8C00E3EFC1 /* package */;
+			productName = Realm;
+		};
+		A40000000000000000000302 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 37AA9E7827526B8C00E3EFC1 /* package */;
+			productName = RealmSwift;
+		};
+		A40000000000000000000303 /* HelloProteinCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A20000000000000000000001 /* package */;
+			productName = HelloProteinCore;
+		};
+		A40000000000000000000304 /* MigrationCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000003 /* package */;
+			productName = MigrationCore;
+		};
+		A20000000000000000000002 /* HelloProteinCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A20000000000000000000001 /* XCLocalSwiftPackageReference "../HelloProteinCore" */;
+			productName = HelloProteinCore;
+		};
+		A10000000000000000000004 /* MigrationCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000003 /* XCLocalSwiftPackageReference "../MigrationCore" */;
+			productName = MigrationCore;
+		};
 		3728B24C275E58420098BDCF /* JGProgressHUD */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3728B24B275E58410098BDCF /* XCRemoteSwiftPackageReference "JGProgressHUD" */;

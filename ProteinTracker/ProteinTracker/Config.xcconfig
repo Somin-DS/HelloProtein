@@ -1,0 +1,4 @@
+// Safe defaults for local builds and CI.
+// Put a real API key in an ignored Secrets.xcconfig next to this file.
+API_KEY =
+#include? "Secrets.xcconfig"
