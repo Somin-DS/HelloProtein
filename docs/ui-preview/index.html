@@ -188,11 +188,13 @@ table.t th,table.t td{border:1px solid var(--page-line);padding:6px 10px;text-al
 .cal .dot.only{background:transparent;border:1.5px solid var(--green)}
 .cal .dot.none{visibility:hidden}
 .chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding:8px 20px 4px;position:relative;border-bottom:1px solid var(--line);margin:0 0 0}
-.chart .b{flex:1;background:var(--green);border-radius:4px 4px 0 0;position:relative;min-height:2px;border:0;padding:0;cursor:pointer}
+.chart .plot{display:flex;align-items:flex-end;gap:8px;height:100%;width:100%;position:relative}
+.chart .column{flex:1;height:100%;position:relative;display:flex;align-items:flex-end;min-width:0}
+.chart .b{width:100%;background:var(--green);border-radius:4px 4px 0 0;position:relative;min-height:2px;border:0;padding:0;cursor:pointer}
 .chart .b.sel{background:var(--action)}
 .chart .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
-.chart .b .tick{position:absolute;left:-3px;right:-3px;border-top:1.5px dashed var(--action)}
-.chart .goal{position:absolute;left:20px;right:20px;border-top:1.5px dashed var(--action);font-size:10px;color:var(--action);text-align:right}
+.chart .column .tick{position:absolute;left:-3px;right:-3px;border-top:1.5px dashed var(--action);pointer-events:none}
+.chart .goal{position:absolute;left:0;right:0;border-top:1.5px dashed var(--action);font-size:10px;color:var(--action);text-align:right;pointer-events:none}
 .xl{display:flex;gap:8px;padding:4px 20px;font-size:11px;color:var(--muted)}
 .xl span{flex:1;text-align:center}
 .inline-note{font-size:calc(12px * var(--scale,1));color:var(--muted);padding:0 20px 8px}
@@ -353,8 +355,14 @@ function goalFor(st,d){ if(st.goalState==='none') return null; if(st.goalState==
 /* ---------- state ---------- */
 function initial(){ return { screen:'home', day:'2026-09-23', days:cloneDays(), todayRecords:[], goalState:'set', sheet:null, alert:null, pending:false, histMode:'cal', addTab:'manual', editor:null, saveCount:0, reconfCount:0 }; }
 let L = initial();
+const pendingDemoTimers = new Set();
+function scheduleDemoSave(callback){
+  const session=L;
+  const timer=setTimeout(()=>{ pendingDemoTimers.delete(timer); if(L===session) callback(); },700);
+  pendingDemoTimers.add(timer);
+}
 /* Restores the original fixture (deep copy) and the scripted save/reconfirm counters, so repeated reviews start from the same state. */
-function resetLive(){ L=initial(); renderLive(); }
+function resetLive(){ pendingDemoTimers.forEach(clearTimeout); pendingDemoTimers.clear(); L=initial(); renderLive(); }
 
 /* ---------- renderers ---------- */
 function statusBar(){ return `<div class="status"><span>9:41</span><span>●●● ▲ ▮</span></div>`; }
@@ -493,7 +501,7 @@ function historyScreen(st, live){
     const goalNote = goalVals.length===0? t().weekNoGoal : (sameGoal? '' : t().weekMixedGoal);
     const weekLabel = `${shortDate(days[0])} – ${shortDate(days[6])}`;
     body=`<div class="nav" style="min-height:36px"><button aria-label="prev">‹</button><span class="title" style="font-size:15px">${weekLabel}</span><button aria-label="next">›</button></div>
-      <div class="chart">${goalLine}${vals.map((v,i)=>`<button class="b ${days[i]===st.day?'sel':''}" style="height:${v/max*100}%" ${on(`pickFromHistory('${days[i]}')`)} aria-label="${longDate(days[i])} ${fmt(v)}g${goals[i]!==null? ', '+t().goal(fmt(goals[i])):''}">${(!sameGoal&&goals[i]!==null)? `<i class=\"tick\" style=\"bottom:${goals[i]/max*100}%\"></i>`:''}<span>${v?fmt(v):''}</span></button>`).join('')}</div>
+      <div class="chart"><div class="plot">${goalLine}${vals.map((v,i)=>`<div class="column"><button class="b ${days[i]===st.day?'sel':''}" style="height:${v/max*100}%" ${on(`pickFromHistory('${days[i]}')`)} aria-label="${longDate(days[i])} ${fmt(v)}g${goals[i]!==null? ', '+t().goal(fmt(goals[i])):''}"><span>${v?fmt(v):''}</span></button>${(!sameGoal&&goals[i]!==null)? `<i class=\"tick\" style=\"bottom:${goals[i]/max*100}%\"></i>`:''}</div>`).join('')}</div></div>
       <div class="xl">${days.map((d,i)=>`<span>${WD[LANG][i]}</span>`).join('')}</div>${goalNote? `<div class="inline-note">${goalNote}</div>`:''}<div class="inline-note">${t().avg(fmt(avgLogged(vals)))}</div>`;
   }
   return `<div class="screen"><div class="nav"><button ${on("go('home')")}>‹ ${t().record}</button><span class="title">${t().history}</span><span style="width:44px"></span></div>
@@ -562,15 +570,15 @@ function closeAlert(){ const a=L.alert; L.alert=null; if(a&&a.then) a.then(); re
 function toggleSel(i){ const s=L.editor.selected; const k=s.indexOf(i); if(k>=0) s.splice(k,1); else s.push(i); renderLive(); }
 /* Save is a scripted demo: 1st save on an empty add = validation error, then success; the 3rd add of the session ends "unconfirmed" to show the reconfirm path. */
 function saveSheet(){ const e=L.editor; if(!e) return;
-  if(e.id){ e.state='saving'; renderLive(); setTimeout(()=>{ L.sheet=null; L.editor=null; renderLive(); },700); return; }
+  if(e.id){ e.state='saving'; renderLive(); scheduleDemoSave(()=>{ L.sheet=null; L.editor=null; renderLive(); }); return; }
   if(e.protein===''){ e.name = e.name||''; e.state='error'; e.errKind='empty'; e.kbd=true; renderLive();
     // next tap fills a value so the flow can continue
     e.protein='31.5'; e.name= e.name || (LANG==='ko'?'닭가슴살 구이':'Grilled chicken breast'); e.state='idle'; return; }
   L.saveCount++; const saveCount=L.saveCount; e.state='saving'; e.kbd=false; renderLive();
-  setTimeout(()=>{
+  scheduleDemoSave(()=>{
     if(saveCount===3){ e.state='unconfirmed'; L.pending=true; L.alert={t:t().uncT,m:t().uncM}; renderLive(); return; }
     if(saveCount===2){ e.state='idle'; L.alert={t:t().failT,m:t().failM}; renderLive(); return; }
-    commit(e); L.sheet=null; L.editor=null; renderLive(); },700);
+    commit(e); L.sheet=null; L.editor=null; renderLive(); });
 }
 function commit(e){ const rec={id:'x'+Date.now(),n:e.name||'',g:parseFloat(e.protein)||0,src:'manual'}; if(!rec.n) rec.n=t().manual; if(e.day===FX.today) L.todayRecords.push(rec); else { L.days[e.day]=L.days[e.day]||{records:[]}; L.days[e.day].records.push(rec); } }
 function reconfirmSheet(){ const e=L.editor; L.reconfCount++; const reconfCount=L.reconfCount; if(reconfCount===1){ e.state='reconfFail'; L.alert={t:t().reconfFailT,m:t().reconfFailM}; renderLive(); return; }
