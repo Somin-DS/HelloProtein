@@ -59,6 +59,17 @@ iOS 앱 연결
 - DEBUG 전용 `-HelloProteinFailAfterReplaceOnce YES`: 시작 후 첫 사용자 저장을 `rename` 직후 실패시켜 미확정 경로를 시뮬레이터에서 재현한다. 권한을 바꾸지 않는다.
 - DEBUG 전용 실행 인자: `-HelloProteinSeedLegacyFixture YES`(합성 구버전 데이터), `-HelloProteinInterruptAt <beforeBackup|afterBackup|afterMapping|afterTemporaryWrite|beforeReplace|afterReplace|beforeFirstScreen>`(SIGKILL).
 
+## UI 기준 정리 (2026-09-29, 권장안 / 미확정)
+
+`docs/ui-direction-plan.md`에 따라 제품 코드 변경 없이 문서·시안만 작성했다.
+
+- [ui-audit.md](ui-audit.md): 기존 UIKit 앱(실행 캡처·코드), Figma 의도(2026-09-23 검토 문서 기준, 원본은 이번 세션에서 접근 거부), 현재 SwiftUI 프로토타입을 요소별로 비교. 관찰/계산/추론을 구분했다.
+- [ui-spec.md](ui-spec.md): 화면 트리(권장안 A 홈+하단 액션 바, 대안 B 3탭+FAB), 8개 핵심 흐름, 화면별 상태, 색·서체·간격 토큰 초안, 결정 기록, §6 저장 계약 재확인.
+- [ui-preview/](ui-preview/README.md): 클릭 가능한 로컬 HTML 시안. 기존 앱·현재 프로토타입 캡처와 나란히 비교, 한/영·큰 글자·A/B·라이트/다크 전환, 필수 상태 36개 갤러리, 합성 fixture.
+- [ui-implementation-backlog.md](ui-implementation-backlog.md): 5단계 후속 구현 순서. 각 항목에 현재/목표, 파일, 데이터 의존성, 시각 확인, 회귀 검사.
+
+사용자 결정 대기: 화면 구조(A/B), 브랜드 유지 범위(크림·민트·그린·Binggrae 숫자·계란 워드마크), 다크 모드 지원 여부, 목표 진입점, 계산기 옵션 범위. 결정 전에는 제품 화면을 교체하지 않는다.
+
 ## 아직 해결할 사항
 
 - 실제 사용자 Realm 파일, 실기기, iOS 13/14 기기, 배포 바이너리와 저장소 HEAD 일치 여부는 미검증이다. 새 흐름의 Release 기본 활성화(플래그 제거)는 하지 않았다.
