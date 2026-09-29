@@ -70,7 +70,7 @@
 ### 2.3 미확정 저장 UX
 
 - 현재: 경고창 + 시트 유지 + 필드 잠금 + "저장 결과 확인" 버튼, 홈 배너, 모든 저장 거부. 미반영이면 입력 유지.
-- 목표: 동작 변경 없음. 표현만 ui-spec §3.3: 시트 안 warning 밴드(경고창 대신 1회 안내 후 밴드 상주), 잠긴 필드는 chip 배경, 홈 배너에 "저장 결과 확인" 링크, 재확인 실패는 밴드 유지 + 짧은 경고, 미반영은 입력 재개 안내.
+- 목표: 동작 변경 없음(미확정 중 취소 허용, 초안 미보존은 현재 동작 유지). 표현만 ui-spec §3.3: 미확정 중 취소·스와이프 시 "입력한 내용은 남지 않아요" 확인 대화상자 추가, 시트 안 warning 밴드(경고창 대신 1회 안내 후 밴드 상주), 잠긴 필드는 chip 배경, 홈 배너에 "저장 결과 확인" 링크, 재확인 실패는 밴드 유지 + 짧은 경고, 미반영은 입력 재개 안내.
 - 변경 파일: `RecordEditorSheet.swift`, `Components/NoticeBand.swift`, `RecordHomePrototypeView.swift`(배너).
 - 데이터 의존성: `PendingSave.operationID`, `ActionError.unconfirmed/.notApplied`, `reconfirm()` 그대로.
 - 시각 확인: 갤러리 "미확정 4상태". 잠금 중 ＋·행·총량 편집이 비활성으로 보임.
@@ -174,9 +174,9 @@
 - 현재: 새 흐름에 없음. 기존 `StatsViewController`는 Charts 주간 막대, 기존 Realm `StatProtein`.
 - 목표: ui-spec §3.6. 캘린더(기록 있음 ●, 합계만 ◯), 주간 막대 + 목표선(그 주 각 날짜의 목표 이력), 기록한 날 평균, 날짜 탭 → 홈으로 복귀하며 선택. 새 저장소만 읽음.
 - 변경 파일: `Renewal/HistoryView.swift`(신규), `Renewal/HistoryViewModel.swift`(신규, 읽기 전용), Swift Charts(iOS 16+) 사용 시 iOS 15 fallback 결정 필요 → 15 지원이면 직접 그린 막대.
-- 데이터 의존성: `AppState.logs` 전체 순회, `state.goal(on:)`. 쓰기 없음.
+- 데이터 의존성: `AppState.logs` 전체 순회, 목표선은 날짜별 `state.goal(on:)`(그 주 전부 이력이 없으면 목표선 없음, 현재 목표를 과거 주에 소급하지 않음). 쓰기 없음.
 - 시각 확인: 갤러리 "히스토리 2상태". 다크에서 막대·목표선 대비.
-- 회귀 검사: 주간 합계가 홈 합계와 같은 계산(`totalProteinCentigrams`)을 쓰는지 테스트. 이관 fixture(9/20 합계만, 9/23 상세)에서 ◯/● 구분 테스트.
+- 회귀 검사: 주간 합계가 홈 합계와 같은 계산(`totalProteinCentigrams`)을 쓰는지 테스트. 이관 fixture(목표 2026-09-28부터)에서 9/21–27 주에 목표선이 없고 9/28 주에 있는지 테스트. 이관 fixture(9/20 합계만, 9/23 상세)에서 ◯/● 구분 테스트.
 
 ### 5.2 설정
 

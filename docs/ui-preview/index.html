@@ -188,9 +188,10 @@ table.t th,table.t td{border:1px solid var(--page-line);padding:6px 10px;text-al
 .cal .dot.only{background:transparent;border:1.5px solid var(--green)}
 .cal .dot.none{visibility:hidden}
 .chart{display:flex;align-items:flex-end;gap:8px;height:150px;padding:8px 20px 4px;position:relative;border-bottom:1px solid var(--line);margin:0 0 0}
-.chart .b{flex:1;background:var(--green);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+.chart .b{flex:1;background:var(--green);border-radius:4px 4px 0 0;position:relative;min-height:2px;border:0;padding:0;cursor:pointer}
 .chart .b.sel{background:var(--action)}
 .chart .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.chart .b .tick{position:absolute;left:-3px;right:-3px;border-top:1.5px dashed var(--action)}
 .chart .goal{position:absolute;left:20px;right:20px;border-top:1.5px dashed var(--action);font-size:10px;color:var(--action);text-align:right}
 .xl{display:flex;gap:8px;padding:4px 20px;font-size:11px;color:var(--muted)}
 .xl span{flex:1;text-align:center}
@@ -290,11 +291,12 @@ const S = {
     goalTitle:'하루 목표', goalCur:(g,d)=>`현재 목표 ${g}g · ${d}부터`, goalNew:'새 목표 (g)', goalFrom:'오늘부터 적용돼요. 지난 날짜의 목표는 바꾸지 않아요.', calc:'계산기로 정하기', goalBad:r=>`이전 버전의 목표 '${r}'는 사용할 수 없어요. 새 목표를 입력해주세요.`, goalNone:'아직 목표가 없어요.',
     weight:'몸무게', activity:'활동량', act:['적음','보통','많음'], calcBtn:'계산', recommend:v=>`추천 ${v}g/일`, useIt:'목표로 사용',
     search:'검색', searchPh:'음식 이름', per100:'100g당', selectedN:(n,g)=>`${n}개 · ${g}g 추가`, favEmpty:'저장한 음식이 없어요. 직접 입력한 뒤 ★을 눌러 저장해요.',
-    calendar:'캘린더', graph:'그래프', weekOf:'9월 21일 – 27일', avg:a=>`기록한 날 평균 ${a}g`, thisMonth:'2026년 9월',
+    calendar:'캘린더', graph:'그래프', weekNoGoal:'이 주에는 목표 이력이 없어 목표선을 표시하지 않아요.', weekMixedGoal:'목표가 주 중간에 바뀌어 날짜별로 표시해요.', avg:a=>`기록한 날 평균 ${a}g`, thisMonth:'2026년 9월',
     secSetting:'설정', secInfo:'정보', sGoal:'하루 목표', sLang:'검색 언어', sQna:'문의하기', sOss:'오픈소스', sData:'데이터', sDataV:'이관 완료 · 백업 있음', korean:'한국어', english:'영어',
     recT:'데이터를 옮기지 못했어요', recPreserved:'원본 데이터는 그대로 있고 삭제되지 않았어요.', recBackup:'이관 전 백업 사본이 앱 안에 있어요.', recCorrupt:'저장된 기록 파일을 읽을 수 없어요.', recEvidence:'이관 기록 파일이 손상됐어요. 다시 가져오거나 새로 만들거나 덮어쓴 것은 없어요.', retry:'다시 시도', noRetry:'이 상태는 자동으로 해결되지 않아요.', contact:'문의하기',
     obT:'하루 목표를 정해주세요', obP:'단백질 g 단위로 입력해요. 나중에 설정에서 바꿀 수 있어요.', start:'시작',
     discardT:'입력을 버릴까요?', discardM:'저장하지 않은 내용이 있어요.', keep:'계속 쓰기', discard:'버리기',
+    closeUncT:'저장 결과를 아직 확인하지 못했어요', closeUncM:'닫아도 홈에서 저장 결과를 확인할 수 있어요. 다만 입력한 내용은 남지 않아서, 저장되지 않았다면 다시 입력해야 해요.', closeAnyway:'닫기',
     delT:'이 기록을 삭제할까요?', delM:'합계에서 빠져요. 이전 버전 합계는 그대로예요.',
     loading:'데이터를 준비하는 중…', edit:'수정',
   },
@@ -316,11 +318,12 @@ const S = {
     goalTitle:'Daily goal', goalCur:(g,d)=>`Current goal ${g}g · since ${d}`, goalNew:'New goal (g)', goalFrom:"Applies from today. Past days keep their history.", calc:'Use the calculator', goalBad:r=>`The previous version's goal '${r}' can't be used. Enter a new goal.`, goalNone:'No goal yet.',
     weight:'Weight', activity:'Activity', act:['Light','Moderate','Active'], calcBtn:'Calculate', recommend:v=>`Suggested ${v}g/day`, useIt:'Use as goal',
     search:'Search', searchPh:'Food name', per100:'per 100g', selectedN:(n,g)=>`Add ${n} items · ${g}g`, favEmpty:'No saved foods. Add one manually and tap ★ to save it.',
-    calendar:'Calendar', graph:'Graph', weekOf:'Sep 21 – 27', avg:a=>`Average on logged days ${a}g`, thisMonth:'September 2026',
+    calendar:'Calendar', graph:'Graph', weekNoGoal:'No goal history this week, so no goal line is shown.', weekMixedGoal:'The goal changed mid-week, so it is shown per day.', avg:a=>`Average on logged days ${a}g`, thisMonth:'September 2026',
     secSetting:'Settings', secInfo:'Info', sGoal:'Daily goal', sLang:'Search language', sQna:'Contact', sOss:'Open source', sData:'Data', sDataV:'Migrated · backup kept', korean:'Korean', english:'English',
     recT:"Couldn't move your data", recPreserved:'Your original data is untouched and has not been deleted.', recBackup:'A pre-migration backup copy is stored inside the app.', recCorrupt:"The stored log file can't be read.", recEvidence:'The migration record file is damaged. Nothing was re-imported, created or overwritten.', retry:'Try again', noRetry:"This won't resolve on its own.", contact:'Contact us',
     obT:'Set your daily goal', obP:'In grams of protein. You can change it later in Settings.', start:'Start',
     discardT:'Discard your input?', discardM:'You have unsaved changes.', keep:'Keep editing', discard:'Discard',
+    closeUncT:"Save result not confirmed yet", closeUncM:"You can still check the result from the home screen. Your input won't be kept, so if it wasn't saved you'll need to enter it again.", closeAnyway:'Close',
     delT:'Delete this entry?', delM:"It leaves the total. The previous version's total stays.",
     loading:'Preparing your data…', edit:'Edit',
   }
@@ -342,13 +345,15 @@ function iso(dt){ return dt.toISOString().slice(0,10); }
 function addDays(d,n){ const x=parse(d); x.setUTCDate(x.getUTCDate()+n); return iso(x); }
 function longDate(d){ const [y,m,dd]=d.split('-'); return LANG==='ko'? `${y}년 ${Number(m)}월 ${Number(dd)}일` : `${MONTHS_EN[Number(m)-1]} ${Number(dd)}, ${y}`; }
 function shortDate(d){ const [y,m,dd]=d.split('-'); return LANG==='ko'? `${Number(m)}월 ${Number(dd)}일` : `${MONTHS_EN[Number(m)-1]} ${Number(dd)}`; }
-function dayData(st,d){ if(d===FX.today) return { records: st.todayRecords }; return FX.days[d] || { records: [] }; }
+function cloneDays(){ return JSON.parse(JSON.stringify(FX.days)); }
+function dayData(st,d){ if(d===FX.today) return { records: st.todayRecords }; return (st.days||FX.days)[d] || { records: [] }; }
 function total(dd){ const f=dd.records.reduce((a,r)=>a+r.g,0); return f + (dd.legacy? dd.legacy.adj:0); }
 function goalFor(st,d){ if(st.goalState==='none') return null; if(st.goalState==='bad') return {bad:true}; return d>=FX.goal.from ? {g:FX.goal.g} : null; }
 
 /* ---------- state ---------- */
-function initial(){ return { screen:'home', day:'2026-09-23', todayRecords:[], goalState:'set', sheet:null, alert:null, pending:false, histMode:'cal', addTab:'manual', hasShownDiscard:false, editor:null }; }
+function initial(){ return { screen:'home', day:'2026-09-23', days:cloneDays(), todayRecords:[], goalState:'set', sheet:null, alert:null, pending:false, histMode:'cal', addTab:'manual', editor:null, saveCount:0, reconfCount:0 }; }
 let L = initial();
+/* Restores the original fixture (deep copy) and the scripted save/reconfirm counters, so repeated reviews start from the same state. */
 function resetLive(){ L=initial(); renderLive(); }
 
 /* ---------- renderers ---------- */
@@ -447,7 +452,7 @@ function editorSheet(st, live){
       ${isEdit? `<button class="btn text" ${locked?'disabled':''} ${on("askDelete()")}>${t().delete}</button>`:''}
     </div>${e.kbd&&!locked? `<div class="kbd" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>.</span><span>0</span><span>⌫</span><span class="save">${t().save}</span></div>`:''}`;
   }
-  return `<div class="sheet"><div class="panel"><div class="grab"></div><div class="nav"><button ${busy||e.state==='unconfirmed'?'disabled':''} ${on("closeSheet()")}>${t().cancel}</button><span class="title">${isEdit? t().editTitle : t().addTitle}</span><button ${locked||(!isEdit&&st.addTab!=='manual')?'disabled':''} ${on("saveSheet()")}>${t().save}</button></div>${tabs}${body}</div></div>`;
+  return `<div class="sheet"><div class="panel"><div class="grab"></div><div class="nav"><button ${busy?'disabled':''} ${on("closeSheet()")}>${t().cancel}</button><span class="title">${isEdit? t().editTitle : t().addTitle}</span><button ${locked||(!isEdit&&st.addTab!=='manual')?'disabled':''} ${on("saveSheet()")}>${t().save}</button></div>${tabs}${body}</div></div>`;
 }
 function totalSheet(st, live){
   const on = live? (fn)=>`onclick="${fn}"` : ()=>'';
@@ -472,6 +477,7 @@ function calcSheet(st, live){
     <div class="form"><div class="card"><div class="field"><label>${t().weight}</label><div class="v"><span>68</span><span class="unit">kg ▾</span></div></div><div class="field"><label>${t().activity}</label><div class="v"><span>${t().act[1]}</span><span class="unit">▾</span></div></div></div>
     <div class="btnrow"><button class="btn ghost">${t().calcBtn}</button></div><div class="card"><div class="field"><div class="v" style="justify-content:center"><b>${t().recommend('95.2')}</b></div></div></div><button class="btn" ${on("closeSheet()")}>${t().useIt}</button><div class="inline-note" style="padding:0">kg × 1.2 / 1.4 / 1.6 — ${LANG==='ko'?'기존 앱 공식 유지. 임신·수유·고령 옵션은 근거 확인 전 미포함.':'existing formula kept. Pregnancy/nursing/senior options withheld until sourced.'}</div></div></div></div>`;
 }
+function avgLogged(vals){ const v=vals.filter(x=>x>0); return v.length? Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10 : 0; }
 function historyScreen(st, live){
   const on = live? (fn)=>`onclick="${fn}"` : ()=>'';
   let body='';
@@ -480,10 +486,15 @@ function historyScreen(st, live){
     for(let d=1; d<=30; d++){ const key=`2026-09-${String(d).padStart(2,'0')}`; const dd=dayData(st,key); const has=dd.records.length>0; const only=!!dd.legacy&&!has; const cls=key===st.day?'sel':''; cells+=`<button class="${cls}" ${on(`pickFromHistory('${key}')`)} aria-label="${longDate(key)}"><span>${d}</span><span class="dot ${has?'':only?'only':'none'}"></span></button>`; }
     body=`<div class="nav" style="min-height:36px"><button ${on("")} aria-label="prev">‹</button><span class="title" style="font-size:15px">${t().thisMonth}</span><button aria-label="next">›</button></div><div class="cal">${WD[LANG].map(w=>`<span class="h">${w}</span>`).join('')}${cells}</div><div class="inline-note">● ${LANG==='ko'?'기록 있음':'has entries'} · ◯ ${LANG==='ko'?'이전 버전 합계만':'previous total only'}</div>`;
   } else {
-    const days=[21,22,23,24,25,26,27].map(d=>`2026-09-${d}`); const vals=days.map(d=>total(dayData(st,d))); const max=Math.max(120,...vals);
-    body=`<div class="nav" style="min-height:36px"><button aria-label="prev">‹</button><span class="title" style="font-size:15px">${t().weekOf}</span><button aria-label="next">›</button></div>
-      <div class="chart"><div class="goal" style="bottom:${120/max*100}%">${t().goal(120)}</div>${vals.map((v,i)=>`<button class="b ${days[i]===st.day?'sel':''}" style="height:${v/max*100}%" ${on(`pickFromHistory('${days[i]}')`)} aria-label="${longDate(days[i])} ${fmt(v)}g"><span>${v?fmt(v):''}</span></button>`).join('')}</div>
-      <div class="xl">${days.map((d,i)=>`<span>${WD[LANG][(i+1)%7]}</span>`).join('')}</div><div class="inline-note">${t().avg('35')}</div>`;
+    const start=addDays(st.day,-parse(st.day).getUTCDay()); const days=[0,1,2,3,4,5,6].map(i=>addDays(start,i)); const vals=days.map(d=>total(dayData(st,d)));
+    const goals=days.map(d=>{ const g=goalFor(st,d); return g&&!g.bad? g.g:null; }); const goalVals=goals.filter(g=>g!==null); const max=Math.max(...vals,...goalVals,60);
+    const sameGoal=goalVals.length===7 && goalVals.every(g=>g===goalVals[0]);
+    const goalLine = sameGoal? `<div class="goal" style="bottom:${goalVals[0]/max*100}%">${t().goal(fmt(goalVals[0]))}</div>` : '';
+    const goalNote = goalVals.length===0? t().weekNoGoal : (sameGoal? '' : t().weekMixedGoal);
+    const weekLabel = `${shortDate(days[0])} – ${shortDate(days[6])}`;
+    body=`<div class="nav" style="min-height:36px"><button aria-label="prev">‹</button><span class="title" style="font-size:15px">${weekLabel}</span><button aria-label="next">›</button></div>
+      <div class="chart">${goalLine}${vals.map((v,i)=>`<button class="b ${days[i]===st.day?'sel':''}" style="height:${v/max*100}%" ${on(`pickFromHistory('${days[i]}')`)} aria-label="${longDate(days[i])} ${fmt(v)}g${goals[i]!==null? ', '+t().goal(fmt(goals[i])):''}">${(!sameGoal&&goals[i]!==null)? `<i class=\"tick\" style=\"bottom:${goals[i]/max*100}%\"></i>`:''}<span>${v?fmt(v):''}</span></button>`).join('')}</div>
+      <div class="xl">${days.map((d,i)=>`<span>${WD[LANG][i]}</span>`).join('')}</div>${goalNote? `<div class="inline-note">${goalNote}</div>`:''}<div class="inline-note">${t().avg(fmt(avgLogged(vals)))}</div>`;
   }
   return `<div class="screen"><div class="nav"><button ${on("go('home')")}>‹ ${t().record}</button><span class="title">${t().history}</span><span style="width:44px"></span></div>
     <div class="tabs" role="tablist"><button class="${st.histMode==='cal'?'on':''}" ${on("setHist('cal')")}>${t().calendar}</button><button class="${st.histMode==='graph'?'on':''}" ${on("setHist('graph')")}>${t().graph}</button></div>
@@ -543,26 +554,26 @@ function openAdd(){ if(L.pending) return; L.addTab='manual'; L.editor={day:L.day
 function openEdit(id){ const dd=dayData(L,L.day); const r=dd.records.find(x=>x.id===id); L.editor={day:L.day,id,name:r.n,protein:fmt(r.g),state:'idle',kbd:false}; L.sheet='editor'; renderLive(); }
 function openTotal(){ L.sheet='total'; renderLive(); }
 function openCalc(){ L.sheet='calc'; renderLive(); }
-function closeSheet(){ const e=L.editor; if(L.sheet==='editor' && e && (e.name||e.protein) && e.state==='idle'){ L.alert={t:t().discardT,m:t().discardM,buttons:[[t().keep,'closeAlert()'],[t().discard,'forceClose()']]}; renderLive(); return; } L.sheet=null; L.editor=null; renderLive(); }
+function closeSheet(){ const e=L.editor;
+  if(L.sheet==='editor' && e && (e.state==='unconfirmed'||e.state==='reconfFail')){ L.alert={t:t().closeUncT,m:t().closeUncM,buttons:[[t().keep,'closeAlert()'],[t().closeAnyway,'forceClose()']]}; renderLive(); return; }
+  if(L.sheet==='editor' && e && (e.name||e.protein) && e.state==='idle'){ L.alert={t:t().discardT,m:t().discardM,buttons:[[t().keep,'closeAlert()'],[t().discard,'forceClose()']]}; renderLive(); return; } L.sheet=null; L.editor=null; renderLive(); }
 function forceClose(){ L.alert=null; L.sheet=null; L.editor=null; renderLive(); }
 function closeAlert(){ const a=L.alert; L.alert=null; if(a&&a.then) a.then(); renderLive(); }
 function toggleSel(i){ const s=L.editor.selected; const k=s.indexOf(i); if(k>=0) s.splice(k,1); else s.push(i); renderLive(); }
 /* Save is a scripted demo: 1st save on an empty add = validation error, then success; the 3rd add of the session ends "unconfirmed" to show the reconfirm path. */
-let saveCount=0;
 function saveSheet(){ const e=L.editor; if(!e) return;
   if(e.id){ e.state='saving'; renderLive(); setTimeout(()=>{ L.sheet=null; L.editor=null; renderLive(); },700); return; }
   if(e.protein===''){ e.name = e.name||''; e.state='error'; e.errKind='empty'; e.kbd=true; renderLive();
     // next tap fills a value so the flow can continue
     e.protein='31.5'; e.name= e.name || (LANG==='ko'?'닭가슴살 구이':'Grilled chicken breast'); e.state='idle'; return; }
-  saveCount++; e.state='saving'; e.kbd=false; renderLive();
+  L.saveCount++; const saveCount=L.saveCount; e.state='saving'; e.kbd=false; renderLive();
   setTimeout(()=>{
     if(saveCount===3){ e.state='unconfirmed'; L.pending=true; L.alert={t:t().uncT,m:t().uncM}; renderLive(); return; }
     if(saveCount===2){ e.state='idle'; L.alert={t:t().failT,m:t().failM}; renderLive(); return; }
     commit(e); L.sheet=null; L.editor=null; renderLive(); },700);
 }
-function commit(e){ const rec={id:'x'+Date.now(),n:e.name||'',g:parseFloat(e.protein)||0,src:'manual'}; if(!rec.n) rec.n=t().manual; if(e.day===FX.today) L.todayRecords.push(rec); else { FX.days[e.day]=FX.days[e.day]||{records:[]}; FX.days[e.day].records.push(rec); } }
-let reconfCount=0;
-function reconfirmSheet(){ const e=L.editor; reconfCount++; if(reconfCount===1){ e.state='reconfFail'; L.alert={t:t().reconfFailT,m:t().reconfFailM}; renderLive(); return; }
+function commit(e){ const rec={id:'x'+Date.now(),n:e.name||'',g:parseFloat(e.protein)||0,src:'manual'}; if(!rec.n) rec.n=t().manual; if(e.day===FX.today) L.todayRecords.push(rec); else { L.days[e.day]=L.days[e.day]||{records:[]}; L.days[e.day].records.push(rec); } }
+function reconfirmSheet(){ const e=L.editor; L.reconfCount++; const reconfCount=L.reconfCount; if(reconfCount===1){ e.state='reconfFail'; L.alert={t:t().reconfFailT,m:t().reconfFailM}; renderLive(); return; }
   if(reconfCount===2){ e.state='idle'; e.kbd=true; L.pending=false; L.alert={t:t().notAppliedT,m:t().notAppliedM}; renderLive(); return; }
   commit(e); L.pending=false; L.sheet=null; L.editor=null; renderLive(); }
 function reconfirmHome(){ L.pending=false; renderLive(); }
@@ -598,7 +609,10 @@ const GALLERY = () => [
   ['ed', G({screen:'home',day:FX.today,sheet:'editor',addTab:'fav',editor:{day:FX.today,id:null,name:'',protein:'',state:'idle',favEmpty:true}}), '즐겨찾기 · 비어 있음', 'Favorites · empty'],
   ['ed', G({screen:'home',day:FX.today,sheet:'editor',addTab:'fav',editor:{day:FX.today,id:null,name:'',protein:'',state:'idle'}}), '즐겨찾기 · 목록', 'Favorites · list'],
   ['hist', G({screen:'history',histMode:'cal',day:'2026-09-23'}), '히스토리 · 캘린더 (● 기록, ◯ 합계만)', 'History · calendar'],
-  ['hist', G({screen:'history',histMode:'graph',day:'2026-09-23'}), '히스토리 · 주간 그래프 + 목표선', 'History · weekly graph'],
+  ['hist', G({screen:'history',histMode:'graph',day:'2026-09-23'}), '히스토리 · 주간 그래프, 목표 이력 없는 주 (목표선 없음)', 'History · weekly graph, week without goal history'],
+  ['hist', G({screen:'history',histMode:'graph',day:FX.today,todayRecords:FX.todayFull}), '히스토리 · 주간 그래프, 목표가 주 중간(9/28)에 시작한 주 → 날짜별 눈금', 'History · weekly graph, goal starts mid-week → per-day ticks'],
+  ['hist', G({screen:'history',histMode:'graph',day:'2026-10-06'}), '히스토리 · 주간 그래프, 목표 있는 주 + 목표선 (기록 없음)', 'History · weekly graph with goal line, no entries'],
+  ['ed', G({screen:'home',day:FX.today,sheet:'editor',editor:{day:FX.today,id:null,name:'tuna',protein:'15',state:'unconfirmed',kbd:false},pending:true,alert:{t:'{closeUncT}',m:'{closeUncM}'}}), '미확정 · 취소 시 확인 (초안 미보존 안내)', 'Unconfirmed · close confirmation'],
   ['set', G({screen:'settings'}), '설정', 'Settings'],
   ['rec', G({screen:'recovery',variant:'corrupt'}), '복구 · 재시도 가능', 'Recovery · retry available'],
   ['rec', G({screen:'recovery',variant:'evidence'}), '복구 · 이관 기록 손상, 백업 있음', 'Recovery · evidence corrupt'],
