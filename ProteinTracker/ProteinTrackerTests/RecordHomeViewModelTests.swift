@@ -3,6 +3,30 @@ import HelloProteinCore
 
 @available(iOS 15.0, *)
 final class RecordHomeViewModelTests: XCTestCase {
+    func testGoalPresentationClampsVisualProgressButKeepsExactExcess() {
+        let over = GoalProgressPresentation(total: 13_200, goal: 12_000)
+        XCTAssertEqual(over.fraction, 1)
+        XCTAssertEqual(over.excessCentigrams, 1_200)
+        XCTAssertTrue(over.isReached)
+        let under = GoalProgressPresentation(total: 5_170, goal: 12_000)
+        XCTAssertEqual(under.fraction, Double(5_170) / 12_000, accuracy: 0.000001)
+        XCTAssertNil(under.excessCentigrams)
+        XCTAssertFalse(under.isReached)
+    }
+
+    func testGoalPresentationHandlesSignedAndExtremeTotalsWithoutOverflow() {
+        let negative = GoalProgressPresentation(total: .min, goal: .max)
+        XCTAssertEqual(negative.fraction, 0)
+        XCTAssertNil(negative.excessCentigrams)
+        XCTAssertFalse(negative.isReached)
+        let large = GoalProgressPresentation(total: .max, goal: 1)
+        XCTAssertEqual(large.excessCentigrams, Int64.max - 1)
+        let exact = GoalProgressPresentation(total: .max, goal: .max)
+        XCTAssertTrue(exact.isReached)
+        XCTAssertNil(exact.excessCentigrams)
+        XCTAssertEqual(GoalProgressPresentation(total: 1, goal: 0).fraction, 0)
+    }
+
     private var directory: URL!
     private var storeURL: URL { directory.appendingPathComponent("app-state.json") }
     private let queue = DispatchQueue(label: "vm-tests")

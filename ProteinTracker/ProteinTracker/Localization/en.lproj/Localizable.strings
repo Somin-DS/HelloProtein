@@ -93,9 +93,9 @@
 "renewal_empty" = "Add your first protein entry";
 "renewal_manual_entry" = "Manual entry";
 "renewal_legacy_entry" = "Imported from the previous version";
-"renewal_legacy_section" = "Previous version total";
-"renewal_legacy_total_label" = "Daily total saved by the previous version";
-"renewal_legacy_adjustment" = "Difference between the old total and the entries (adjustment)";
+"renewal_legacy_section" = "Imported adjustment";
+"renewal_legacy_total_label" = "Original imported daily total";
+"renewal_legacy_adjustment" = "Adjustment";
 "renewal_legacy_imported" = "Imported original total %@g";
 "renewal_legacy_user_edited" = "You changed the daily total to %@g";
 "renewal_legacy_total_only" = "The previous version kept only the total for this day. There are no per-food entries.";
@@ -142,12 +142,36 @@
 "recovery_kind_verificationFailed" = "Re-reading and verifying the saved log failed.";
 "recovery_kind_interrupted" = "Migration was interrupted.";
 "renewal_error_unconfirmed_title" = "Save result unconfirmed";
-"renewal_error_unconfirmed_message" = "The file was replaced, but it couldn't be read back. Your input is kept. Nothing else will be saved until the saved result has been checked.";
+"renewal_error_unconfirmed_message" = "We couldn’t confirm whether this change was saved. Check the save status before making more changes.";
 "renewal_error_not_applied_title" = "Not saved";
-"renewal_error_not_applied_message" = "The saved file doesn't contain this change. Your input is kept; tap Save again.";
-"renewal_reconfirm" = "Check saved result";
+"renewal_error_not_applied_message" = "This change wasn’t saved. Please make the change again.";
+"renewal_reconfirm" = "Check save status";
 "renewal_pending_banner" = "A save couldn't be confirmed. Check the saved result before making more changes.";
 "renewal_pending_sheet" = "This save couldn't be confirmed. Check the saved result to see whether it was stored.";
 "recovery_kind_evidenceCorrupt" = "The migration record file is damaged. Nothing was re-imported, created or overwritten.";
 "recovery_kind_evidenceUnreadable" = "The migration record file can't be accessed. Unlock the device and try again.";
 "recovery_kind_evidenceUnsupported" = "The migration record file uses a newer format than this app version.";
+
+"renewal_daily_protein" = "Daily protein";
+
+"renewal_goal_completion" = "Goal progress";
+
+"renewal_goal_reached" = "Goal reached";
+
+"renewal_goal_excess" = "%@ g above your goal";
+
+"renewal_has_records" = "Has records";
+
+"renewal_food_entries" = "Food entries";
+
+"renewal_empty_past" = "No entries for this day. You can add one now.";
+
+"renewal_add_on_date" = "Add protein for %@";
+
+"renewal_original_total" = "Original imported total";
+
+"renewal_current_total" = "Daily total";
+
+"renewal_adjustment_explanation" = "An adjustment keeps the daily total in sync with your food entries. The original imported total is kept separately.";
+
+"renewal_pending_close_notice" = "You can check the save status from the home screen. If you close this screen, your input won’t be kept.";
