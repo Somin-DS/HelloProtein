@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A51000000000000000000006 /* RenewalStrings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* RenewalStrings.swift */; };
+		A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* RecordHomePrototypeView.swift */; };
+		A51000000000000000000004 /* LegacyTotalDisclosure.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* LegacyTotalDisclosure.swift */; };
+		A51000000000000000000003 /* FoodRow.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* FoodRow.swift */; };
+		A51000000000000000000002 /* DaySummary.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000003 /* DaySummary.swift */; };
+		A51000000000000000000001 /* DayStrip.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* DayStrip.swift */; };
+		A51000000000000000000000 /* RenewalTheme.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000001 /* RenewalTheme.swift */; };
         A50000000000000000000106 /* GoalProgressPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* GoalProgressPresentation.swift */; };
         A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* GoalProgressPresentation.swift */; };
 		A50000000000000000000105 /* LegacyTotalDisclosure.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* LegacyTotalDisclosure.swift */; };
@@ -545,6 +552,13 @@
 				A40000000000000000000101 /* RealmLegacySourceGatewayTests.swift in Sources */,
 				A40000000000000000000102 /* RecordHomeViewModelTests.swift in Sources */,
                 A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
+				A51000000000000000000006 /* RenewalStrings.swift in Test Sources */,
+				A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */,
+				A51000000000000000000004 /* LegacyTotalDisclosure.swift in Test Sources */,
+				A51000000000000000000003 /* FoodRow.swift in Test Sources */,
+				A51000000000000000000002 /* DaySummary.swift in Test Sources */,
+				A51000000000000000000001 /* DayStrip.swift in Test Sources */,
+				A51000000000000000000000 /* RenewalTheme.swift in Test Sources */,
 				A40000000000000000000103 /* RenewalLaunchPolicyTests.swift in Sources */,
 				A40000000000000000000104 /* MigrationRealmEndToEndTests.swift in Sources */,
 				A40000000000000000000201 /* RealmModel.swift in Sources */,

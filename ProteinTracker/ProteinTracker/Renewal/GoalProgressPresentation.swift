@@ -17,4 +17,3 @@ struct GoalProgressPresentation {
         excessCentigrams = total > goal ? total - goal : nil
     }
 }
-

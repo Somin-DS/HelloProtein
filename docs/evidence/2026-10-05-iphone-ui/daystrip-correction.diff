@@ -5,7 +5,7 @@
      let onSelect: (CalendarDay) -> Void
      let onShift: (Int) -> Void
 +    @Environment(\.sizeCategory) private var sizeCategory
- 
+
 +    /// Seven equal-width buttons at standard text sizes: on a 375 pt phone the
 +    /// content width is 335 pt, so 7 × 44 pt plus 6 × 4 pt (332 pt) fits
 +    /// without horizontal scrolling. Accessibility sizes keep the original

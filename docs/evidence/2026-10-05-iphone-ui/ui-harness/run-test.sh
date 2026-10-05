@@ -1,6 +1,7 @@
 #!/bin/zsh
 # usage: run-test.sh <se|17> <run-label> <testMethod> [more methods...]
 set -u
+set -o pipefail
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 cd /private/tmp/hp-iphone-ui
 dev=$1; run=$2; shift 2
@@ -21,3 +22,5 @@ d=json.load(sys.stdin)
 print({k:d.get(k) for k in ['result','totalTestCount','passedTests','failedTests','skippedTests']})
 for f in d.get('testFailures',[]): print('  -', f.get('testName'), '|', (f.get('failureText') or '')[:500])
 "
+
+exit "$code"

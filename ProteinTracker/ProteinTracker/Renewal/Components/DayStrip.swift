@@ -11,11 +11,14 @@ struct DayStrip: View {
     let onShift: (Int) -> Void
     @Environment(\.sizeCategory) private var sizeCategory
 
-    /// Seven equal-width buttons at standard text sizes: on a 375 pt phone the
-    /// content width is 335 pt, so 7 × 44 pt plus 6 × 4 pt (332 pt) fits
-    /// without horizontal scrolling. Accessibility sizes keep the original
-    /// scrolling strip so the labels and the 44 pt touch targets stay intact.
-    private var fitsWithoutScrolling: Bool { !sizeCategory.isAccessibilityCategory }
+    @State private var availableWidth: CGFloat = 0
+
+    // Measure the container, not the screen: narrow phones and constrained
+    // hosts must retain scrolling even at standard text sizes.
+    private var fitsWithoutScrolling: Bool {
+        !sizeCategory.isAccessibilityCategory &&
+        availableWidth >= CGFloat(days.count) * 44 + CGFloat(max(0, days.count - 1)) * 4
+    }
 
     var body: some View {
         VStack(spacing: 4) {
@@ -52,11 +55,20 @@ struct DayStrip: View {
                         }
                         .padding(.vertical, 2)
                     }
+                    .accessibilityIdentifier("renewal.dayScroll")
                     .onAppear { proxy.scrollTo(selected, anchor: .center) }
                     .onChange(of: selected) { day in proxy.scrollTo(day, anchor: .center) }
                 }
             }
         }
+        // Accept the parent's narrower proposal even while the fixed row is
+        // still present, so its intrinsic minimum cannot mask a width change.
+        .frame(minWidth: 0, maxWidth: .infinity)
+        .background(GeometryReader { geometry in
+            Color.clear
+                .onAppear { availableWidth = geometry.size.width }
+                .onChange(of: geometry.size.width) { availableWidth = $0 }
+        })
         .buttonStyle(.plain)
     }
 

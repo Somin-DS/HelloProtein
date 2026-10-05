@@ -1,4 +1,6 @@
 import XCTest
+import SwiftUI
+import UIKit
 import HelloProteinCore
 
 @available(iOS 15.0, *)
@@ -419,5 +421,53 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(wait { second.reconfirm(completion: $0) }, .ok)
         sync { second.select(day) }
         XCTAssertEqual(sync { second.log.records.map(\.id) }, ["rec-1"])
+    }
+}
+
+@available(iOS 15.0, *)
+final class DayStripLayoutTests: XCTestCase {
+    @MainActor
+    func testWidthChangesSwitchBetweenScrollingAndSevenColumns() async throws {
+        let day = try CalendarDay(iso8601: "2026-10-05")
+        let days = try (2...8).map { try CalendarDay(iso8601: "2026-10-0\($0)") }
+        func root(width: CGFloat) -> some View {
+            DayStrip(days: days, selected: day, today: day, recordedDays: [],
+                     onSelect: { _ in }, onShift: { _ in })
+                .environment(\.sizeCategory, .large)
+                .frame(width: width - 40)
+        }
+        let host = UIHostingController(rootView: root(width: 320))
+        let window: UIWindow
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            window = UIWindow(windowScene: scene)
+        } else {
+            window = UIWindow(frame: CGRect(x: 0, y: 0, width: 375, height: 667))
+        }
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+
+        func scrollViews(_ view: UIView) -> [UIScrollView] {
+            (view as? UIScrollView).map { [$0] } ?? view.subviews.flatMap(scrollViews)
+        }
+        func settle(width: CGFloat) async throws {
+            // Constrain the SwiftUI host content, rather than resizing the
+            // simulator's UIWindow (UIKit may restore its screen bounds).
+            host.rootView = root(width: width)
+            host.view.frame = window.bounds
+            host.view.setNeedsLayout()
+            host.view.layoutIfNeeded()
+            try await Task.sleep(nanoseconds: 300_000_000)
+            host.view.layoutIfNeeded()
+        }
+        try await settle(width: 320)
+        let narrowScroll = try XCTUnwrap(scrollViews(host.view).first)
+        XCTAssertGreaterThan(narrowScroll.contentSize.width, narrowScroll.bounds.width)
+        XCTAssertLessThanOrEqual(narrowScroll.bounds.width, 280.5)
+        try await settle(width: 375)
+        let remaining = scrollViews(host.view).map { "bounds=\($0.bounds), content=\($0.contentSize)" }
+        XCTAssertTrue(remaining.isEmpty, "375 pt should show seven columns without scrolling: \(remaining)")
+        try await settle(width: 320)
+        XCTAssertFalse(scrollViews(host.view).isEmpty, "Resizing must restore scrolling")
     }
 }

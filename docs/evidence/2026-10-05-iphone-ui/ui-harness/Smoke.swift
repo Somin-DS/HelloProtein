@@ -106,6 +106,7 @@ final class Smoke: XCTestCase {
         // A day button whose frame crosses the page inset is clipped by the
         // horizontal scroller (frames come back unclipped from XCUITest).
         // RenewalTheme.pageInset is 20 pt; the strip's scroller is clipped there.
+        XCTAssertFalse(app.scrollViews["renewal.dayScroll"].exists, "Standard 375+ pt layout must not scroll", file: file, line: line)
         let left: CGFloat = 20
         let right = app.windows.firstMatch.frame.maxX - 20
         var frames: [String] = []
@@ -295,10 +296,25 @@ final class Smoke: XCTestCase {
         XCTAssertTrue(dayButton(today).isHittable)
         XCTAssertTrue(app.buttons["renewal.add"].isHittable)
         capture("large-text")
-        // Strip must still reach every day of the week by scrolling.
-        let last = dayButton(calendar.date(byAdding: .day, value: 3, to: today)!)
-        if !last.isHittable { app.swipeLeft() }
-        XCTAssertTrue(last.waitForExistence(timeout: 3))
+        // Existence does not prove visibility. Scroll the strip itself and
+        // actually select both ends, returning to today between selections
+        // because the visible range recenters on each selected date.
+        for offset in [-3, 3] {
+            let target = dayButton(calendar.date(byAdding: .day, value: offset, to: today)!)
+            let strip = app.scrollViews["renewal.dayScroll"]
+            XCTAssertTrue(strip.waitForExistence(timeout: 3))
+            for _ in 0..<4 {
+                if target.isHittable && target.frame.minX >= strip.frame.minX && target.frame.maxX <= strip.frame.maxX { break }
+                if offset < 0 { strip.swipeRight() } else { strip.swipeLeft() }
+            }
+            XCTAssertTrue(target.isHittable)
+            XCTAssertGreaterThanOrEqual(target.frame.minX, strip.frame.minX - 0.5)
+            XCTAssertLessThanOrEqual(target.frame.maxX, strip.frame.maxX + 0.5)
+            target.tap()
+            XCTAssertTrue(target.isSelected, "Tapping the end date must change selection")
+            app.buttons["오늘"].tap()
+            XCTAssertTrue(dayButton(today).isSelected)
+        }
         app.swipeUp()
         capture("large-text-scrolled")
         app.buttons["renewal.add"].tap()
