@@ -1,0 +1,36 @@
+{
+  "udid": "AF20D47C-C440-470E-91D6-6380CEA5F9CB",
+  "day_2026-09-23": {
+    "originalCentigrams": 5500,
+    "detailCentigrams": 4500,
+    "adjustmentCentigrams": 1000,
+    "totalCentigrams": 5500,
+    "recordCount": 2
+  },
+  "day_2026-09-20": {
+    "originalCentigrams": 7000,
+    "totalCentigrams": 7000,
+    "recordCount": 0
+  },
+  "today": "2026-10-05",
+  "todayRecords": [
+    {
+      "name": "Pending save with a deliberately long food name",
+      "centigrams": 3150
+    }
+  ],
+  "todayTotalCentigrams": 3150,
+  "pendingRowCount": 1,
+  "lifecycleRowAbsent": true,
+  "uniqueRecordIDs": true,
+  "goals": [
+    {
+      "amount": 12000,
+      "effectiveFrom": "2026-10-05",
+      "id": "legacy:goal:targetProtein"
+    }
+  ],
+  "favoriteCount": 2,
+  "searchHistoryCount": 2,
+  "migrationCompletedAt": "2026-10-05T10:10:29.632Z"
+}

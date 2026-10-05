@@ -104,3 +104,7 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 ## 2026-10-01 Phase 1 구현
 
 기록 홈/기존 편집 시트 테마와 표시 컴포넌트, 원본·보정 구분, 미확정 안내를 구현했다. 저장·이관 계약과 기본 실행 경로는 유지한다. [구현·검증 기록](evidence/2026-09-30-ui-phase1/README.md)을 참고하며, UI 검증 제한이 남아 있으므로 출시 준비 완료로 간주하지 않는다. 다음 기능 구현은 Phase 1B 편집·미확정 닫기 확인·복구 UX다.
+
+## 2026-10-05 일반 iPhone 보정
+
+Phase 1 홈을 일반 iPhone(SE 3세대 375 pt, iPhone 17 402 pt, iOS 26.5 시뮬레이터)에서 실행했다. 실제 문제는 SE에서 날짜 줄 좌우 4.5 pt 잘림 하나였고 `DayStrip`만 보정했다(비접근성 글자 7일 균등 폭 고정, 접근성 글자는 가로 스크롤 유지). 두 기기에서 홈·달력·과거·펼침·총량 시트·추가/수정/삭제·미확정 재확인·AX3·시스템 다크 시나리오를 XCTest 하네스로 통과했고 Core 45·Migration 64·앱 32 테스트가 통과했다. [실행 증거](evidence/2026-10-05-iphone-ui/README.md). Duo 동시 대응은 연기했으며 이전 Duo 결과는 일반 iPhone QA 근거로 쓰지 않는다. 실제 VoiceOver·iOS 15·실기기는 미검증이고 기본 활성화·출시는 하지 않았다.

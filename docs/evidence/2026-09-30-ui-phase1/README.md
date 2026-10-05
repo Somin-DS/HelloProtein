@@ -1,5 +1,7 @@
 # 기록 홈 Phase 1 구현·검증
 
+> 2026-10-05: 이 기록의 실행 증거는 iPhone Duo 런타임에서 얻은 것이며 일반 iPhone 검증을 대체하지 않는다. 일반 iPhone(SE 3세대·iPhone 17) 보정과 검증은 [2026-10-05-iphone-ui](../2026-10-05-iphone-ui/README.md)를 본다. Duo 동시 대응은 연기됐다.
+
 작업 시작 2026-09-30, 재개·검증 2026-10-01 (Asia/Seoul). 브랜치 `feat/renewal-home-phase1`, 기준 main `d6ad3dd0f42643bc53c4814cdd037ea65d5c59dd`.
 
 ## 구현 범위
