@@ -16,22 +16,36 @@ struct RecordHomeView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                dayStrip
-                if model.pendingSave != nil { pendingBanner }
-                summary
-                recordList
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    DayStrip(days: model.visibleDays, selected: model.selectedDay, today: model.today,
+                             recordedDays: recordedDays, onSelect: model.select, onShift: model.shift)
+                    if model.pendingSave != nil { pendingBanner }
+                    DaySummary(total: model.totalCentigrams, goalState: model.goalState,
+                               decimalSeparator: model.decimalSeparator)
+                    if model.log.hasLegacyTotal {
+                        LegacyTotalDisclosure(log: model.log, total: model.totalCentigrams,
+                                              decimalSeparator: model.decimalSeparator,
+                                              canEdit: model.totalCentigrams != nil && model.pendingSave == nil) {
+                            legacyTotalTarget = LegacyTotalTarget(day: model.selectedDay, currentTotal: model.totalCentigrams)
+                        }
+                        .id(model.selectedDay)
+                    }
+                    recordList
+                }
+                .padding(RenewalTheme.pageInset)
             }
+            .background(RenewalTheme.canvas)
             .navigationTitle(Text("renewal_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button { model.selectToday() } label: { Text("renewal_today") }
+                    Button { model.selectToday() } label: { Text("renewal_today").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.selectedDay == model.today)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showingDatePicker = true } label: {
-                        Image(systemName: "calendar")
+                        Image(systemName: "calendar").frame(width: 44, height: 44)
                             .accessibilityLabel(Text("renewal_pick_date"))
                     }
                 }
@@ -42,13 +56,14 @@ struct RecordHomeView: View {
                 } label: {
                     Label { Text("renewal_add") } icon: { Image(systemName: "plus") }
                         .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(RenewalPrimaryButtonStyle())
                 .disabled(model.pendingSave != nil)
-                .padding(.horizontal, 24)
-                .background(.ultraThinMaterial)
+                .accessibilityLabel(Text(RenewalStrings.format("renewal_add_on_date", Self.longDate(model.selectedDay))))
+                .accessibilityIdentifier("renewal.add")
+                .padding(.horizontal, RenewalTheme.pageInset)
+                .padding(.vertical, 12)
+                .background(RenewalTheme.canvas)
             }
             .actionErrorAlert($homeError)
             .sheet(item: $editorTarget) { target in
@@ -64,6 +79,8 @@ struct RecordHomeView: View {
             }
         }
         .navigationViewStyle(.stack)
+        .tint(RenewalTheme.action)
+        .preferredColorScheme(.light)
         .onChange(of: scenePhase) { phase in
             if phase == .active { model.refreshToday() }
         }
@@ -83,181 +100,61 @@ struct RecordHomeView: View {
                     // never stored and the banner is about to disappear.
                     if case .failure(let failure) = result { homeError = failure }
                 }
-            } label: { Text("renewal_reconfirm").font(.footnote.weight(.semibold)) }
+            } label: { Text("renewal_reconfirm").font(.subheadline.weight(.semibold)).frame(minHeight: 44) }
             .disabled(model.isBusy)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.orange.opacity(0.15))
+        .background(RenewalTheme.warning)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .contain)
     }
 
-    // MARK: Day strip
-
-    private var dayStrip: some View {
-        HStack(spacing: 6) {
-            Button { model.shift(days: -7) } label: { Image(systemName: "chevron.left") }
-                .accessibilityLabel(Text("renewal_previous_week"))
-            ForEach(model.visibleDays, id: \.self) { day in
-                Button { model.select(day) } label: {
-                    VStack(spacing: 4) {
-                        Text(Self.weekdaySymbol(day))
-                            .font(.caption2)
-                        Text("\(day.day)")
-                            .font(.subheadline.weight(.semibold))
-                        Circle()
-                            .fill(day == model.today ? Color.accentColor : Color.clear)
-                            .frame(width: 5, height: 5)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 58)
-                    .foregroundStyle(day == model.selectedDay ? .white : .primary)
-                    .background(day == model.selectedDay ? Color.green : Color.clear)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .accessibilityLabel(Text(Self.longDate(day)))
-                .accessibilityAddTraits(day == model.selectedDay ? .isSelected : [])
-            }
-            Button { model.shift(days: 7) } label: { Image(systemName: "chevron.right") }
-                .accessibilityLabel(Text("renewal_next_week"))
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+    private var recordedDays: Set<CalendarDay> {
+        Set(model.visibleDays.filter { day in
+            guard let log = model.state.log(for: day) else { return false }
+            return log.hasLegacyTotal || !log.records.isEmpty
+        })
     }
-
-    // MARK: Summary
-
-    private var summary: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(Self.longDate(model.selectedDay))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            if let total = model.totalCentigrams {
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(ProteinInput.format(centigrams: total, decimalSeparator: model.decimalSeparator))
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                    Text("g").font(.title3).foregroundStyle(.secondary)
-                }
-                .accessibilityElement(children: .combine)
-                goalView(total: total)
-            } else {
-                Label { Text("renewal_total_error") } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                    .font(.subheadline)
-                    .foregroundStyle(.red)
-            }
-            if model.log.hasLegacyTotal {
-                legacySection
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(Color(.secondarySystemBackground))
-    }
-
-    @ViewBuilder
-    private func goalView(total: Int64) -> some View {
-        switch model.goalState {
-        case .goal(let goal):
-            let fraction = goal.centigrams > 0 ? Double(total) / Double(goal.centigrams) : 0
-            ProgressView(value: min(max(fraction, 0), 1)).tint(.green)
-            Text(RenewalStrings.format("renewal_goal_progress",
-                                       ProteinInput.format(centigrams: goal.centigrams, decimalSeparator: model.decimalSeparator)))
-                .font(.caption).foregroundStyle(.secondary)
-        case .notSet:
-            Text("renewal_goal_not_set").font(.caption).foregroundStyle(.secondary)
-        case .noHistory:
-            Text("renewal_goal_no_history").font(.caption).foregroundStyle(.secondary)
-        case .needsReview(let raw):
-            Text(RenewalStrings.format("renewal_goal_needs_review", raw ?? "")).font(.caption).foregroundStyle(.orange)
-        case .integrityError(let detail):
-            Text(RenewalStrings.format("renewal_goal_error", detail)).font(.caption).foregroundStyle(.red)
-        }
-    }
-
-    private var legacySection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("renewal_legacy_section").font(.caption.weight(.semibold))
-            if let adjustment = model.log.legacyAdjustmentCentigrams {
-                HStack {
-                    Text(LocalizedStringKey(model.log.detailState == .legacyTotalOnly ? "renewal_legacy_total_label" : "renewal_legacy_adjustment"))
-                        .font(.caption)
-                    Spacer()
-                    Text(signed(adjustment) + "g")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(adjustment < 0 ? .red : .primary)
-                }
-            }
-            if let aggregate = model.log.legacyAggregate {
-                Text(RenewalStrings.format("renewal_legacy_imported", format(aggregate.importedTotalCentigrams)))
-                    .font(.caption2).foregroundStyle(.secondary)
-                if let edited = aggregate.userEditedTotalCentigrams {
-                    Text(RenewalStrings.format("renewal_legacy_user_edited", format(edited)))
-                        .font(.caption2).foregroundStyle(.secondary)
-                }
-            }
-            if model.log.detailState == .legacyTotalOnly {
-                Text("renewal_legacy_total_only").font(.caption2).foregroundStyle(.secondary)
-            }
-            Button {
-                legacyTotalTarget = LegacyTotalTarget(day: model.selectedDay, currentTotal: model.totalCentigrams)
-            } label: {
-                Text("renewal_edit_total").font(.caption.weight(.semibold))
-            }
-            .disabled(model.totalCentigrams == nil || model.pendingSave != nil)
-        }
-        .padding(.top, 6)
-    }
-
-    // MARK: Records
 
     private var recordList: some View {
-        List {
+        LazyVStack(alignment: .leading, spacing: 10) {
+            Text("renewal_food_entries").font(.headline).accessibilityAddTraits(.isHeader)
             if model.log.records.isEmpty {
-                Text(LocalizedStringKey(model.log.detailState == .legacyTotalOnly ? "renewal_legacy_add_hint" : "renewal_empty"))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 100)
+                VStack(alignment: .leading, spacing: 10) {
+                    Image(systemName: "fork.knife").font(.title2).foregroundColor(RenewalTheme.action)
+                    Text(LocalizedStringKey(model.log.detailState == .legacyTotalOnly ? "renewal_legacy_add_hint" :
+                                            (model.selectedDay == model.today ? "renewal_empty" : "renewal_empty_past")))
+                        .foregroundColor(RenewalTheme.secondary)
+                }
+                .frame(minHeight: 100)
+                .renewalCard()
             } else {
                 ForEach(model.log.records) { record in
                     Button {
                         editorTarget = EditorTarget(day: model.selectedDay, record: record)
                     } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(record.name ?? RenewalStrings.text("renewal_manual_entry"))
-                                    .foregroundStyle(.primary)
-                                if record.source == .legacy {
-                                    Text("renewal_legacy_entry").font(.caption2).foregroundStyle(.secondary)
-                                }
-                            }
-                            Spacer()
-                            Text(format(record.protein.centigrams) + "g")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
+                        FoodRow(record: record, decimalSeparator: model.decimalSeparator)
                     }
+                    .buttonStyle(.plain)
                     .accessibilityHint(Text("renewal_edit"))
-                    // No editor opens while a save is unconfirmed: its Save
-                    // would only be refused with another operation's ID.
                     .disabled(model.pendingSave != nil)
+                    .opacity(model.pendingSave == nil ? 1 : 0.45)
                 }
             }
         }
-        .listStyle(.plain)
     }
 
     // MARK: Formatting
 
-    private func format(_ centigrams: Int64) -> String {
-        ProteinInput.format(centigrams: centigrams, decimalSeparator: model.decimalSeparator)
-    }
-
-    private func signed(_ centigrams: Int64) -> String {
-        centigrams > 0 ? "+" + format(centigrams) : format(centigrams)
-    }
-
     static func longDate(_ day: CalendarDay) -> String {
-        "\(day.year).\(String(format: "%02d", day.month)).\(String(format: "%02d", day.day))"
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateStyle = .long
+        guard let date = day.startOfDay(in: formatter.timeZone) else { return day.iso8601 }
+        return formatter.string(from: date)
     }
 
     static func weekdaySymbol(_ day: CalendarDay) -> String {
@@ -311,50 +208,65 @@ private struct RecordEditorSheet: View {
 
     var body: some View {
         NavigationView {
-            Form {
-                Section {
-                    Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
-                    // Input is locked while a save is running or unconfirmed:
-                    // the reconfirm decides about the values that were sent,
-                    // so an edit typed in the meantime would be lost with the
-                    // sheet. The fields unlock again on `.notApplied`.
-                    TextField(RenewalStrings.text("renewal_name_placeholder"), text: $name)
-                        .disabled(model.isBusy || saveUnconfirmed)
-                    TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
-                        .keyboardType(.decimalPad)
-                        .accessibilityLabel(Text("renewal_protein_placeholder"))
-                        .disabled(model.isBusy || saveUnconfirmed)
-                }
-                if saveUnconfirmed {
-                    PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
-                        saveUnconfirmed = false
-                        error = .notApplied
-                    }, onError: { error = $0 })
-                }
-                if target.record != nil {
-                    Section {
-                        Button(role: .destructive) { delete() } label: { Text("renewal_delete") }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
+                        // Input is locked while a save is running or unconfirmed:
+                        // the reconfirm decides about the values that were sent,
+                        // so an edit typed in the meantime would be lost with the
+                        // sheet. The fields unlock again on `.notApplied`.
+                        TextField(RenewalStrings.text("renewal_name_placeholder"), text: $name)
+                            .renewalInput()
                             .disabled(model.isBusy || saveUnconfirmed)
+                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                        TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
+                            .renewalInput()
+                            .keyboardType(.decimalPad)
+                            .accessibilityLabel(Text("renewal_protein_placeholder"))
+                            .disabled(model.isBusy || saveUnconfirmed)
+                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                    }
+                    .renewalCard()
+                    if saveUnconfirmed {
+                        PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
+                            saveUnconfirmed = false
+                            error = .notApplied
+                        }, onError: { error = $0 })
+                    }
+                    if target.record != nil {
+                        Button(role: .destructive) { delete() } label: {
+                            Text("renewal_delete").frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .foregroundColor(RenewalTheme.danger)
+                        .disabled(model.isBusy || saveUnconfirmed)
+                        .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
                     }
                 }
+                .padding(RenewalTheme.pageInset)
             }
+            .background(RenewalTheme.canvas)
             .navigationTitle(Text(LocalizedStringKey(target.record == nil ? "renewal_add" : "renewal_edit")))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     // Cancel is unavailable while a save is running so the sheet
                     // cannot close with a write still in flight behind it.
-                    Button { dismiss() } label: { Text("renewal_cancel") }
+                    Button { dismiss() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button { save() } label: { Text("renewal_save") }
+                    Button { save() } label: { Text("renewal_save").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy || saveUnconfirmed)
+                        .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
                 }
             }
             .interactiveDismissDisabled(model.isBusy)
             .actionErrorAlert($error)
         }
+        .navigationViewStyle(.stack)
+        .tint(RenewalTheme.action)
+        .preferredColorScheme(.light)
     }
 
     private func handle(_ result: Result<Void, RecordHomeViewModel.ActionError>) {
@@ -396,8 +308,10 @@ private struct PendingSaveSection: View {
     let onError: (RecordHomeViewModel.ActionError) -> Void
 
     var body: some View {
-        Section {
-            Text("renewal_pending_sheet").font(.footnote).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            Label { Text("renewal_pending_sheet") } icon: { Image(systemName: "exclamationmark.triangle") }
+                .font(.subheadline)
+            Text("renewal_pending_close_notice").font(.footnote)
             Button {
                 model.reconfirm { result in
                     switch result {
@@ -406,9 +320,12 @@ private struct PendingSaveSection: View {
                     case .failure(let failure): onError(failure)
                     }
                 }
-            } label: { Text("renewal_reconfirm") }
+            } label: { Text("renewal_reconfirm").frame(minHeight: 44) }
             .disabled(model.isBusy)
         }
+        .padding(16)
+        .background(RenewalTheme.warning)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -431,28 +348,34 @@ private struct LegacyTotalSheet: View {
 
     var body: some View {
         NavigationView {
-            Form {
-                Section {
-                    Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
-                    TextField(RenewalStrings.text("renewal_total_placeholder"), text: $total)
-                        .keyboardType(.decimalPad)
-                        .accessibilityLabel(Text("renewal_total_placeholder"))
-                        .disabled(model.isBusy || saveUnconfirmed)
-                } footer: {
-                    Text("renewal_edit_total_footer")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
+                        TextField(RenewalStrings.text("renewal_total_placeholder"), text: $total)
+                            .renewalInput()
+                            .keyboardType(.decimalPad)
+                            .accessibilityLabel(Text("renewal_total_placeholder"))
+                            .disabled(model.isBusy || saveUnconfirmed)
+                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                        Text("renewal_edit_total_footer").font(.footnote).foregroundColor(RenewalTheme.secondary)
+                    }
+                    .renewalCard()
+                    if saveUnconfirmed {
+                        PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
+                            saveUnconfirmed = false
+                            error = .notApplied
+                        }, onError: { error = $0 })
+                    }
                 }
-                if saveUnconfirmed {
-                    PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
-                        saveUnconfirmed = false
-                        error = .notApplied
-                    }, onError: { error = $0 })
-                }
+                .padding(RenewalTheme.pageInset)
             }
+            .background(RenewalTheme.canvas)
             .navigationTitle(Text("renewal_edit_total"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button { dismiss() } label: { Text("renewal_cancel") }
+                    Button { dismiss() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -466,13 +389,17 @@ private struct LegacyTotalSheet: View {
                             case .failure(let failure): error = failure
                             }
                         }
-                    } label: { Text("renewal_save") }
+                    } label: { Text("renewal_save").frame(minWidth: 44, minHeight: 44) }
                     .disabled(model.isBusy || saveUnconfirmed)
+                    .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
                 }
             }
             .interactiveDismissDisabled(model.isBusy)
             .actionErrorAlert($error)
         }
+        .navigationViewStyle(.stack)
+        .tint(RenewalTheme.action)
+        .preferredColorScheme(.light)
     }
 }
 
@@ -510,17 +437,21 @@ private struct DatePickerSheet: View {
                 Spacer()
             }
             .padding()
+            .background(RenewalTheme.canvas)
             .navigationTitle(Text("renewal_pick_date"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button { dismiss() } label: { Text("renewal_cancel") }
+                    Button { dismiss() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button { onPick(date); dismiss() } label: { Text("renewal_done") }
+                    Button { onPick(date); dismiss() } label: { Text("renewal_done").frame(minWidth: 44, minHeight: 44) }
                 }
             }
         }
+        .navigationViewStyle(.stack)
+        .tint(RenewalTheme.action)
+        .preferredColorScheme(.light)
     }
 }
 

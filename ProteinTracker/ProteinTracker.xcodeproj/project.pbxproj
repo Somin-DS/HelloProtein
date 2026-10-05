@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A51000000000000000000006 /* RenewalStrings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* RenewalStrings.swift */; };
+		A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* RecordHomePrototypeView.swift */; };
+		A51000000000000000000004 /* LegacyTotalDisclosure.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* LegacyTotalDisclosure.swift */; };
+		A51000000000000000000003 /* FoodRow.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* FoodRow.swift */; };
+		A51000000000000000000002 /* DaySummary.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000003 /* DaySummary.swift */; };
+		A51000000000000000000001 /* DayStrip.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* DayStrip.swift */; };
+		A51000000000000000000000 /* RenewalTheme.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000001 /* RenewalTheme.swift */; };
+        A50000000000000000000106 /* GoalProgressPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* GoalProgressPresentation.swift */; };
+        A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000006 /* GoalProgressPresentation.swift */; };
+		A50000000000000000000105 /* LegacyTotalDisclosure.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* LegacyTotalDisclosure.swift */; };
+		A50000000000000000000104 /* FoodRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000004 /* FoodRow.swift */; };
+		A50000000000000000000103 /* DaySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000003 /* DaySummary.swift */; };
+		A50000000000000000000102 /* DayStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002 /* DayStrip.swift */; };
+		A50000000000000000000101 /* RenewalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000001 /* RenewalTheme.swift */; };
 		A30000000000000000000101 /* RenewalPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* RenewalPaths.swift */; };
 		A30000000000000000000102 /* RealmLegacySourceGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* RealmLegacySourceGateway.swift */; };
 		A30000000000000000000103 /* RenewalLaunchPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* RenewalLaunchPolicy.swift */; };
@@ -96,6 +110,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        A50000000000000000000006 /* GoalProgressPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalProgressPresentation.swift; sourceTree = "<group>"; };
+		A50000000000000000000005 /* LegacyTotalDisclosure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/LegacyTotalDisclosure.swift"; sourceTree = "<group>"; };
+		A50000000000000000000004 /* FoodRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/FoodRow.swift"; sourceTree = "<group>"; };
+		A50000000000000000000003 /* DaySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/DaySummary.swift"; sourceTree = "<group>"; };
+		A50000000000000000000002 /* DayStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/DayStrip.swift"; sourceTree = "<group>"; };
+		A50000000000000000000001 /* RenewalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RenewalTheme.swift"; sourceTree = "<group>"; };
 		A30000000000000000000001 /* RenewalPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalPaths.swift; sourceTree = "<group>"; };
 		A30000000000000000000002 /* RealmLegacySourceGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLegacySourceGateway.swift; sourceTree = "<group>"; };
 		A30000000000000000000003 /* RenewalLaunchPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenewalLaunchPolicy.swift; sourceTree = "<group>"; };
@@ -235,6 +255,12 @@
 				A20000000000000000000007 /* RecordHomePrototypeView.swift */,
 				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
 				A30000000000000000000008 /* RenewalStrings.swift */,
+                A50000000000000000000006 /* GoalProgressPresentation.swift */,
+				A50000000000000000000005 /* LegacyTotalDisclosure.swift */,
+				A50000000000000000000004 /* FoodRow.swift */,
+				A50000000000000000000003 /* DaySummary.swift */,
+				A50000000000000000000002 /* DayStrip.swift */,
+				A50000000000000000000001 /* RenewalTheme.swift */,
 			);
 			path = Renewal;
 			sourceTree = "<group>";
@@ -525,6 +551,14 @@
 			files = (
 				A40000000000000000000101 /* RealmLegacySourceGatewayTests.swift in Sources */,
 				A40000000000000000000102 /* RecordHomeViewModelTests.swift in Sources */,
+                A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
+				A51000000000000000000006 /* RenewalStrings.swift in Test Sources */,
+				A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */,
+				A51000000000000000000004 /* LegacyTotalDisclosure.swift in Test Sources */,
+				A51000000000000000000003 /* FoodRow.swift in Test Sources */,
+				A51000000000000000000002 /* DaySummary.swift in Test Sources */,
+				A51000000000000000000001 /* DayStrip.swift in Test Sources */,
+				A51000000000000000000000 /* RenewalTheme.swift in Test Sources */,
 				A40000000000000000000103 /* RenewalLaunchPolicyTests.swift in Sources */,
 				A40000000000000000000104 /* MigrationRealmEndToEndTests.swift in Sources */,
 				A40000000000000000000201 /* RealmModel.swift in Sources */,
@@ -549,6 +583,12 @@
 				A30000000000000000000106 /* RecoveryViewController.swift in Sources */,
 				A30000000000000000000107 /* LegacyFixtureSeeder.swift in Sources */,
 				A30000000000000000000108 /* RenewalStrings.swift in Sources */,
+                A50000000000000000000106 /* GoalProgressPresentation.swift in Sources */,
+				A50000000000000000000105 /* LegacyTotalDisclosure.swift in Sources */,
+				A50000000000000000000104 /* FoodRow.swift in Sources */,
+				A50000000000000000000103 /* DaySummary.swift in Sources */,
+				A50000000000000000000102 /* DayStrip.swift in Sources */,
+				A50000000000000000000101 /* RenewalTheme.swift in Sources */,
 				A20000000000000000000006 /* RecordHomeViewModel.swift in Sources */,
 				A20000000000000000000008 /* RecordHomePrototypeView.swift in Sources */,
 				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,

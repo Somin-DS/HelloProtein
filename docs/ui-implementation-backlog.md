@@ -2,7 +2,9 @@
 
 작성 2026-09-29. 근거: [ui-audit.md](ui-audit.md), 명세: [ui-spec.md](ui-spec.md), 시안: [ui-preview/](ui-preview/README.md). 계획: [ui-direction-plan.md](ui-direction-plan.md) §F.
 
-상태: **권장안 / 미확정**. 아래 항목은 사용자가 화면 구조(A/B)와 브랜드 유지 범위를 결정한 뒤 시작한다. 결정 전에는 어떤 단계도 제품 코드를 바꾸지 않는다.
+상태: **권장안 / 미확정**. 2026-09-30 공동 검토에 따라 Phase 1은 [상세 실행 계획](ui-phase1-implementation-plan.md)을 우선한다. 이번 홈·추가 배치, 브랜드와 테마를 확정한 뒤 적용한다. 최종 A/B 결정은 실제 내비게이션 연결 전에 수행하며 Phase 1 착수 조건이 아니다. 아직 확정되지 않은 제품 디자인을 승인으로 간주하지 않는다.
+
+2026-10-01 구현 상태: Phase 1 홈/테마/기존 편집 화면 표현과 미확정 문구 수정을 작업 브랜치에 구현했다. [실행 증거](evidence/2026-09-30-ui-phase1/README.md)에 빌드·테스트·캡처 및 실행 제한을 기록한다. Phase 1B 확인 정책, 목표·검색·즐겨찾기·최종 내비게이션과 출시 활성화는 미구현이다.
 
 공통 원칙
 
@@ -16,13 +18,13 @@
 
 ## 1단계. 토큰·공통 컴포넌트·기록 홈 시각 정리
 
-전제: 구조 결정(A/B), 브랜드 유지 범위, 다크 모드 지원 여부 확정.
+전제: 이번 홈·추가 배치, 브랜드 유지 범위, 테마 범위 확정. 최종 A/B는 후속. Phase 1 뒤에는 §2의 편집·미확정·복구 UX를 Phase 1B로 먼저 진행하고 목표 설정으로 넘어간다. 날짜 탐색 확장은 별도 우선순위로 둔다.
 
 ### 1.1 색·서체·간격 토큰 도입
 
 - 현재: 새 흐름은 SwiftUI 기본값(`.accentColor` 미정의 → 시스템 파랑, 시스템 서체, 선택은 초록 임시색). 기존 UIKit은 `Assets.xcassets/color` 에셋과 코드 내 hex를 섞어 씀.
 - 목표: ui-spec §4의 의미 토큰(`bg.canvas`, `action.primary`, `ink.*`, `selection`, `danger`, `warning`)을 하나의 Swift 타입으로 정의하고 새 흐름 뷰가 그것만 참조. 다크 지원 시 같은 이름에 다크 값. 숫자용 서체 Binggrae-Bold 44pt를 `Font.custom`으로, 본문은 시스템 텍스트 스타일(Dynamic Type 자동).
-- 변경 파일: `ProteinTracker/ProteinTracker/Renewal/`에 `RenewalTheme.swift`(신규), `Assets.xcassets/color/`에 새 컬러셋 추가(기존 에셋은 삭제하지 않음, 기존 UIKit 경로가 아직 쓰기 때문), `Info.plist`의 `UIAppFonts`는 이미 Binggrae 포함이므로 변경 없음. `AccentColor.colorset`에 `action.primary` 값 부여.
+- 변경 파일: `ProteinTracker/ProteinTracker/Renewal/`에 `RenewalTheme.swift`(신규), `Assets.xcassets/color/`에 새 컬러셋 추가(기존 에셋은 삭제하지 않음, 기존 UIKit 경로가 아직 쓰기 때문), `Info.plist`의 `UIAppFonts`는 이미 Binggrae 포함이므로 변경 없음. 기존 `AccentColor.colorset`은 변경하지 않고 Renewal 화면 계층에만 테마를 적용.
 - 데이터 의존성: 없음.
 - 시각 확인: 홈·시트·경고에서 파란색이 남지 않음. 라이트에서 크림 배경·흰 카드 구분이 보임. 큰 글자(AX3)에서 숫자 44pt가 화면을 넘지 않음(줄바꿈이 아니라 축소 허용 여부 결정).
 - 회귀 검사: 앱 테스트 30개 유지. 기존 UIKit 경로(플래그 없음)의 화면이 픽셀 단위로 그대로인지 D1 캡처와 비교.
@@ -38,11 +40,11 @@
 
 ### 1.3 기록 홈 시각 적용
 
-- 현재: 링 없음, 선형 막대 없음(숫자만), 임시 초록 선택, "Previous version total" 영문 내부 용어, 파란 "Add protein" 전폭 버튼.
-- 목표: ui-spec §3.1. 진행 막대(목표 없으면 숨김, 초과 시 100% 고정 + `목표 +Ng` + 달성 배지), 선택 날짜 잉크색 캡슐, 기록 있는 날 밑줄 점, 오늘 점, 이전 합계 접힘 박스(기본 접힘, 총량 편집 링크 안에 포함), 하단 액션 바 또는 탭+FAB, 빈 상태 문구(오늘/과거 구분), 목표 없음 링크는 설정 진입점이 아직 없으면 1.3에서는 비활성 표시.
+- 현재: 링 없음, 목표가 있는 날짜는 기존 `ProgressView` 있음, 임시 초록 선택, "Previous version total" 영문 내부 용어, 파란 "Add protein" 전폭 버튼.
+- 목표: ui-spec §3.1. 진행 막대(목표 없으면 숨김, 초과 시 100% 고정 + `목표 +Ng` + 달성 배지), 선택 날짜 잉크색 캡슐, 기록 있는 날 밑줄 점, 오늘 점, 이전 합계 접힘 박스(기본 접힘, 총량 편집 링크 안에 포함), 이번에는 동작하는 단일 추가 버튼 유지, 최종 액션 바/탭은 후속. 빈 상태 문구는 오늘/과거 구분. 목표 설정 진입점 연결 전에는 설명만 표시하며 가짜 링크를 만들지 않음.
 - 변경 파일: `Renewal/RecordHomePrototypeView.swift`, `Renewal/RenewalStrings.swift`, `Localization/ko.lproj`·`en.lproj` `Localizable.strings`.
 - 데이터 의존성: `RecordHomeViewModel.goalState` (`.goal/.noHistory/.notSet/.needsReview/.integrityError`)를 그대로 매핑. `.integrityError`는 danger 밴드로 표시하고 숨기지 않음.
-- 시각 확인: 갤러리 홈 4상태 + 과거 3상태(상세+보정, 합계만, 음수 보정)와 비교. 음수 보정값이 부호와 함께 danger 잉크로 보임. 영어에서 "Previous version total" 대신 확정 문구.
+- 시각 확인: 갤러리 홈 4상태 + 과거 3상태(상세+보정, 합계만, 음수 보정)와 비교. 음수 보정값은 부호를 유지하며 정상 보정을 오류 색상으로 강제하지 않음. 영어에서 "Previous version total" 대신 확정 문구.
 - 회귀 검사: 앱 테스트 유지. 시뮬레이터 A3(합계만) → A4(추가) → A5/A6(총량 편집) 재캡처, 합계 88g/75g 계산이 이전 캡처와 같음.
 
 ---
@@ -70,7 +72,7 @@
 ### 2.3 미확정 저장 UX
 
 - 현재: 경고창 + 시트 유지 + 필드 잠금 + "저장 결과 확인" 버튼, 홈 배너, 모든 저장 거부. 미반영이면 입력 유지.
-- 목표: 동작 변경 없음(미확정 중 취소 허용, 초안 미보존은 현재 동작 유지). 표현만 ui-spec §3.3: 미확정 중 취소·스와이프 시 "입력한 내용은 남지 않아요" 확인 대화상자 추가, 시트 안 warning 밴드(경고창 대신 1회 안내 후 밴드 상주), 잠긴 필드는 chip 배경, 홈 배너에 "저장 결과 확인" 링크, 재확인 실패는 밴드 유지 + 짧은 경고, 미반영은 입력 재개 안내.
+- 목표: 동작 변경 없음(미확정 중 취소 허용, 초안 미보존은 현재 동작 유지). 닫기 중재가 추가되는 UX 변경이며 저장 계약은 유지. Phase 1에는 초안 미보존 상시 안내와 홈/시트 미반영 문구 정확성 수정만 포함하고, 확인창은 Phase 1B에서 완료. ui-spec §3.3: 미확정 중 취소·스와이프 시 "입력한 내용은 남지 않아요" 확인 대화상자 추가, 시트 안 warning 밴드(경고창 대신 1회 안내 후 밴드 상주), 잠긴 필드는 chip 배경, 홈 배너에 "저장 결과 확인" 링크, 재확인 실패는 밴드 유지 + 짧은 경고, 미반영은 입력 재개 안내.
 - 변경 파일: `RecordEditorSheet.swift`, `Components/NoticeBand.swift`, `RecordHomePrototypeView.swift`(배너).
 - 데이터 의존성: `PendingSave.operationID`, `ActionError.unconfirmed/.notApplied`, `reconfirm()` 그대로.
 - 시각 확인: 갤러리 "미확정 4상태". 잠금 중 ＋·행·총량 편집이 비활성으로 보임.
@@ -198,12 +200,12 @@
 
 ### 5.4 출시 전 검증 (플래그 제거 전)
 
-- 현재: 새 흐름은 플래그 뒤, 시뮬레이터 iPhone 15 Pro iOS 17만 검증.
+- 현재: 새 흐름은 플래그 뒤. 2026-10-05 iOS 26.5 시뮬레이터 iPhone SE 3세대·iPhone 17에서 홈·시트·AX3·시스템 다크 시나리오를 통과([증거](evidence/2026-10-05-iphone-ui/README.md)). 이전 Duo 결과는 근거로 쓰지 않는다.
 - 목표: 다음을 실행하고 `docs/evidence/<날짜>-ui-release-check/`에 남긴다. 통과 전에는 Release 기본 활성화를 하지 않는다.
   - 한국어·영어 × 기본·AX3 글자 × 라이트·(다크 지원 시) 다크에서 홈·추가·미확정·목표·히스토리·설정·복구 캡처.
   - VoiceOver로 날짜 띠(날짜 전체 읽기), ＋(날짜 포함 라벨), 진행 막대(퍼센트), 잠긴 필드(비활성 안내) 확인.
   - 색 대비를 실제 렌더 캡처에서 측정(계산값 6.45/6.39/5.71 등을 측정으로 대체).
-  - 작은 화면(iPhone SE 3세대) 키보드 열린 상태.
+  - 작은 화면(iPhone SE 3세대) 키보드 열린 상태 — 2026-10-05 추가·수정·총량 시트에서 확인. 영어 AX3·한국어 다크·실기기는 남음.
   - 기존 사용자 이관 시나리오 A/B/C/S 전체 재실행, 실기기 1대 이상.
 - 변경 파일: 없음(문서·증거만). 통과 후 별도 결정으로 `RenewalLaunchPolicy` 기본값 변경.
 - 데이터 의존성: 합성 fixture + 실제 배포 데이터 파일 1건(로드맵 미검증 항목).

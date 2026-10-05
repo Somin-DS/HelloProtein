@@ -68,7 +68,9 @@ iOS 앱 연결
 - [ui-preview/](ui-preview/README.md): 클릭 가능한 로컬 HTML 시안. 기존 앱·현재 프로토타입 캡처와 나란히 비교, 한/영·큰 글자·A/B·라이트/다크 전환, 필수 상태 36개 갤러리, 합성 fixture.
 - [ui-implementation-backlog.md](ui-implementation-backlog.md): 5단계 후속 구현 순서. 각 항목에 현재/목표, 파일, 데이터 의존성, 시각 확인, 회귀 검사.
 
-사용자 결정 대기: 화면 구조(A/B), 브랜드 유지 범위(크림·민트·그린·Binggrae 숫자·계란 워드마크), 다크 모드 지원 여부, 목표 진입점, 계산기 옵션 범위. 결정 전에는 제품 화면을 교체하지 않는다.
+다음 작업은 [공동 검토된 Phase 1 계획](ui-phase1-implementation-plan.md)에 따라 홈 UI → Phase 1B 편집·미확정·복구 UX → 목표 설정 순서로 진행한다. 최종 A/B 결정은 내비게이션 연결 전으로 분리한다. 이번 홈·추가 배치와 브랜드·테마의 사용자 결정은 아직 미확정이다.
+
+후속까지 포함한 사용자 결정 대기: 화면 구조(A/B), 브랜드 유지 범위(크림·민트·그린·Binggrae 숫자·계란 워드마크), 다크 모드 지원 여부, 목표 진입점, 계산기 옵션 범위. 결정 전에는 제품 화면을 교체하지 않는다.
 
 ## 아직 해결할 사항
 
@@ -98,3 +100,11 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 2026-09-28 결과: `HelloProteinCore` 40개, `MigrationCore` 53개, 앱 테스트 타깃 25개 통과(로그 `/private/tmp/helloprotein-next/core-tests-3.log`, `migration-tests-3.log`, `app-test-5.log`, 모두 exit 0). 앱 Debug 빌드 성공(`/private/tmp/helloprotein-next/app-build-5-debug.log`, exit 0). 별도 코드 리뷰 패스에서 나온 상위/중간 지적(예외로 죽는 FileHandle 쓰기, 실패한 이관이 기존 앱을 막는 증거 판정, 빈 이름 검산 오류, 임시 파일 중단 지점 누락, 0/음수 총량 편집 불가, 목표 이력 오류를 빈 상태로 표시, 복구 화면의 원시 상세 노출, 임시 파일 일괄 삭제, 픽스처 시더 보호, 달력 범위)은 반영했고, 시트 3개 체인·`FileRecordRepository` 잔존·보정값 0인 날의 안내 표시는 남겨 두었다. 시뮬레이터 시나리오(정상 업그레이드, 교체 직전/직후 강제 종료 후 재실행, 과거 날짜 추가·총량 편집, 저장 실패, 기본 경로 유지, 손상 저장소 복구 화면)는 `docs/evidence/2026-09-28-simulator/README.md`에 정리했다. 실제 사용자 파일·실기기·Android는 미검증.
 
 2026-09-28 후속(PR #2 리뷰 R1·R2) 결과: 증거 파일 판정 계약과 커밋 결과 계약(`notCommitted`/`indeterminate`, 경로 단위 쓰기 차단, 읽기 재확인, operation ID)을 넣고 회귀 테스트를 먼저 추가했다. 별도 코드 리뷰 패스의 지적(미확정 차단이 인스턴스에만 있고 `inspect()`가 풀지 않아 이관 미확정 뒤 저장이 영구 실패, 배너의 `notApplied` 무시, 증거 문제 시 백업 유무 오보, `afterReplace` 중단 분류, `commit()`의 검증 오류 포장, 플래그 읽기 락, 미확정 중 행 편집, 캡처 버전 프로브, 인자 truthy 판정)을 반영했다. 2차 리뷰에서 백업 본문의 SHA-256을 fingerprint와 대조하지 않던 판정과 미확정 중 입력란이 열려 있던 문제를 고쳤다. `HelloProteinCore` 45개, `MigrationCore` 64개, 앱 테스트 타깃 30개 통과(로그 `/private/tmp/helloprotein-next/core-tests-5.log`, `migration-tests-6.log`, `app-test-10.log`, 모두 exit 0). 앱 Debug/Release 빌드 성공(`app-build-8-debug.log`, `app-build-8-release.log`, exit 0)이며 Release 바이너리에는 실패 주입·픽스처 인자 문자열이 없다. 시뮬레이터 시나리오(정상 이관 후 과거 날짜 추가, 손상 완료 마커의 복구 화면과 파일 보존, `rename` 이후 읽기 실패 → 재확인 → 재실행에서 한 행)는 `docs/evidence/2026-09-28-pr2-followup/README.md`에 정리했다. `notApplied` 경로, 권한 없음/상위 버전 증거, 실제 사용자 파일·실기기는 미검증.
+
+## 2026-10-01 Phase 1 구현
+
+기록 홈/기존 편집 시트 테마와 표시 컴포넌트, 원본·보정 구분, 미확정 안내를 구현했다. 저장·이관 계약과 기본 실행 경로는 유지한다. [구현·검증 기록](evidence/2026-09-30-ui-phase1/README.md)을 참고하며, UI 검증 제한이 남아 있으므로 출시 준비 완료로 간주하지 않는다. 다음 기능 구현은 Phase 1B 편집·미확정 닫기 확인·복구 UX다.
+
+## 2026-10-05 일반 iPhone 보정
+
+Phase 1 홈을 일반 iPhone(SE 3세대 375 pt, iPhone 17 402 pt, iOS 26.5 시뮬레이터)에서 실행했다. 실제 문제는 SE에서 날짜 줄 좌우 4.5 pt 잘림 하나였고 `DayStrip`만 보정했다(비접근성 글자 7일 균등 폭 고정, 접근성 글자는 가로 스크롤 유지). 두 기기에서 홈·달력·과거·펼침·총량 시트·추가/수정/삭제·미확정 재확인·AX3·시스템 다크 시나리오를 XCTest 하네스로 통과했고 Core 45·Migration 64·앱 32 테스트가 통과했다. [실행 증거](evidence/2026-10-05-iphone-ui/README.md). Duo 동시 대응은 연기했으며 이전 Duo 결과는 일반 iPhone QA 근거로 쓰지 않는다. 실제 VoiceOver·iOS 15·실기기는 미검증이고 기본 활성화·출시는 하지 않았다.
