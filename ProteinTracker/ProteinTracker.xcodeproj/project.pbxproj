@@ -115,6 +115,8 @@
 		A60000000000000000000014 /* RecoveryViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000004 /* RecoveryViewControllerTests.swift */; };
 		A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* RecoveryViewController.swift */; };
 		A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* RenewalLaunchGate.swift */; };
+		A60000000000000000000015 /* GoalEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000005 /* GoalEditorSheet.swift */; };
+		A60000000000000000000025 /* GoalEditorSheet.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000005 /* GoalEditorSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -198,6 +200,7 @@
 		A60000000000000000000002 /* SheetDismissAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetDismissAdapter.swift; sourceTree = "<group>"; };
 		A60000000000000000000003 /* EditorDismissPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorDismissPolicyTests.swift; sourceTree = "<group>"; };
 		A60000000000000000000004 /* RecoveryViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryViewControllerTests.swift; sourceTree = "<group>"; };
+		A60000000000000000000005 /* GoalEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -269,6 +272,7 @@
 				A20000000000000000000007 /* RecordHomePrototypeView.swift */,
 				A60000000000000000000001 /* EditorDismissPolicy.swift */,
 				A60000000000000000000002 /* SheetDismissAdapter.swift */,
+				A60000000000000000000005 /* GoalEditorSheet.swift */,
 				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
 				A30000000000000000000008 /* RenewalStrings.swift */,
                 A50000000000000000000006 /* GoalProgressPresentation.swift */,
@@ -571,6 +575,7 @@
 				A60000000000000000000014 /* RecoveryViewControllerTests.swift in Sources */,
 				A60000000000000000000021 /* EditorDismissPolicy.swift in Test Sources */,
 				A60000000000000000000022 /* SheetDismissAdapter.swift in Test Sources */,
+				A60000000000000000000025 /* GoalEditorSheet.swift in Test Sources */,
 				A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */,
 				A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */,
                 A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
@@ -615,6 +620,7 @@
 				A20000000000000000000008 /* RecordHomePrototypeView.swift in Sources */,
 				A60000000000000000000011 /* EditorDismissPolicy.swift in Sources */,
 				A60000000000000000000012 /* SheetDismissAdapter.swift in Sources */,
+				A60000000000000000000015 /* GoalEditorSheet.swift in Sources */,
 				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,
 				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,

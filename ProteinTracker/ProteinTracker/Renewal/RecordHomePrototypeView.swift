@@ -6,6 +6,7 @@ struct RecordHomeView: View {
     @StateObject private var model: RecordHomeViewModel
     @State private var editorTarget: EditorTarget?
     @State private var legacyTotalTarget: LegacyTotalTarget?
+    @State private var goalTarget: GoalEditorTarget?
     @State private var showingDatePicker = false
     @State private var homeError: RecordHomeViewModel.ActionError?
     @Environment(\.scenePhase) private var scenePhase
@@ -23,6 +24,7 @@ struct RecordHomeView: View {
                     if model.pendingSave != nil { pendingBanner }
                     DaySummary(total: model.totalCentigrams, goalState: model.goalState,
                                decimalSeparator: model.decimalSeparator)
+                    if let goalEntryKey { goalEntryButton(goalEntryKey) }
                     if model.log.hasLegacyTotal {
                         LegacyTotalDisclosure(log: model.log, total: model.totalCentigrams,
                                               decimalSeparator: model.decimalSeparator,
@@ -72,6 +74,9 @@ struct RecordHomeView: View {
             .sheet(item: $legacyTotalTarget) { target in
                 LegacyTotalSheet(target: target, model: model)
             }
+            .sheet(item: $goalTarget) { target in
+                GoalEditorSheet(target: target, model: model)
+            }
             .sheet(isPresented: $showingDatePicker) {
                 DatePickerSheet(initial: model.selectedDay, timeZone: model.timeZone) { date in
                     model.select(date: date)
@@ -84,6 +89,38 @@ struct RecordHomeView: View {
         .onChange(of: scenePhase) { phase in
             if phase == .active { model.refreshToday() }
         }
+    }
+
+    // MARK: Goal entry (today only)
+
+    /// Which label the goal button carries, or nil when there is no entry:
+    /// past days are never edited from, and a history integrity error is kept
+    /// visible instead of being overwritten by a normal edit.
+    private var goalEntryKey: String? {
+        guard model.selectedDay == model.today else { return nil }
+        // A migrated value still under review is "set", even if history exists.
+        if model.goalReview.needsReview { return "renewal_goal_set" }
+        switch model.goalState {
+        case .goal: return "renewal_goal_change"
+        case .notSet, .needsReview, .noHistory: return "renewal_goal_set"
+        case .integrityError: return nil
+        }
+    }
+
+    private func goalEntryButton(_ key: String) -> some View {
+        Button {
+            // Re-check the clock first. If midnight passed while this card was
+            // showing, move to today instead of opening an editor on yesterday.
+            model.refreshToday()
+            guard model.selectedDay == model.today else { return model.selectToday() }
+            goalTarget = GoalEditorTarget(day: model.today)
+        } label: {
+            Label { Text(LocalizedStringKey(key)) } icon: { Image(systemName: "target") }
+                .font(.subheadline.weight(.semibold))
+                .frame(minHeight: 44)
+        }
+        .disabled(model.isBusy || model.pendingSave != nil)
+        .accessibilityIdentifier("renewal.goal.entry")
     }
 
     // MARK: Unconfirmed save
@@ -377,7 +414,7 @@ private struct RecordEditorSheet: View {
 /// Form section offered while a save's outcome is unknown: explains the state
 /// and lets the user re-read the store. It never retries the write by itself.
 @available(iOS 15.0, *)
-private struct PendingSaveSection: View {
+struct PendingSaveSection: View {
     @ObservedObject var model: RecordHomeViewModel
     let onConfirmed: () -> Void
     let onNotApplied: () -> Void
@@ -599,8 +636,9 @@ enum ActionErrorText {
         case .storage: return RenewalStrings.text("renewal_error_storage_title")
         case .integrity, .notFound: return RenewalStrings.text("renewal_error_integrity_title")
         case .busy: return RenewalStrings.text("renewal_error_busy_title")
-        case .unconfirmed: return RenewalStrings.text("renewal_error_unconfirmed_title")
+        case .unconfirmed, .reconfirmFailed: return RenewalStrings.text("renewal_error_unconfirmed_title")
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_title")
+        case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_title")
         }
     }
 
@@ -621,6 +659,8 @@ enum ActionErrorText {
         case .busy: return RenewalStrings.text("renewal_error_busy")
         case .unconfirmed: return RenewalStrings.text("renewal_error_unconfirmed_message")
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_message")
+        case .reconfirmFailed: return RenewalStrings.text("renewal_error_reconfirm_message")
+        case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_message")
         }
     }
 }

@@ -33,6 +33,13 @@ final class RecordHomeViewModel: ObservableObject {
         /// `reconfirm` read the store and the pending operation is not in it.
         /// Input is kept; the same save can be retried.
         case notApplied
+        /// `reconfirm` could not read the store. Nothing is known yet: the
+        /// pending state stays and the read can be tried again. Distinct from
+        /// `.storage`, which promises that nothing was changed.
+        case reconfirmFailed(String)
+        /// The goal sheet's start day is no longer today. Nothing was written;
+        /// the input is kept and the user updates the start day explicitly.
+        case goalDateChanged(today: CalendarDay)
     }
 
     /// A save whose commit outcome is unknown. Cleared only by a successful reload.
@@ -49,6 +56,14 @@ final class RecordHomeViewModel: ObservableObject {
     @Published private(set) var isBusy = false
     @Published private(set) var today: CalendarDay
     @Published private(set) var pendingSave: PendingSave?
+    /// Mirrors of the last confirmed state for the goal sheet.
+    @Published private(set) var goals: [ProteinGoal] = []
+    @Published private(set) var goalReview = GoalReview(needsReview: false, raw: nil)
+
+    struct GoalReview: Equatable {
+        let needsReview: Bool
+        let raw: String?
+    }
 
     let timeZone: TimeZone
     let decimalSeparator: String
@@ -173,6 +188,39 @@ final class RecordHomeViewModel: ObservableObject {
         }
     }
 
+    // MARK: Goal
+
+    /// The goal in effect on `day` from the last confirmed state, or nil when
+    /// the history does not cover it. Throws on a history integrity failure.
+    func goal(on day: CalendarDay) throws -> ProteinGoal? {
+        try state.goal(on: day)
+    }
+
+    /// Sets the goal that applies from `day`, which must still be today at the
+    /// moment of the call: the clock is re-read first and a stale day is
+    /// refused without a write. `id` is fixed for the editing session. The
+    /// review flag left by the migration is cleared in the same commit. A
+    /// value equal to the goal already in effect, with no flag to clear, is a
+    /// confirmed no-op and never creates a history entry.
+    func setGoal(day: CalendarDay, id: String = UUID().uuidString, proteinText: String,
+                 completion: @escaping (Result<Void, ActionError>) -> Void) {
+        if let pending = pendingSave { return completion(.failure(.unconfirmed(operationID: pending.operationID))) }
+        guard !isBusy else { return completion(.failure(.busy)) }
+        refreshToday()
+        guard day == today else { return completion(.failure(.goalDateChanged(today: today))) }
+        let amount: ProteinAmount
+        do { amount = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
+        catch let error as ProteinInputError { return completion(.failure(.input(error))) }
+        catch { return completion(.failure(.integrity(String(describing: error)))) }
+        if !state.settings.goalNeedsReview, let current = try? state.goal(on: day), current.amount == amount {
+            return completion(.success(()))
+        }
+        perform(day: day, completion: completion) { state in
+            try state.replaceGoal(on: day, with: ProteinGoal(id: id, effectiveFrom: day, amount: amount))
+            state.settings.goalNeedsReview = false
+        }
+    }
+
     // MARK: Unconfirmed saves
 
     /// Re-reads the store after an indeterminate commit. Success means the
@@ -187,9 +235,10 @@ final class RecordHomeViewModel: ObservableObject {
         let store = self.store
         workQueue.async {
             let result: Result<AppState, ActionError>
+            // A failed read is reported as exactly that: the outcome is still
+            // unknown, so the pending state stays and nothing is promised.
             do { result = .success(try store.load()) }
-            catch let error as StoreError { result = .failure(.storage(String(describing: error))) }
-            catch { result = .failure(.integrity(String(describing: error))) }
+            catch { result = .failure(.reconfirmFailed(String(describing: error))) }
             self.mainQueue.async {
                 self.isBusy = false
                 switch result {
@@ -261,6 +310,8 @@ final class RecordHomeViewModel: ObservableObject {
         log = state.log(for: selectedDay) ?? ((try? DailyLog(day: selectedDay)) ?? log)
         totalCentigrams = try? log.totalProteinCentigrams()
         goalState = Self.goalState(for: selectedDay, in: state)
+        goals = state.goals
+        goalReview = GoalReview(needsReview: state.settings.goalNeedsReview, raw: state.settings.legacyTargetRaw)
     }
 
     static func goalState(for day: CalendarDay, in state: AppState) -> GoalState {

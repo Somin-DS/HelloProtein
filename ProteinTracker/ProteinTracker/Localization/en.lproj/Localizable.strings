@@ -191,3 +191,23 @@
 
 // Phase 1B: recovery screen
 "recovery_retry_hint" = "Try again to check whether your entries can be opened.";
+
+// Goal settings
+"renewal_goal_title" = "Daily protein goal";
+"renewal_goal_set" = "Set goal";
+"renewal_goal_change" = "Change goal";
+"renewal_goal_placeholder" = "Daily goal (g)";
+"renewal_goal_current_value" = "Current goal %@ g";
+"renewal_goal_none_yet" = "No goal yet";
+"renewal_goal_applies_from" = "Applies from %@";
+"renewal_goal_apply_note" = "Your new goal applies from today. Goals for earlier dates won’t change.";
+"renewal_goal_replace_note" = "Setting another goal today replaces today’s goal.";
+"renewal_goal_history" = "Goal history";
+"renewal_goal_history_empty" = "No goal history yet.";
+"renewal_goal_current" = "Currently active";
+"renewal_goal_date_changed_title" = "The start date has changed";
+"renewal_goal_date_changed_message" = "Update the start date to today, then save again. Your input will be kept.";
+"renewal_goal_update_date" = "Update start date to today";
+"renewal_goal_review_missing" = "Goal needs review: the previous value is missing";
+"renewal_goal_review_empty" = "Goal needs review: the previous value is empty";
+"renewal_error_reconfirm_message" = "We haven’t confirmed the save status yet. Please check again.";
