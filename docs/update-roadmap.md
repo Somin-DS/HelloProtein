@@ -108,3 +108,14 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 ## 2026-10-05 일반 iPhone 보정
 
 Phase 1 홈을 일반 iPhone(SE 3세대 375 pt, iPhone 17 402 pt, iOS 26.5 시뮬레이터)에서 실행했다. 실제 문제는 SE에서 날짜 줄 좌우 4.5 pt 잘림 하나였고 `DayStrip`만 보정했다(비접근성 글자 7일 균등 폭 고정, 접근성 글자는 가로 스크롤 유지). 두 기기에서 홈·달력·과거·펼침·총량 시트·추가/수정/삭제·미확정 재확인·AX3·시스템 다크 시나리오를 XCTest 하네스로 통과했고 Core 45·Migration 64·앱 32 테스트가 통과했다. [실행 증거](evidence/2026-10-05-iphone-ui/README.md). Duo 동시 대응은 연기했으며 이전 Duo 결과는 일반 iPhone QA 근거로 쓰지 않는다. 실제 VoiceOver·iOS 15·실기기는 미검증이고 기본 활성화·출시는 하지 않았다.
+
+
+## 2026-10-06 PR #5 이후 계획
+
+PR #5는 2026-10-05 main에 병합됐다(`64b9688ee674a8bdb831ea4298f1cfeb847f05ab`). 다음 작업은 [Phase 1B 편집 확인과 저장 결과 안내](ui-phase1b-editing-recovery-plan.md)다. 본사 기획·디자인·개발·QA·마케팅·프롬프트 엔지니어·그로스 7개 직무의 [공동 검토](reviews/2026-10-06-phase1b-team-review.md)를 반영했다.
+
+취소/스와이프의 초안 버리기 확인, 삭제 확인, 미확정 닫기와 재확인 안내, 조건부 복구 문구를 먼저 구현한다. 인라인 입력 안내·키보드 액세서리·검증된 문의 연결은 후속으로 분리한다. 그다음 목표 설정과 기존 무료 검색·즐겨찾기 연결을 진행한다. 일반 iPhone 기준과 Duo 연기 결정을 유지하며, 위 9월의 미확정 UI 방향 기록은 당시 이력이다. 현재 홈을 다시 설계하는 작업은 이번 범위에 없다. 이번에는 계획 문서만 작성했고 제품 수정이나 새 실행 테스트는 하지 않았다.
+
+## 2026-10-06 Phase 1B 구현
+
+[Phase 1B 계획](ui-phase1b-editing-recovery-plan.md)대로 두 편집 시트(음식 기록·하루 총량)에 취소·스와이프 공통 닫기 정책(처리 중 차단 → 미확정 닫기 확인 → 초안 버리기 확인 → 바로 닫기), 저장된 값 기준 삭제 확인, 미확정 닫기 확인을 넣고 복구 화면 문구를 상태 플래그 조건부로 정리했다. 저장 schema·commit·이관 판정·ID 수명·플래그 기본값·최소 OS는 바꾸지 않았다. 미반영·재확인 읽기 실패는 DEBUG 전용 저장소 대역(`-HelloProteinSaveOutcomeOnce`)으로 검증했고 실제 `afterReplace` 재확인과 구분해 기록했다. [실행 증거](evidence/2026-10-06-phase1b/README.md). iOS 15 런타임·실기기·VoiceOver는 미검증이며 기본 활성화·출시는 하지 않았다.

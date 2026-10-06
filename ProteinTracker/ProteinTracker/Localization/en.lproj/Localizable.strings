@@ -123,7 +123,7 @@
 "renewal_error_busy_title" = "One moment";
 "renewal_error_busy" = "Please wait for the previous action to finish";
 "launch_loading" = "Preparing your data…";
-"recovery_title" = "Couldn't move your data";
+"recovery_title" = "Unable to open your entries";
 "recovery_preserved" = "Your original data is untouched and has not been deleted.";
 "recovery_backup_available" = "A pre-migration backup copy is stored inside the app.";
 "recovery_retry" = "Try again";
@@ -175,3 +175,19 @@
 "renewal_adjustment_explanation" = "An adjustment keeps the daily total in sync with your food entries. The original imported total is kept separately.";
 
 "renewal_pending_close_notice" = "You can check the save status from the home screen. If you close this screen, your input won’t be kept.";
+
+// Phase 1B: editing confirmations (closing, deleting, unconfirmed close)
+"renewal_discard_title" = "Discard changes?";
+"renewal_discard_message" = "Your unsaved input won’t be kept.";
+"renewal_discard_keep" = "Keep editing";
+"renewal_discard_confirm" = "Discard changes";
+"renewal_delete_confirm_title" = "Delete this entry?";
+"renewal_delete_confirm_message" = "This can’t be undone.";
+"renewal_delete_confirm_target" = "%1$@ · %2$@ · %3$@ g";
+"renewal_pending_close_title" = "Close before checking the save status?";
+"renewal_pending_close_message" = "We haven’t confirmed whether this change was saved. You can check the save status from the home screen, but this screen’s input won’t be kept.";
+"renewal_pending_close_stay" = "Stay here";
+"renewal_pending_close_confirm" = "Close";
+
+// Phase 1B: recovery screen
+"recovery_retry_hint" = "Try again to check whether your entries can be opened.";

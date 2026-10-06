@@ -121,7 +121,7 @@
 "renewal_error_busy_title" = "잠시만요";
 "renewal_error_busy" = "이전 작업이 끝날 때까지 기다려주세요";
 "launch_loading" = "데이터를 준비하는 중…";
-"recovery_title" = "데이터를 옮기지 못했어요";
+"recovery_title" = "기록을 열 수 없어요";
 "recovery_preserved" = "원본 데이터는 그대로 보관되어 있고 삭제되지 않았어요.";
 "recovery_backup_available" = "이관 전 백업 사본이 앱 안에 저장되어 있어요.";
 "recovery_retry" = "다시 시도";
@@ -173,3 +173,19 @@
 "renewal_adjustment_explanation" = "음식 기록과 함께 현재 하루 합계를 맞추는 보정값이에요. 가져온 원본 합계는 별도로 보존해요.";
 
 "renewal_pending_close_notice" = "닫아도 홈에서 저장 결과를 확인할 수 있어요. 닫으면 입력 초안은 남지 않아요.";
+
+// Phase 1B: 편집 확인 (닫기, 삭제, 미확정 닫기)
+"renewal_discard_title" = "변경 내용을 버릴까요?";
+"renewal_discard_message" = "저장하지 않은 입력은 남지 않아요.";
+"renewal_discard_keep" = "계속 입력";
+"renewal_discard_confirm" = "버리고 닫기";
+"renewal_delete_confirm_title" = "이 기록을 삭제할까요?";
+"renewal_delete_confirm_message" = "삭제하면 되돌릴 수 없어요.";
+"renewal_delete_confirm_target" = "%1$@ · %2$@ · %3$@ g";
+"renewal_pending_close_title" = "저장 결과를 확인하기 전에 닫을까요?";
+"renewal_pending_close_message" = "변경 내용이 저장됐는지 아직 확인하지 못했어요. 닫아도 홈에서 저장 결과를 확인할 수 있지만, 이 화면의 입력 초안은 남지 않아요.";
+"renewal_pending_close_stay" = "화면에 머무르기";
+"renewal_pending_close_confirm" = "닫기";
+
+// Phase 1B: 복구 화면
+"recovery_retry_hint" = "다시 시도해 기록을 열 수 있는지 확인해 주세요.";

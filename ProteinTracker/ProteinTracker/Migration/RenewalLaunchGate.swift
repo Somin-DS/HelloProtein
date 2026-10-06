@@ -16,7 +16,22 @@ final class RenewalLaunchGate {
     /// migration commit itself is never affected. Changes no file permissions.
     static let failAfterReplaceArgument = "-HelloProteinFailAfterReplaceOnce"
     private let finalReadFailure = FinalReadFailureInjector()
+    /// `-HelloProteinSaveOutcomeOnce notApplied|readFailure`: the first user
+    /// save is reported as unconfirmed, and the next re-read of the store
+    /// finds it either not applied or unreadable. A test double around the
+    /// store for the screen only; the migration commit uses the real store.
+    static let saveOutcomeArgument = "-HelloProteinSaveOutcomeOnce"
+    private let saveOutcomeStore: SaveOutcomeInjectingStore?
     #endif
+
+    /// The store handed to the record screen. In Release this is the verified
+    /// file store itself.
+    var screenStore: AppStateStore {
+        #if DEBUG
+        if let saveOutcomeStore { return saveOutcomeStore }
+        #endif
+        return store
+    }
 
     init(paths: RenewalPaths = .standard(),
          arguments: [String] = ProcessInfo.processInfo.arguments,
@@ -45,6 +60,15 @@ final class RenewalLaunchGate {
                 }
             }
         )
+        #if DEBUG
+        let mode = RenewalLaunchPolicy.value(of: Self.saveOutcomeArgument, in: arguments)
+            .flatMap(SaveOutcomeInjectingStore.Mode.init(rawValue:))
+        if let mode {
+            saveOutcomeStore = SaveOutcomeInjectingStore(inner: store, mode: mode)
+        } else {
+            saveOutcomeStore = nil
+        }
+        #endif
     }
 
     static var isOSSupported: Bool {
@@ -127,6 +151,66 @@ final class FinalReadFailureInjector {
         armed = false
         NSLog("HelloProtein: simulated final read failure after replace")
         throw SimulatedFinalReadFailure()
+    }
+}
+#endif
+
+#if DEBUG
+/// DEBUG-only store double for the record screen. `notApplied`: the first
+/// write throws "indeterminate" without touching the file, so the re-read
+/// finds nothing. `readFailure`: the first write lands, is reported as
+/// indeterminate, and the next `load()` fails once, so the re-read keeps the
+/// pending state until it is tried again. Never used in Release builds.
+final class SaveOutcomeInjectingStore: AppStateStore {
+    enum Mode: String {
+        case notApplied
+        case readFailure
+    }
+
+    private let inner: AppStateStore
+    private let lock = NSLock()
+    private var pendingMode: Mode?
+    private var failNextLoad = false
+
+    init(inner: AppStateStore, mode: Mode) {
+        self.inner = inner
+        self.pendingMode = mode
+    }
+
+    var unconfirmedOperationID: String? { inner.unconfirmedOperationID }
+    var hasUnconfirmedCommit: Bool { inner.hasUnconfirmedCommit }
+
+    func load() throws -> AppState {
+        lock.lock()
+        let fail = failNextLoad
+        failNextLoad = false
+        lock.unlock()
+        if fail {
+            NSLog("HelloProtein: simulated reconfirm read failure")
+            throw StoreError.unreadable("simulated reconfirm read failure")
+        }
+        return try inner.load()
+    }
+
+    func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
+        lock.lock()
+        let mode = pendingMode
+        pendingMode = nil
+        lock.unlock()
+        switch mode {
+        case nil:
+            return try inner.modify(operationID: operationID, change)
+        case .notApplied:
+            NSLog("HelloProtein: simulated indeterminate commit without a write")
+            throw StoreCommitError.indeterminate(.verificationMismatch(.finalFile))
+        case .readFailure:
+            _ = try inner.modify(operationID: operationID, change)
+            lock.lock()
+            failNextLoad = true
+            lock.unlock()
+            NSLog("HelloProtein: simulated indeterminate commit after a real write")
+            throw StoreCommitError.indeterminate(.verificationMismatch(.finalFile))
+        }
     }
 }
 #endif
