@@ -107,6 +107,14 @@
 		ABCA62DA29E1717A00B0E7C1 /* UIColor+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */; };
 		ABCA62DC29E19CB900B0E7C1 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DB29E19CB900B0E7C1 /* Alert.swift */; };
 		ABCA62DE29E2BD9C00B0E7C1 /* ProteinModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCA62DD29E2BD9C00B0E7C1 /* ProteinModel.swift */; };
+		A60000000000000000000011 /* EditorDismissPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000001 /* EditorDismissPolicy.swift */; };
+		A60000000000000000000021 /* EditorDismissPolicy.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000001 /* EditorDismissPolicy.swift */; };
+		A60000000000000000000012 /* SheetDismissAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000002 /* SheetDismissAdapter.swift */; };
+		A60000000000000000000022 /* SheetDismissAdapter.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000002 /* SheetDismissAdapter.swift */; };
+		A60000000000000000000013 /* EditorDismissPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000003 /* EditorDismissPolicyTests.swift */; };
+		A60000000000000000000014 /* RecoveryViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000004 /* RecoveryViewControllerTests.swift */; };
+		A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* RecoveryViewController.swift */; };
+		A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* RenewalLaunchGate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -186,6 +194,10 @@
 		ABCA62D929E1717A00B0E7C1 /* UIColor+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Extension.swift"; sourceTree = "<group>"; };
 		ABCA62DB29E19CB900B0E7C1 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
 		ABCA62DD29E2BD9C00B0E7C1 /* ProteinModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProteinModel.swift; sourceTree = "<group>"; };
+		A60000000000000000000001 /* EditorDismissPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorDismissPolicy.swift; sourceTree = "<group>"; };
+		A60000000000000000000002 /* SheetDismissAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetDismissAdapter.swift; sourceTree = "<group>"; };
+		A60000000000000000000003 /* EditorDismissPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorDismissPolicyTests.swift; sourceTree = "<group>"; };
+		A60000000000000000000004 /* RecoveryViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryViewControllerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -243,6 +255,8 @@
 				A40000000000000000000001 /* RealmLegacySourceGatewayTests.swift */,
 				A40000000000000000000002 /* RecordHomeViewModelTests.swift */,
 				A40000000000000000000003 /* RenewalLaunchPolicyTests.swift */,
+				A60000000000000000000003 /* EditorDismissPolicyTests.swift */,
+				A60000000000000000000004 /* RecoveryViewControllerTests.swift */,
 				A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */,
 			);
 			path = ProteinTrackerTests;
@@ -253,6 +267,8 @@
 			children = (
 				A20000000000000000000005 /* RecordHomeViewModel.swift */,
 				A20000000000000000000007 /* RecordHomePrototypeView.swift */,
+				A60000000000000000000001 /* EditorDismissPolicy.swift */,
+				A60000000000000000000002 /* SheetDismissAdapter.swift */,
 				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
 				A30000000000000000000008 /* RenewalStrings.swift */,
                 A50000000000000000000006 /* GoalProgressPresentation.swift */,
@@ -551,6 +567,12 @@
 			files = (
 				A40000000000000000000101 /* RealmLegacySourceGatewayTests.swift in Sources */,
 				A40000000000000000000102 /* RecordHomeViewModelTests.swift in Sources */,
+				A60000000000000000000013 /* EditorDismissPolicyTests.swift in Sources */,
+				A60000000000000000000014 /* RecoveryViewControllerTests.swift in Sources */,
+				A60000000000000000000021 /* EditorDismissPolicy.swift in Test Sources */,
+				A60000000000000000000022 /* SheetDismissAdapter.swift in Test Sources */,
+				A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */,
+				A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */,
                 A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
 				A51000000000000000000006 /* RenewalStrings.swift in Test Sources */,
 				A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */,
@@ -591,6 +613,8 @@
 				A50000000000000000000101 /* RenewalTheme.swift in Sources */,
 				A20000000000000000000006 /* RecordHomeViewModel.swift in Sources */,
 				A20000000000000000000008 /* RecordHomePrototypeView.swift in Sources */,
+				A60000000000000000000011 /* EditorDismissPolicy.swift in Sources */,
+				A60000000000000000000012 /* SheetDismissAdapter.swift in Sources */,
 				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,
 				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,

@@ -102,6 +102,7 @@ struct RecordHomeView: View {
                 }
             } label: { Text("renewal_reconfirm").font(.subheadline.weight(.semibold)).frame(minHeight: 44) }
             .disabled(model.isBusy)
+            .accessibilityIdentifier("renewal.reconfirm.home")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
@@ -192,18 +193,41 @@ private struct RecordEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var protein: String
+    /// The strings the fields opened with, taken once per editing session.
+    /// "Dirty" is an exact comparison against them, so a typed space counts.
+    @State private var initial: [String]
     @State private var error: RecordHomeViewModel.ActionError?
-    /// Set when this sheet's own save ended unconfirmed; saving stays disabled
-    /// until the store has been re-read.
+    /// At most one confirmation at a time, and none while `error` shows.
+    @State private var prompt: EditorPrompt?
+    /// Set when this sheet's own save or delete ended unconfirmed; saving stays
+    /// disabled until the store has been re-read.
     @State private var saveUnconfirmed = false
+    @State private var deleteInFlight = false
 
     init(target: EditorTarget, model: RecordHomeViewModel) {
         self.target = target
         self.model = model
-        _name = State(initialValue: target.record?.name ?? "")
-        _protein = State(initialValue: target.record.map {
+        let name = target.record?.name ?? ""
+        let protein = target.record.map {
             ProteinInput.format(centigrams: $0.protein.centigrams, decimalSeparator: model.decimalSeparator)
-        } ?? "")
+        } ?? ""
+        _name = State(initialValue: name)
+        _protein = State(initialValue: protein)
+        _initial = State(initialValue: [name, protein])
+    }
+
+    private var locked: Bool { model.isBusy || saveUnconfirmed }
+    private var hasPendingSave: Bool { saveUnconfirmed || model.pendingSave != nil }
+    private var isDirty: Bool { EditorDismissPolicy.isDirty(initial: initial, current: [name, protein]) }
+    private var closeDecision: EditorCloseDecision {
+        EditorDismissPolicy.decision(isBusy: model.isBusy, hasPendingSave: hasPendingSave, isDirty: isDirty)
+    }
+    /// Describes the stored record, never the unsaved field values.
+    private var deleteSummary: String? {
+        target.record.map {
+            EditorPromptText.deleteTarget(name: $0.name, day: target.day, centigrams: $0.protein.centigrams,
+                                          decimalSeparator: model.decimalSeparator)
+        }
     }
 
     var body: some View {
@@ -218,32 +242,35 @@ private struct RecordEditorSheet: View {
                         // sheet. The fields unlock again on `.notApplied`.
                         TextField(RenewalStrings.text("renewal_name_placeholder"), text: $name)
                             .renewalInput()
-                            .disabled(model.isBusy || saveUnconfirmed)
-                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                            .disabled(locked)
+                            .opacity(locked ? 0.5 : 1)
                         TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
                             .renewalInput()
                             .keyboardType(.decimalPad)
                             .accessibilityLabel(Text("renewal_protein_placeholder"))
-                            .disabled(model.isBusy || saveUnconfirmed)
-                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                            .disabled(locked)
+                            .opacity(locked ? 0.5 : 1)
                     }
                     .renewalCard()
                     if saveUnconfirmed {
                         PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
                             saveUnconfirmed = false
-                            error = .notApplied
-                        }, onError: { error = $0 })
+                            showError(.notApplied)
+                        }, onError: { showError($0) })
                     }
                     if target.record != nil {
-                        Button(role: .destructive) { delete() } label: {
+                        Button(role: .destructive) { show(.delete) } label: {
                             Text("renewal_delete").frame(maxWidth: .infinity, minHeight: 44)
                         }
                         .foregroundColor(RenewalTheme.danger)
-                        .disabled(model.isBusy || saveUnconfirmed)
-                        .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                        .disabled(locked)
+                        .opacity(locked ? 0.5 : 1)
                     }
                 }
                 .padding(RenewalTheme.pageInset)
+                .editorPromptAlert($prompt, deleteSummary: deleteSummary, onConfirm: confirm)
+                .background(SheetDismissAdapter(shouldDismiss: { closeDecision == .close },
+                                                onAttemptToDismiss: { requestClose() }))
             }
             .background(RenewalTheme.canvas)
             .navigationTitle(Text(LocalizedStringKey(target.record == nil ? "renewal_add" : "renewal_edit")))
@@ -252,15 +279,17 @@ private struct RecordEditorSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     // Cancel is unavailable while a save is running so the sheet
                     // cannot close with a write still in flight behind it.
-                    Button { dismiss() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
+                    Button { requestClose() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button { save() } label: { Text("renewal_save").frame(minWidth: 44, minHeight: 44) }
-                        .disabled(model.isBusy || saveUnconfirmed)
-                        .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                        .disabled(locked)
+                        .opacity(locked ? 0.5 : 1)
                 }
             }
+            // Belt and braces for the busy case: the pull-down is refused by
+            // UIKit itself, and the adapter still routes the attempt here.
             .interactiveDismissDisabled(model.isBusy)
             .actionErrorAlert($error)
         }
@@ -269,15 +298,55 @@ private struct RecordEditorSheet: View {
         .preferredColorScheme(.light)
     }
 
+    // MARK: Closing
+
+    /// Cancel button and pull-down end up here.
+    private func requestClose() {
+        let decision = closeDecision
+        if decision == .close { return dismiss() }
+        if let next = EditorDismissPolicy.prompt(for: decision) { show(next) }
+    }
+
+    private func show(_ next: EditorPrompt) {
+        guard error == nil, prompt == nil else { return }
+        prompt = next
+    }
+
+    private func showError(_ failure: RecordHomeViewModel.ActionError) {
+        prompt = nil
+        error = failure
+    }
+
+    private func confirm(_ confirmed: EditorPrompt) {
+        switch confirmed {
+        case .delete:
+            // Start after the confirmation alert has finished closing so the
+            // success dismiss or an error alert is never swallowed by it.
+            DispatchQueue.main.async { delete() }
+        case .discard, .pendingClose:
+            // The state is checked again at the moment of the tap.
+            switch EditorDismissPolicy.resolve(confirmed: confirmed, isBusy: model.isBusy,
+                                               hasPendingSave: hasPendingSave, isDirty: isDirty) {
+            case .close: dismiss()
+            case .blocked: break
+            case .confirmDiscard, .confirmPendingClose:
+                DispatchQueue.main.async { requestClose() }
+            }
+        }
+    }
+
+    // MARK: Writes
+
     private func handle(_ result: Result<Void, RecordHomeViewModel.ActionError>) {
         switch result {
         case .success:
+            // Programmatic close after a confirmed write: no prompt.
             dismiss()
         case .failure(.unconfirmed(let operationID)):
             saveUnconfirmed = true
-            error = .unconfirmed(operationID: operationID)
+            showError(.unconfirmed(operationID: operationID))
         case .failure(let failure):
-            error = failure
+            showError(failure)
         }
     }
 
@@ -292,9 +361,16 @@ private struct RecordEditorSheet: View {
         }
     }
 
+    /// Runs only from the delete confirmation, once per confirmation.
     private func delete() {
-        guard let record = target.record else { return }
-        model.deleteRecord(day: target.day, id: record.id, completion: handle)
+        guard let record = target.record,
+              EditorDismissPolicy.canDelete(isBusy: model.isBusy, hasPendingSave: hasPendingSave,
+                                            deleteInFlight: deleteInFlight) else { return }
+        deleteInFlight = true
+        model.deleteRecord(day: target.day, id: record.id) { result in
+            deleteInFlight = false
+            handle(result)
+        }
     }
 }
 
@@ -322,6 +398,7 @@ private struct PendingSaveSection: View {
                 }
             } label: { Text("renewal_reconfirm").frame(minHeight: 44) }
             .disabled(model.isBusy)
+            .accessibilityIdentifier("renewal.reconfirm.sheet")
         }
         .padding(16)
         .background(RenewalTheme.warning)
@@ -335,15 +412,26 @@ private struct LegacyTotalSheet: View {
     @ObservedObject var model: RecordHomeViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var total: String
+    @State private var initial: [String]
     @State private var error: RecordHomeViewModel.ActionError?
+    @State private var prompt: EditorPrompt?
     @State private var saveUnconfirmed = false
 
     init(target: LegacyTotalTarget, model: RecordHomeViewModel) {
         self.target = target
         self.model = model
-        _total = State(initialValue: target.currentTotal.map {
+        let total = target.currentTotal.map {
             ProteinInput.format(centigrams: $0, decimalSeparator: model.decimalSeparator)
-        } ?? "")
+        } ?? ""
+        _total = State(initialValue: total)
+        _initial = State(initialValue: [total])
+    }
+
+    private var locked: Bool { model.isBusy || saveUnconfirmed }
+    private var hasPendingSave: Bool { saveUnconfirmed || model.pendingSave != nil }
+    private var isDirty: Bool { EditorDismissPolicy.isDirty(initial: initial, current: [total]) }
+    private var closeDecision: EditorCloseDecision {
+        EditorDismissPolicy.decision(isBusy: model.isBusy, hasPendingSave: hasPendingSave, isDirty: isDirty)
     }
 
     var body: some View {
@@ -356,42 +444,35 @@ private struct LegacyTotalSheet: View {
                             .renewalInput()
                             .keyboardType(.decimalPad)
                             .accessibilityLabel(Text("renewal_total_placeholder"))
-                            .disabled(model.isBusy || saveUnconfirmed)
-                            .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                            .disabled(locked)
+                            .opacity(locked ? 0.5 : 1)
                         Text("renewal_edit_total_footer").font(.footnote).foregroundColor(RenewalTheme.secondary)
                     }
                     .renewalCard()
                     if saveUnconfirmed {
                         PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
                             saveUnconfirmed = false
-                            error = .notApplied
-                        }, onError: { error = $0 })
+                            showError(.notApplied)
+                        }, onError: { showError($0) })
                     }
                 }
                 .padding(RenewalTheme.pageInset)
+                .editorPromptAlert($prompt, deleteSummary: nil, onConfirm: confirm)
+                .background(SheetDismissAdapter(shouldDismiss: { closeDecision == .close },
+                                                onAttemptToDismiss: { requestClose() }))
             }
             .background(RenewalTheme.canvas)
             .navigationTitle(Text("renewal_edit_total"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button { dismiss() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
+                    Button { requestClose() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        model.setLegacyTotal(day: target.day, totalText: total) { result in
-                            switch result {
-                            case .success: dismiss()
-                            case .failure(.unconfirmed(let operationID)):
-                                saveUnconfirmed = true
-                                error = .unconfirmed(operationID: operationID)
-                            case .failure(let failure): error = failure
-                            }
-                        }
-                    } label: { Text("renewal_save").frame(minWidth: 44, minHeight: 44) }
-                    .disabled(model.isBusy || saveUnconfirmed)
-                    .opacity(model.isBusy || saveUnconfirmed ? 0.5 : 1)
+                    Button { save() } label: { Text("renewal_save").frame(minWidth: 44, minHeight: 44) }
+                        .disabled(locked)
+                        .opacity(locked ? 0.5 : 1)
                 }
             }
             .interactiveDismissDisabled(model.isBusy)
@@ -400,6 +481,45 @@ private struct LegacyTotalSheet: View {
         .navigationViewStyle(.stack)
         .tint(RenewalTheme.action)
         .preferredColorScheme(.light)
+    }
+
+    private func requestClose() {
+        let decision = closeDecision
+        if decision == .close { return dismiss() }
+        if let next = EditorDismissPolicy.prompt(for: decision) { show(next) }
+    }
+
+    private func show(_ next: EditorPrompt) {
+        guard error == nil, prompt == nil else { return }
+        prompt = next
+    }
+
+    private func showError(_ failure: RecordHomeViewModel.ActionError) {
+        prompt = nil
+        error = failure
+    }
+
+    private func confirm(_ confirmed: EditorPrompt) {
+        guard confirmed != .delete else { return }
+        switch EditorDismissPolicy.resolve(confirmed: confirmed, isBusy: model.isBusy,
+                                           hasPendingSave: hasPendingSave, isDirty: isDirty) {
+        case .close: dismiss()
+        case .blocked: break
+        case .confirmDiscard, .confirmPendingClose:
+            DispatchQueue.main.async { requestClose() }
+        }
+    }
+
+    private func save() {
+        model.setLegacyTotal(day: target.day, totalText: total) { result in
+            switch result {
+            case .success: dismiss()
+            case .failure(.unconfirmed(let operationID)):
+                saveUnconfirmed = true
+                showError(.unconfirmed(operationID: operationID))
+            case .failure(let failure): showError(failure)
+            }
+        }
     }
 }
 
@@ -502,5 +622,82 @@ enum ActionErrorText {
         case .unconfirmed: return RenewalStrings.text("renewal_error_unconfirmed_message")
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_message")
         }
+    }
+}
+
+// MARK: - Confirmations
+
+@available(iOS 15.0, *)
+extension View {
+    /// One alert for every confirmation an editing sheet can show. The cancel
+    /// choice never writes; the confirming choice is destructive for discard
+    /// and delete, and deliberately neutral for the unconfirmed close.
+    func editorPromptAlert(_ prompt: Binding<EditorPrompt?>, deleteSummary: String?,
+                           onConfirm: @escaping (EditorPrompt) -> Void) -> some View {
+        alert(
+            Text(prompt.wrappedValue.map(EditorPromptText.title) ?? ""),
+            isPresented: Binding(get: { prompt.wrappedValue != nil }, set: { if !$0 { prompt.wrappedValue = nil } }),
+            presenting: prompt.wrappedValue
+        ) { current in
+            Button(role: .cancel) {} label: { Text(EditorPromptText.keep(current)) }
+            Button(role: current == .pendingClose ? nil : .destructive) { onConfirm(current) } label: {
+                Text(EditorPromptText.confirm(current))
+            }
+        } message: { current in
+            Text(EditorPromptText.message(current, deleteSummary: deleteSummary))
+        }
+    }
+}
+
+@available(iOS 15.0, *)
+enum EditorPromptText {
+    static func title(_ prompt: EditorPrompt) -> String {
+        switch prompt {
+        case .discard: return RenewalStrings.text("renewal_discard_title")
+        case .delete: return RenewalStrings.text("renewal_delete_confirm_title")
+        case .pendingClose: return RenewalStrings.text("renewal_pending_close_title")
+        }
+    }
+
+    static func message(_ prompt: EditorPrompt, deleteSummary: String?) -> String {
+        switch prompt {
+        case .discard: return RenewalStrings.text("renewal_discard_message")
+        case .delete:
+            return [deleteSummary, RenewalStrings.text("renewal_delete_confirm_message")]
+                .compactMap { $0 }.joined(separator: "\n")
+        case .pendingClose: return RenewalStrings.text("renewal_pending_close_message")
+        }
+    }
+
+    /// The choice that keeps everything as it is.
+    static func keep(_ prompt: EditorPrompt) -> String {
+        switch prompt {
+        case .discard: return RenewalStrings.text("renewal_discard_keep")
+        case .delete: return RenewalStrings.text("renewal_cancel")
+        case .pendingClose: return RenewalStrings.text("renewal_pending_close_stay")
+        }
+    }
+
+    static func confirm(_ prompt: EditorPrompt) -> String {
+        switch prompt {
+        case .discard: return RenewalStrings.text("renewal_discard_confirm")
+        case .delete: return RenewalStrings.text("renewal_delete")
+        case .pendingClose: return RenewalStrings.text("renewal_pending_close_confirm")
+        }
+    }
+
+    /// Name (or "Manual entry"), date and stored amount of the record that
+    /// would be deleted.
+    static func deleteTarget(name: String?, day: CalendarDay, centigrams: Int64, decimalSeparator: String) -> String {
+        deleteTarget(name: name, day: day, centigrams: centigrams, decimalSeparator: decimalSeparator,
+                     template: RenewalStrings.text("renewal_delete_confirm_target"),
+                     manualEntry: RenewalStrings.text("renewal_manual_entry"))
+    }
+
+    static func deleteTarget(name: String?, day: CalendarDay, centigrams: Int64, decimalSeparator: String,
+                             template: String, manualEntry: String) -> String {
+        let label = name.flatMap { $0.isEmpty ? nil : $0 } ?? manualEntry
+        let amount = ProteinInput.format(centigrams: centigrams, decimalSeparator: decimalSeparator)
+        return String(format: template, locale: Locale.current, label, RecordHomeView.longDate(day), amount)
     }
 }

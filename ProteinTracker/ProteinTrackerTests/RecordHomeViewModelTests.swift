@@ -422,6 +422,117 @@ final class RecordHomeViewModelTests: XCTestCase {
         sync { second.select(day) }
         XCTAssertEqual(sync { second.log.records.map(\.id) }, ["rec-1"])
     }
+
+    // MARK: Phase 1B: state doubles for the three re-check outcomes and the delete contract
+
+    /// Counts writes so the sheet contract "cancel writes nothing, confirm deletes once" can be checked.
+    final class CountingStore: AppStateStore {
+        let inner: AppStateStore
+        private(set) var modifyCalls = 0
+        private(set) var loadCalls = 0
+        init(inner: AppStateStore) { self.inner = inner }
+        func load() throws -> AppState { loadCalls += 1; return try inner.load() }
+        var unconfirmedOperationID: String? { inner.unconfirmedOperationID }
+        var hasUnconfirmedCommit: Bool { inner.hasUnconfirmedCommit }
+        func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
+            modifyCalls += 1
+            return try inner.modify(operationID: operationID, change)
+        }
+    }
+
+    private func seededWithRecord(_ id: String = "old-1") throws -> (AppState, CalendarDay) {
+        var seeded = try seededState()
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        var log = try XCTUnwrap(seeded.log(for: day))
+        try log.add(FoodRecord(id: id, day: day, name: "우유", quantity: nil, protein: ProteinAmount(centigrams: 1_000), source: .legacy))
+        try seeded.upsert(log)
+        return (seeded, day)
+    }
+
+    func testConfirmedDeleteWritesExactlyOnceAndNothingBeforeThat() throws {
+        let (state, day) = try seededWithRecord()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        sync { model.select(day) }
+        // Opening the sheet, cancelling the prompt: no write.
+        XCTAssertEqual(store.modifyCalls, 0)
+        XCTAssertEqual(wait { model.deleteRecord(day: day, id: "old-1", completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        XCTAssertTrue(sync { model.log.records.isEmpty })
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 0)
+        // Re-reading is the only thing a "retry" may do before writing again.
+        XCTAssertEqual(store.loadCalls, 0)
+    }
+
+    func testSaveOutcomeDoubleNotAppliedUnlocksAndKeepsTheRowSoTheDeleteCanBeRepeated() throws {
+        let (state, day) = try seededWithRecord()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let counting = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let store = SaveOutcomeInjectingStore(inner: counting, mode: .notApplied)
+        let model = makeModel(store: store, state: state)
+        sync { model.select(day) }
+
+        let deletion = wait { model.deleteRecord(day: day, id: "old-1", completion: $0) }
+        guard case .failed(.unconfirmed) = deletion else { return XCTFail("\(deletion)") }
+        XCTAssertNotNil(sync { model.pendingSave })
+        XCTAssertEqual(counting.modifyCalls, 0, "the double reports indeterminate without writing")
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["old-1"], "screen keeps the confirmed state")
+
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(counting.loadCalls, 1, "reconfirm reads, it never re-writes")
+        XCTAssertNil(sync { model.pendingSave }, "unlocked again")
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["old-1"], "the row is still there and can be deleted again")
+
+        XCTAssertEqual(wait { model.deleteRecord(day: day, id: "old-1", completion: $0) }, .ok)
+        XCTAssertEqual(counting.modifyCalls, 1)
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 0)
+    }
+
+    func testSaveOutcomeDoubleReadFailureKeepsPendingUntilARetryOfTheReadSucceeds() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let counting = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let store = SaveOutcomeInjectingStore(inner: counting, mode: .readFailure)
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+
+        let first = wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) }
+        guard case .failed(.unconfirmed(let operationID)) = first, operationID != nil else { return XCTFail("\(first)") }
+        XCTAssertEqual(counting.modifyCalls, 1, "the write landed before the outcome was lost")
+        XCTAssertTrue(sync { model.log.records.isEmpty }, "screen keeps the confirmed state")
+
+        // Writes stay refused and the first re-read fails: pending stays, nothing is re-written.
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) },
+                       .failed(.unconfirmed(operationID: operationID)))
+        let failedRead = wait { model.reconfirm(completion: $0) }
+        guard case .failed(.storage) = failedRead else { return XCTFail("\(failedRead)") }
+        XCTAssertNotNil(sync { model.pendingSave })
+        XCTAssertEqual(counting.loadCalls, 0, "the double failed before reaching the file")
+        XCTAssertEqual(counting.modifyCalls, 1)
+
+        // The next read succeeds: the operation is found exactly once.
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok)
+        XCTAssertNil(sync { model.pendingSave })
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1"])
+        XCTAssertEqual(counting.modifyCalls, 1, "no second write")
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.map(\.id), ["rec-1"])
+    }
+
+    func testSaveOutcomeDoubleOnlyAffectsTheFirstWrite() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+        guard case .failed(.unconfirmed) = wait({ model.addRecord(day: day, id: "rec-1", name: nil, proteinText: "8", completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: nil, proteinText: "8", completion: $0) }, .ok)
+        XCTAssertEqual(wait { model.setLegacyTotal(day: day, totalText: "80", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.totalCentigrams }, 8_000)
+    }
 }
 
 @available(iOS 15.0, *)

@@ -65,7 +65,7 @@ extension SceneDelegate {
             guard let self, let window = self.window else { return }
             switch outcome {
             case .ready(let state):
-                if let root = RenewalRootFactory.makeRecordHome(store: gate.store, state: state) {
+                if let root = RenewalRootFactory.makeRecordHome(store: gate.screenStore, state: state) {
                     window.rootViewController = root
                 } else {
                     window.rootViewController = RecoveryViewController(presentation: .unsupportedOS, retry: nil)
