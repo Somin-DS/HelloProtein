@@ -34,9 +34,12 @@ final class RecordHomeViewModelTests: XCTestCase {
     private let queue = DispatchQueue(label: "vm-tests")
     private let seoul = TimeZone(identifier: "Asia/Seoul")!
     private let now = Date(timeIntervalSince1970: 1_790_638_200) // 2026-09-28T23:30Z → 09-29 in Seoul
+    /// What the model's injected clock returns; tests move it past midnight.
+    private var clock: Date!
 
     override func setUpWithError() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("VMTests-\(UUID().uuidString)")
+        clock = now
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
@@ -71,7 +74,7 @@ final class RecordHomeViewModelTests: XCTestCase {
     }
 
     private func makeModel(store: AppStateStore, state: AppState) -> RecordHomeViewModel {
-        RecordHomeViewModel(store: store, state: state, now: { self.now }, timeZone: seoul,
+        RecordHomeViewModel(store: store, state: state, now: { self.clock }, timeZone: seoul,
                             decimalSeparator: ".", workQueue: queue, mainQueue: queue)
     }
 
@@ -291,7 +294,7 @@ final class RecordHomeViewModelTests: XCTestCase {
 
         // Reconfirmation while the file is still unreadable fails and keeps the pending state.
         let stillBlocked = wait { model.reconfirm(completion: $0) }
-        guard case .failed(.storage) = stillBlocked else { return XCTFail("\(stillBlocked)") }
+        guard case .failed(.reconfirmFailed) = stillBlocked else { return XCTFail("\(stillBlocked)") }
         XCTAssertNotNil(sync { model.pendingSave })
 
         // Access restored: the reload shows the operation landed exactly once and the save converges.
@@ -393,7 +396,7 @@ final class RecordHomeViewModelTests: XCTestCase {
                        .failed(.unconfirmed(operationID: nil)))
 
         // Still unreadable: the pending state stays.
-        guard case .failed(.storage) = wait({ model.reconfirm(completion: $0) }) else { return XCTFail("expected storage error") }
+        guard case .failed(.reconfirmFailed) = wait({ model.reconfirm(completion: $0) }) else { return XCTFail("expected reconfirmFailed") }
         XCTAssertNotNil(sync { model.pendingSave })
 
         try restoreStoreAccess()
@@ -507,7 +510,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: "두부", proteinText: "8", completion: $0) },
                        .failed(.unconfirmed(operationID: operationID)))
         let failedRead = wait { model.reconfirm(completion: $0) }
-        guard case .failed(.storage) = failedRead else { return XCTFail("\(failedRead)") }
+        guard case .failed(.reconfirmFailed) = failedRead else { return XCTFail("\(failedRead)") }
         XCTAssertNotNil(sync { model.pendingSave })
         XCTAssertEqual(counting.loadCalls, 0, "the double failed before reaching the file")
         XCTAssertEqual(counting.modifyCalls, 1)
@@ -518,6 +521,177 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1"])
         XCTAssertEqual(counting.modifyCalls, 1, "no second write")
         XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.map(\.id), ["rec-1"])
+    }
+
+    // MARK: Goal settings
+
+    private var sept29: CalendarDay { try! CalendarDay(iso8601: "2026-09-29") }
+    private var sept30: CalendarDay { try! CalendarDay(iso8601: "2026-09-30") }
+
+    private func reviewState() throws -> AppState {
+        let base = try seededState()
+        var settings = base.settings
+        settings.goalNeedsReview = true
+        settings.legacyTargetRaw = "120g"
+        return try AppState(logs: base.logs, favorites: base.favorites, searchHistory: base.searchHistory,
+                            settings: settings, goals: [], migration: base.migration)
+    }
+
+    func testFirstGoalAppliesFromTodayAndEarlierDaysStayWithoutHistory() throws {
+        let noGoals = try reviewState()
+        var settings = noGoals.settings
+        settings.goalNeedsReview = false
+        settings.legacyTargetRaw = nil
+        let state = try AppState(logs: noGoals.logs, favorites: [], searchHistory: [], settings: settings, goals: [], migration: noGoals.migration)
+        let (model, _) = try makeModel(state: state)
+        XCTAssertEqual(sync { model.goalState }, .notSet)
+        XCTAssertEqual(sync { model.today }, sept29)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "110", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.goalState }, .goal(try ProteinAmount(centigrams: 11_000)))
+        XCTAssertEqual(sync { model.goals.map(\.id) }, ["goal-1"])
+        sync { model.select(try! CalendarDay(iso8601: "2026-09-28")) }
+        XCTAssertEqual(sync { model.goalState }, .noHistory, "no goal is guessed for days before the first one")
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertEqual(reloaded.goals.map { "\($0.id)/\($0.effectiveFrom.iso8601)/\($0.amount.centigrams)" }, ["goal-1/2026-09-29/11000"])
+    }
+
+    func testSameDaySaveReplacesTheEntryAndNextDayKeepsTheEarlierGoal() throws {
+        let (model, _) = try makeModel() // migrated goal 120 from 09-28
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-a", proteinText: "130", completion: $0) }, .ok)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-b", proteinText: "125", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.goals.map(\.effectiveFrom.iso8601) }, ["2026-09-28", "2026-09-29"], "one entry per day")
+        XCTAssertEqual(sync { model.goals.last?.id }, "goal-b")
+        XCTAssertEqual(sync { try? model.goal(on: self.sept29) }??.amount.centigrams, 12_500)
+        XCTAssertEqual(sync { try? model.goal(on: try! CalendarDay(iso8601: "2026-09-28")) }??.amount.centigrams, 12_000, "yesterday keeps the migrated goal")
+
+        // Next day: a new goal keeps the earlier entries untouched.
+        clock = now.addingTimeInterval(86_400)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept30, id: "goal-c", proteinText: "140", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.goals.map(\.effectiveFrom.iso8601) }, ["2026-09-28", "2026-09-29", "2026-09-30"])
+        XCTAssertEqual(sync { try? model.goal(on: self.sept29) }??.amount.centigrams, 12_500)
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().goals.count, 3)
+    }
+
+    func testSavingClearsTheReviewFlagInTheSameCommitAndKeepsTheRawValue() throws {
+        let state = try reviewState()
+        let (model, _) = try makeModel(state: state)
+        XCTAssertEqual(sync { model.goalState }, .needsReview(raw: "120g"))
+        XCTAssertEqual(sync { model.goalReview }, .init(needsReview: true, raw: "120g"))
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "100", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.goalReview }, .init(needsReview: false, raw: "120g"), "raw text is preserved, flag cleared")
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertFalse(reloaded.settings.goalNeedsReview)
+        XCTAssertEqual(reloaded.settings.legacyTargetRaw, "120g")
+        XCTAssertEqual(reloaded.goals.map(\.id), ["goal-1"])
+        XCTAssertEqual(reloaded.migration, state.migration)
+        XCTAssertEqual(reloaded.logs, state.logs)
+    }
+
+    func testUnchangedValueIsANoOpUnlessTheReviewFlagMustBeCleared() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "120", completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 0, "same value as the goal in effect: nothing written")
+        XCTAssertEqual(sync { model.goals.count }, 1)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "120.0", completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 0, "formatting differences do not matter once parsed")
+
+        // Same value but the review flag is set: one atomic write.
+        let review = try reviewState()
+        let goals = try [ProteinGoal(id: "legacy:goal:targetProtein", effectiveFrom: CalendarDay(iso8601: "2026-09-28"), amount: ProteinAmount(centigrams: 12_000))]
+        let flagged = try AppState(logs: review.logs, favorites: [], searchHistory: [], settings: review.settings, goals: goals, migration: review.migration)
+        try FileAppStateStore(fileURL: storeURL).commit(flagged)
+        let store2 = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model2 = makeModel(store: store2, state: flagged)
+        XCTAssertEqual(wait { model2.setGoal(day: self.sept29, id: "goal-2", proteinText: "120", completion: $0) }, .ok)
+        XCTAssertEqual(store2.modifyCalls, 1)
+        XCTAssertFalse(sync { model2.goalReview.needsReview })
+        XCTAssertEqual(sync { model2.goals.map(\.effectiveFrom.iso8601) }, ["2026-09-28", "2026-09-29"])
+    }
+
+    func testStaleDayIsRefusedWithoutAWriteAndSucceedsAfterAnExplicitUpdate() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        clock = now.addingTimeInterval(86_400) // midnight passed while the sheet was open
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "150", completion: $0) },
+                       .failed(.goalDateChanged(today: sept30)))
+        XCTAssertEqual(store.modifyCalls, 0)
+        XCTAssertEqual(sync { model.today }, sept30, "the refusal already refreshed today")
+        XCTAssertEqual(sync { model.goals.count }, 1)
+        // The user updates the start day explicitly and saves again with the same session ID.
+        XCTAssertEqual(wait { model.setGoal(day: self.sept30, id: "goal-1", proteinText: "150", completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        XCTAssertEqual(sync { model.goals.map(\.effectiveFrom.iso8601) }, ["2026-09-28", "2026-09-30"])
+        // Moving back is refused the same way.
+        clock = now
+        XCTAssertEqual(wait { model.setGoal(day: self.sept30, id: "goal-2", proteinText: "160", completion: $0) },
+                       .failed(.goalDateChanged(today: sept29)))
+        XCTAssertEqual(store.modifyCalls, 1)
+    }
+
+    func testGoalInputErrorsAndPreReplaceFailureChangeNothing() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let cases: [(String, ProteinInputError)] = [("", .empty), ("abc", .notANumber), ("1,5", .groupingSeparatorNotAllowed),
+                                                     ("1.234", .tooManyFractionDigits), ("0", .notPositive), ("-5", .notANumber),
+                                                     ("99999999999999999999", .overflow)]
+        for (text, expected) in cases {
+            XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: text, completion: $0) }, .failed(.input(expected)), text)
+        }
+        XCTAssertEqual(store.modifyCalls, 0)
+
+        struct FailingWriter: StoreFileWriter {
+            func write(_ data: Data, to url: URL) throws { throw StoreError.writeFailed("disk full") }
+        }
+        let review = try reviewState()
+        let (failing, _) = try makeModel(writer: FailingWriter(), state: review)
+        let result = wait { failing.setGoal(day: self.sept29, id: "goal-1", proteinText: "100", completion: $0) }
+        guard case .failed(.storage) = result else { return XCTFail("\(result)") }
+        XCTAssertEqual(sync { failing.goalReview }, .init(needsReview: true, raw: "120g"), "flag untouched after a pre-replace failure")
+        XCTAssertTrue(sync { failing.goals.isEmpty })
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertTrue(reloaded.settings.goalNeedsReview)
+        XCTAssertTrue(reloaded.goals.isEmpty)
+    }
+
+    func testGoalSaveRefusedWhilePendingAndRetriedOnceAfterNotApplied() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let counting = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let store = SaveOutcomeInjectingStore(inner: counting, mode: .notApplied)
+        let model = makeModel(store: store, state: state)
+        let first = wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "130", completion: $0) }
+        guard case .failed(.unconfirmed(let operationID)) = first else { return XCTFail("\(first)") }
+        XCTAssertEqual(sync { model.goals.count }, 1, "screen keeps the confirmed history")
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "130", completion: $0) },
+                       .failed(.unconfirmed(operationID: operationID)))
+        XCTAssertEqual(wait { model.addRecord(day: self.sept29, id: "r", name: nil, proteinText: "1", completion: $0) },
+                       .failed(.unconfirmed(operationID: operationID)), "every write is blocked while pending")
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(counting.modifyCalls, 0)
+        XCTAssertEqual(wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "130", completion: $0) }, .ok)
+        XCTAssertEqual(counting.modifyCalls, 1)
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().goals.map(\.id), ["legacy:goal:targetProtein", "goal-1"])
+    }
+
+    func testGoalReconfirmAfterRealReplaceFailureAppliesTheOriginalDayEvenPastMidnight() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace())
+        let first = wait { model.setGoal(day: self.sept29, id: "goal-1", proteinText: "130", completion: $0) }
+        guard case .failed(.unconfirmed) = first else { return XCTFail("\(first)") }
+        let read = wait { model.reconfirm(completion: $0) }
+        guard case .failed(.reconfirmFailed) = read else { return XCTFail("\(read)") }
+        XCTAssertNotNil(sync { model.pendingSave })
+        clock = now.addingTimeInterval(86_400) // midnight passes while pending
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok, "the write that landed is confirmed as is")
+        XCTAssertEqual(sync { model.goals.map(\.effectiveFrom.iso8601) }, ["2026-09-28", "2026-09-29"], "the goal kept the day it was validated for")
     }
 
     func testSaveOutcomeDoubleOnlyAffectsTheFirstWrite() throws {

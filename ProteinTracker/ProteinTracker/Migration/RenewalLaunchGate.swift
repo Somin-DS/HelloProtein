@@ -21,8 +21,27 @@ final class RenewalLaunchGate {
     /// finds it either not applied or unreadable. A test double around the
     /// store for the screen only; the migration commit uses the real store.
     static let saveOutcomeArgument = "-HelloProteinSaveOutcomeOnce"
+    /// `-HelloProteinSaveDelaySeconds <n>`: every user write sleeps on the
+    /// work queue first, so the busy state can be seen and driven in UI runs.
+    static let saveDelayArgument = "-HelloProteinSaveDelaySeconds"
+    /// `-HelloProteinAdvanceDayAfterSeconds <n>`: the record screen's clock
+    /// jumps one day ahead `n` seconds after launch, which is how a midnight
+    /// crossing inside an open sheet is reproduced deterministically.
+    static let advanceDayArgument = "-HelloProteinAdvanceDayAfterSeconds"
     private let saveOutcomeStore: SaveOutcomeInjectingStore?
+    private let launchedAt = Date()
     #endif
+
+    /// The clock handed to the record screen. Real time in Release.
+    var screenClock: () -> Date {
+        #if DEBUG
+        if let text = RenewalLaunchPolicy.value(of: Self.advanceDayArgument, in: arguments), let seconds = TimeInterval(text) {
+            let launchedAt = self.launchedAt
+            return { Date().addingTimeInterval(Date().timeIntervalSince(launchedAt) >= seconds ? 86_400 : 0) }
+        }
+        #endif
+        return Date.init
+    }
 
     /// The store handed to the record screen. In Release this is the verified
     /// file store itself.
@@ -63,8 +82,9 @@ final class RenewalLaunchGate {
         #if DEBUG
         let mode = RenewalLaunchPolicy.value(of: Self.saveOutcomeArgument, in: arguments)
             .flatMap(SaveOutcomeInjectingStore.Mode.init(rawValue:))
-        if let mode {
-            saveOutcomeStore = SaveOutcomeInjectingStore(inner: store, mode: mode)
+        let delay = RenewalLaunchPolicy.value(of: Self.saveDelayArgument, in: arguments).flatMap(TimeInterval.init) ?? 0
+        if mode != nil || delay > 0 {
+            saveOutcomeStore = SaveOutcomeInjectingStore(inner: store, mode: mode, delaySeconds: delay)
         } else {
             saveOutcomeStore = nil
         }
@@ -171,10 +191,12 @@ final class SaveOutcomeInjectingStore: AppStateStore {
     private let lock = NSLock()
     private var pendingMode: Mode?
     private var failNextLoad = false
+    private let delaySeconds: TimeInterval
 
-    init(inner: AppStateStore, mode: Mode) {
+    init(inner: AppStateStore, mode: Mode?, delaySeconds: TimeInterval = 0) {
         self.inner = inner
         self.pendingMode = mode
+        self.delaySeconds = delaySeconds
     }
 
     var unconfirmedOperationID: String? { inner.unconfirmedOperationID }
@@ -193,6 +215,7 @@ final class SaveOutcomeInjectingStore: AppStateStore {
     }
 
     func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
+        if delaySeconds > 0 { Thread.sleep(forTimeInterval: delaySeconds) }
         lock.lock()
         let mode = pendingMode
         pendingMode = nil
