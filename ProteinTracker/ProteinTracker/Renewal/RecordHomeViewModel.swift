@@ -40,12 +40,39 @@ final class RecordHomeViewModel: ObservableObject {
         /// The goal sheet's start day is no longer today. Nothing was written;
         /// the input is kept and the user updates the start day explicitly.
         case goalDateChanged(today: CalendarDay)
+        /// A selected favorite was edited or removed since it was picked, or
+        /// its stored amount cannot be a record. Nothing was written; the
+        /// user re-checks the selection.
+        case selectionChanged
+    }
+
+    /// What a write was for. The sheet that issued it decides what a
+    /// confirmed outcome means (close, leave edit mode, stay); the model only
+    /// carries the context. Runtime only, never persisted.
+    enum OperationKind: Equatable {
+        case record
+        case favoriteBatch
+        case favoriteEdit
+        case favoriteDelete
+        case goal
+        case legacyTotal
+        /// Left blocked by a commit from before this screen existed.
+        case unknown
     }
 
     /// A save whose commit outcome is unknown. Cleared only by a successful reload.
     struct PendingSave: Equatable {
         let operationID: String?
         let day: CalendarDay
+        var kind: OperationKind = .unknown
+    }
+
+    /// Whether the optional "also save as favorite" part of a record save
+    /// created an entry, reused an identical one, or was not asked for.
+    enum FavoriteOutcome: Equatable {
+        case notRequested
+        case created
+        case alreadyExisted
     }
 
     @Published private(set) var selectedDay: CalendarDay
@@ -59,6 +86,8 @@ final class RecordHomeViewModel: ObservableObject {
     /// Mirrors of the last confirmed state for the goal sheet.
     @Published private(set) var goals: [ProteinGoal] = []
     @Published private(set) var goalReview = GoalReview(needsReview: false, raw: nil)
+    /// Favorites in display (position) order, from the last confirmed state.
+    @Published private(set) var favorites: [FavoriteFood] = []
 
     struct GoalReview: Equatable {
         let needsReview: Bool
@@ -98,7 +127,7 @@ final class RecordHomeViewModel: ObservableObject {
         // ended unconfirmed) shows the pending state from the first frame, so
         // the reconfirm action is reachable instead of every save failing.
         if store.hasUnconfirmedCommit {
-            self.pendingSave = PendingSave(operationID: store.unconfirmedOperationID, day: today)
+            self.pendingSave = PendingSave(operationID: store.unconfirmedOperationID, day: today, kind: .unknown)
         }
         refresh()
     }
@@ -138,14 +167,25 @@ final class RecordHomeViewModel: ObservableObject {
     /// a retry after a failed save never produces a second record.
     func addRecord(day: CalendarDay, id: String = UUID().uuidString, name: String?, proteinText: String,
                    completion: @escaping (Result<Void, ActionError>) -> Void) {
+        addRecord(day: day, id: id, name: name, proteinText: proteinText, favoriteID: nil) { completion($0.map { _ in () }) }
+    }
+
+    /// Adds the record and, when `favoriteID` is given, a favorite with the
+    /// same name and amount in the same commit: both land or neither does.
+    /// An identical favorite (trimmed name and amount) is reused instead of
+    /// duplicated and reported as `.alreadyExisted`; the record is still saved.
+    func addRecord(day: CalendarDay, id: String = UUID().uuidString, name: String?, proteinText: String,
+                   favoriteID: String?, completion: @escaping (Result<FavoriteOutcome, ActionError>) -> Void) {
         let protein: ProteinAmount
         do { protein = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
         catch let error as ProteinInputError { return completion(.failure(.input(error))) }
         catch { return completion(.failure(.integrity(String(describing: error)))) }
-        perform(day: day, completion: completion) { state in
+        var outcome = FavoriteOutcome.notRequested
+        perform(day: day, kind: .record, completion: { completion($0.map { outcome }) }) { state in
             var log = try state.log(for: day) ?? DailyLog(day: day)
             try log.add(FoodRecord(id: id, day: day, name: name, quantity: nil, protein: protein, source: .manual))
             try state.upsert(log)
+            outcome = try Self.saveFavorite(id: favoriteID, name: name, protein: protein, in: &state)
         }
     }
 
@@ -153,21 +193,44 @@ final class RecordHomeViewModel: ObservableObject {
     /// fields the user edited.
     func updateRecord(day: CalendarDay, id: String, name: String?, proteinText: String,
                       completion: @escaping (Result<Void, ActionError>) -> Void) {
+        updateRecord(day: day, id: id, name: name, proteinText: proteinText, favoriteID: nil) { completion($0.map { _ in () }) }
+    }
+
+    /// Same as `addRecord(favoriteID:)` for an existing record: the edit and
+    /// the optional favorite share one commit.
+    func updateRecord(day: CalendarDay, id: String, name: String?, proteinText: String,
+                      favoriteID: String?, completion: @escaping (Result<FavoriteOutcome, ActionError>) -> Void) {
         let protein: ProteinAmount
         do { protein = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
         catch let error as ProteinInputError { return completion(.failure(.input(error))) }
         catch { return completion(.failure(.integrity(String(describing: error)))) }
-        perform(day: day, completion: completion) { state in
+        var outcome = FavoriteOutcome.notRequested
+        perform(day: day, kind: .record, completion: { completion($0.map { outcome }) }) { state in
             guard var log = state.log(for: day), let existing = log.record(id: id) else {
                 throw ActionError.notFound
             }
             try log.update(existing.withChanges(name: .some(name), protein: protein))
             try state.upsert(log)
+            outcome = try Self.saveFavorite(id: favoriteID, name: name, protein: protein, in: &state)
         }
     }
 
+    /// The favorite half of a record save. The name is stored trimmed (empty
+    /// when the record has none); an exact duplicate is reused, never merged.
+    private static func saveFavorite(id: String?, name: String?, protein: ProteinAmount,
+                                     in state: inout AppState) throws -> FavoriteOutcome {
+        guard let id else { return .notRequested }
+        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if FavoriteCollection.existing(name: trimmed, proteinCentigrams: protein.centigrams, in: state.favorites) != nil {
+            return .alreadyExisted
+        }
+        try state.setFavorites(FavoriteCollection.appending(id: id, name: trimmed, proteinCentigrams: protein.centigrams,
+                                                            to: state.favorites))
+        return .created
+    }
+
     func deleteRecord(day: CalendarDay, id: String, completion: @escaping (Result<Void, ActionError>) -> Void) {
-        perform(day: day, completion: completion) { state in
+        perform(day: day, kind: .record, completion: completion) { state in
             guard var log = state.log(for: day), log.record(id: id) != nil else { throw ActionError.notFound }
             try log.delete(id: id)
             try state.upsert(log)
@@ -181,10 +244,52 @@ final class RecordHomeViewModel: ObservableObject {
         do { totalCentigrams = try ProteinInput.parseSignedTotal(totalText, decimalSeparator: decimalSeparator) }
         catch let error as ProteinInputError { return completion(.failure(.input(error))) }
         catch { return completion(.failure(.integrity(String(describing: error)))) }
-        perform(day: day, completion: completion) { state in
+        perform(day: day, kind: .legacyTotal, completion: completion) { state in
             guard var log = state.log(for: day), log.hasLegacyTotal else { throw ActionError.notFound }
             try log.setLegacyDailyTotal(totalCentigrams)
             try state.upsert(log)
+        }
+    }
+
+    // MARK: Favorites
+
+    /// Adds one record per selected favorite to `day` in a single commit.
+    /// Every selection is re-checked against the latest favorites inside the
+    /// commit; any mismatch, invalid amount or overflow writes nothing. The
+    /// record IDs come from the selections, so a retry never adds twice.
+    func addFavoriteRecords(day: CalendarDay, selections: [FavoriteSelection],
+                            completion: @escaping (Result<Void, ActionError>) -> Void) {
+        perform(day: day, kind: .favoriteBatch, completion: completion) { state in
+            let records = try FavoriteBatch.records(for: selections, on: day, favorites: state.favorites)
+            var log = try state.log(for: day) ?? DailyLog(day: day)
+            for record in records { try log.add(record) }
+            try state.upsert(log)
+        }
+    }
+
+    /// Changes the name and amount of one favorite; ID, position and legacy
+    /// identity stay. The amount must parse as a positive entry. Daily logs
+    /// are not touched.
+    func updateFavorite(id: String, name: String, proteinText: String,
+                        completion: @escaping (Result<Void, ActionError>) -> Void) {
+        let protein: ProteinAmount
+        do { protein = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
+        catch let error as ProteinInputError { return completion(.failure(.input(error))) }
+        catch { return completion(.failure(.integrity(String(describing: error)))) }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        perform(day: selectedDay, kind: .favoriteEdit, completion: completion) { state in
+            do {
+                try state.setFavorites(FavoriteCollection.replacing(id: id, name: trimmed, proteinCentigrams: protein.centigrams,
+                                                                    in: state.favorites))
+            } catch FavoriteCollectionError.notFound { throw ActionError.notFound }
+        }
+    }
+
+    /// Removes exactly that favorite. Records logged from it stay.
+    func deleteFavorite(id: String, completion: @escaping (Result<Void, ActionError>) -> Void) {
+        perform(day: selectedDay, kind: .favoriteDelete, completion: completion) { state in
+            do { try state.setFavorites(FavoriteCollection.removing(id: id, from: state.favorites)) }
+            catch FavoriteCollectionError.notFound { throw ActionError.notFound }
         }
     }
 
@@ -215,7 +320,7 @@ final class RecordHomeViewModel: ObservableObject {
         if !state.settings.goalNeedsReview, let current = try? state.goal(on: day), current.amount == amount {
             return completion(.success(()))
         }
-        perform(day: day, completion: completion) { state in
+        perform(day: day, kind: .goal, completion: completion) { state in
             try state.replaceGoal(on: day, with: ProteinGoal(id: id, effectiveFrom: day, amount: amount))
             state.settings.goalNeedsReview = false
         }
@@ -259,7 +364,7 @@ final class RecordHomeViewModel: ObservableObject {
 
     // MARK: Internals
 
-    private func perform(day: CalendarDay, completion: @escaping (Result<Void, ActionError>) -> Void,
+    private func perform(day: CalendarDay, kind: OperationKind, completion: @escaping (Result<Void, ActionError>) -> Void,
                          _ change: @escaping (inout AppState) throws -> Void) {
         if let pending = pendingSave { return completion(.failure(.unconfirmed(operationID: pending.operationID))) }
         guard !isBusy else { return completion(.failure(.busy)) }
@@ -284,6 +389,8 @@ final class RecordHomeViewModel: ObservableObject {
                 result = .failure(.storage(String(describing: error)))
             } catch let error as ProteinInputError {
                 result = .failure(.input(error))
+            } catch let error as FavoriteBatchError {
+                result = .failure(Self.actionError(for: error))
             } catch {
                 result = .failure(.integrity(String(describing: error)))
             }
@@ -297,12 +404,22 @@ final class RecordHomeViewModel: ObservableObject {
                 case .failure(.unconfirmed(let pendingID)):
                     // The file may hold the change already; the screen keeps
                     // showing the last confirmed state until a reload says so.
-                    self.pendingSave = PendingSave(operationID: pendingID, day: day)
+                    self.pendingSave = PendingSave(operationID: pendingID, day: day, kind: kind)
                     completion(.failure(.unconfirmed(operationID: pendingID)))
                 case .failure(let error):
                     completion(.failure(error))
                 }
             }
+        }
+    }
+
+    /// A stale or unusable selection is the user's to fix; the rest are
+    /// programming errors and surface as integrity failures.
+    private static func actionError(for error: FavoriteBatchError) -> ActionError {
+        switch error {
+        case .selectionChanged, .invalidAmount: return .selectionChanged
+        case .arithmeticOverflow: return .input(.overflow)
+        case .emptySelection, .duplicateSelection, .duplicateRecordID: return .integrity(String(describing: error))
         }
     }
 
@@ -312,6 +429,7 @@ final class RecordHomeViewModel: ObservableObject {
         goalState = Self.goalState(for: selectedDay, in: state)
         goals = state.goals
         goalReview = GoalReview(needsReview: state.settings.goalNeedsReview, raw: state.settings.legacyTargetRaw)
+        favorites = FavoriteCollection.ordered(state.favorites)
     }
 
     static func goalState(for day: CalendarDay, in state: AppState) -> GoalState {

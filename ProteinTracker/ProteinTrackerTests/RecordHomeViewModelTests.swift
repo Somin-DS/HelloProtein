@@ -281,7 +281,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         // rename succeeded, final read-back failed → unconfirmed, screen keeps the confirmed state.
         let first = wait { model.addRecord(day: day, id: "rec-1", name: "닭가슴살", proteinText: "23", completion: $0) }
         guard case .failed(.unconfirmed(let operationID)) = first else { return XCTFail("\(first)") }
-        XCTAssertEqual(sync { model.pendingSave }, .init(operationID: operationID, day: day))
+        XCTAssertEqual(sync { model.pendingSave }, .init(operationID: operationID, day: day, kind: .record))
         XCTAssertEqual(sync { model.totalCentigrams }, 7_000, "screen shows the last confirmed state, not a guess")
         XCTAssertTrue(sync { model.log.records.isEmpty })
         XCTAssertFalse(sync { model.isBusy })
@@ -706,6 +706,217 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(wait { model.addRecord(day: day, id: "rec-1", name: nil, proteinText: "8", completion: $0) }, .ok)
         XCTAssertEqual(wait { model.setLegacyTotal(day: day, totalText: "80", completion: $0) }, .ok)
         XCTAssertEqual(sync { model.totalCentigrams }, 8_000)
+    }
+
+    // MARK: Favorites
+
+    private func favoritesState() throws -> AppState {
+        let base = try seededState()
+        return try AppState(
+            logs: base.logs,
+            favorites: [FavoriteFood(id: "legacy:favorite:b", name: "그릭요거트", proteinCentigrams: 900, position: 1, legacySourceID: "b"),
+                        FavoriteFood(id: "legacy:favorite:a", name: "닭가슴살", proteinCentigrams: 2_300, position: 0, legacySourceID: "a"),
+                        FavoriteFood(id: "legacy:favorite:c", name: "", proteinCentigrams: -500, position: 7, legacySourceID: "c")],
+            searchHistory: base.searchHistory, settings: base.settings, goals: base.goals, migration: base.migration)
+    }
+
+    private func waitOutcome<T>(_ body: (@escaping (Result<T, RecordHomeViewModel.ActionError>) -> Void) -> Void) -> Result<T, RecordHomeViewModel.ActionError> {
+        let expectation = expectation(description: "action")
+        var captured: Result<T, RecordHomeViewModel.ActionError>!
+        body { result in captured = result; expectation.fulfill() }
+        waitForExpectations(timeout: 5)
+        return captured
+    }
+
+    private func selection(_ model: RecordHomeViewModel, _ id: String, record: String) throws -> FavoriteSelection {
+        let favorite = try XCTUnwrap(sync { model.favorites.first { $0.id == id } })
+        return FavoriteSelection(favorite: favorite, recordID: record)
+    }
+
+    func testFavoritesAreMirroredInPositionOrderWithSignedAndEmptyEntriesKept() throws {
+        let (model, _) = try makeModel(state: favoritesState())
+        XCTAssertEqual(sync { model.favorites.map(\.id) }, ["legacy:favorite:a", "legacy:favorite:b", "legacy:favorite:c"])
+        XCTAssertEqual(sync { model.favorites.map(\.proteinCentigrams) }, [2_300, 900, -500])
+        XCTAssertEqual(sync { model.favorites.last?.name }, "")
+    }
+
+    func testRecordWithFavoriteIsOneCommitReusesAnExactDuplicateAndFailsAsAWhole() throws {
+        let state = try favoritesState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+
+        let created = waitOutcome { model.addRecord(day: day, id: "rec-1", name: " Egg ", proteinText: "6", favoriteID: "fav-new", completion: $0) }
+        XCTAssertEqual(try created.get(), .created)
+        XCTAssertEqual(store.modifyCalls, 1, "record and favorite in one commit")
+        let added = try XCTUnwrap(sync { model.favorites.last })
+        XCTAssertEqual(added.id, "fav-new")
+        XCTAssertEqual(added.name, "Egg")
+        XCTAssertEqual(added.proteinCentigrams, 600)
+        XCTAssertEqual(added.position, 8, "max position + 1, the gap at 2...6 is not filled")
+        XCTAssertNil(added.legacySourceID)
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1"])
+
+        // Same trimmed name and amount: the record is saved, the favorite is reused, nothing is merged.
+        let reused = waitOutcome { model.addRecord(day: day, id: "rec-2", name: "Egg", proteinText: "6", favoriteID: "fav-other", completion: $0) }
+        XCTAssertEqual(try reused.get(), .alreadyExisted)
+        XCTAssertEqual(sync { model.favorites.count }, 4)
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["rec-1", "rec-2"])
+        // Same name, different amount: a separate entry.
+        let other = waitOutcome { model.addRecord(day: day, id: "rec-3", name: "Egg", proteinText: "6.5", favoriteID: "fav-other", completion: $0) }
+        XCTAssertEqual(try other.get(), .created)
+        XCTAssertEqual(sync { model.favorites.count }, 5)
+
+        // Edit path: the favorite is created from the saved values in the same commit.
+        let edited = waitOutcome { model.updateRecord(day: day, id: "rec-1", name: "Boiled egg", proteinText: "6", favoriteID: "fav-from-edit", completion: $0) }
+        XCTAssertEqual(try edited.get(), .created)
+        XCTAssertEqual(sync { model.favorites.last?.name }, "Boiled egg")
+        XCTAssertEqual(sync { model.log.record(id: "rec-1")?.name }, "Boiled egg")
+
+        // A write failure before the replace leaves neither the record nor the favorite.
+        struct FailingWriter: StoreFileWriter {
+            func write(_ data: Data, to url: URL) throws { throw StoreError.writeFailed("disk full") }
+        }
+        let failingStore = FileAppStateStore(fileURL: storeURL, writer: FailingWriter())
+        let failing = makeModel(store: failingStore, state: try failingStore.load())
+        sync { failing.select(day) }
+        let failed = waitOutcome { failing.addRecord(day: day, id: "rec-9", name: "Tofu", proteinText: "8", favoriteID: "fav-9", completion: $0) }
+        guard case .failure(.storage) = failed else { return XCTFail("\(failed)") }
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertNil(reloaded.favorites.first { $0.id == "fav-9" })
+        XCTAssertNil(reloaded.log(for: day)?.record(id: "rec-9"))
+    }
+
+    func testRecordIsNotWrittenWhenTheFavoriteHalfFailsAndARetryAfterNotAppliedMakesOneFavorite() throws {
+        let state = try favoritesState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        sync { model.select(day) }
+        // The favorite half fails inside the commit (ID clash): the record must not land either.
+        let clash = waitOutcome { model.addRecord(day: day, id: "rec-1", name: "Tofu", proteinText: "8", favoriteID: "legacy:favorite:a", completion: $0) }
+        guard case .failure(.integrity) = clash else { return XCTFail("\(clash)") }
+        XCTAssertEqual(store.modifyCalls, 1)
+        XCTAssertTrue(sync { model.log.records.isEmpty })
+        XCTAssertNil(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.record(id: "rec-1"))
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().favorites.count, 3)
+
+        // Unconfirmed, not applied, retried with the session's IDs: one record, one favorite.
+        let injecting = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let retrying = makeModel(store: injecting, state: try injecting.load())
+        sync { retrying.select(day) }
+        let first = waitOutcome { retrying.addRecord(day: day, id: "rec-1", name: "Tofu", proteinText: "8", favoriteID: "fav-1", completion: $0) }
+        guard case .failure(.unconfirmed) = first else { return XCTFail("\(first)") }
+        XCTAssertEqual(sync { retrying.pendingSave?.kind }, .record)
+        XCTAssertEqual(wait { retrying.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(try waitOutcome { retrying.addRecord(day: day, id: "rec-1", name: "Tofu", proteinText: "8", favoriteID: "fav-1", completion: $0) }.get(), .created)
+        XCTAssertEqual(sync { retrying.log.records.map(\.id) }, ["rec-1"])
+        XCTAssertEqual(sync { retrying.favorites.filter { $0.name == "Tofu" }.map(\.id) }, ["fav-1"])
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().favorites.count, 4)
+    }
+
+    func testFavoriteEditAndDeleteKeepIdentityPositionAndEveryLog() throws {
+        let state = try favoritesState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let logsBefore = sync { model.state.logs }
+
+        XCTAssertEqual(wait { model.updateFavorite(id: "legacy:favorite:c", name: " Fixed ", proteinText: "5", completion: $0) }, .ok)
+        let fixed = try XCTUnwrap(sync { model.favorites.first { $0.id == "legacy:favorite:c" } })
+        XCTAssertEqual(fixed.name, "Fixed")
+        XCTAssertEqual(fixed.proteinCentigrams, 500)
+        XCTAssertEqual(fixed.position, 7)
+        XCTAssertEqual(fixed.legacySourceID, "c")
+        XCTAssertEqual(sync { model.favorites.map(\.id) }, ["legacy:favorite:a", "legacy:favorite:b", "legacy:favorite:c"])
+
+        XCTAssertEqual(wait { model.updateFavorite(id: "legacy:favorite:a", name: "x", proteinText: "0", completion: $0) }, .failed(.input(.notPositive)))
+        XCTAssertEqual(wait { model.updateFavorite(id: "missing", name: "x", proteinText: "1", completion: $0) }, .failed(.notFound))
+        XCTAssertEqual(store.modifyCalls, 2, "the input error never reaches the store; the missing ID does, without a write")
+
+        XCTAssertEqual(wait { model.deleteFavorite(id: "legacy:favorite:a", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.favorites.map(\.id) }, ["legacy:favorite:b", "legacy:favorite:c"])
+        XCTAssertEqual(sync { model.favorites.map(\.position) }, [1, 7], "no renumbering after a delete")
+        XCTAssertEqual(wait { model.deleteFavorite(id: "legacy:favorite:a", completion: $0) }, .failed(.notFound))
+
+        XCTAssertEqual(sync { model.state.logs }, logsBefore, "favorite management never touches the daily logs")
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().favorites.map(\.id), ["legacy:favorite:b", "legacy:favorite:c"])
+    }
+
+    func testFavoriteBatchAddsEveryRecordToTheFixedDayInOneCommitOrNothing() throws {
+        let state = try favoritesState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try selection(model, "legacy:favorite:a", record: "r1")
+        let b = try selection(model, "legacy:favorite:b", record: "r2")
+        // The sheet's day is fixed even though the screen shows another day.
+        sync { model.select(try! CalendarDay(iso8601: "2026-09-29")) }
+
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [b, a], completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        sync { model.select(day) }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r2", "r1"])
+        XCTAssertEqual(sync { model.log.records.map(\.source) }, [.favorite, .favorite])
+        XCTAssertEqual(sync { model.log.records.map(\.name) }, ["그릭요거트", "닭가슴살"])
+        XCTAssertEqual(sync { model.totalCentigrams }, 7_000 + 900 + 2_300, "the legacy adjustment is kept")
+        XCTAssertTrue(sync { model.log.records.allSatisfy { $0.quantity == nil } })
+
+        // Edited after selection: the stale snapshot refuses the whole batch.
+        XCTAssertEqual(wait { model.updateFavorite(id: "legacy:favorite:a", name: "닭가슴살", proteinText: "24", completion: $0) }, .ok)
+        let c = try selection(model, "legacy:favorite:c", record: "r3")
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [a, b], completion: $0) }, .failed(.selectionChanged))
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [b, c], completion: $0) }, .failed(.selectionChanged), "negative stored value")
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [b, b], completion: $0) }, .failed(.integrity(String(describing: FavoriteBatchError.duplicateSelection("legacy:favorite:b")))))
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [], completion: $0) }, .failed(.integrity(String(describing: FavoriteBatchError.emptySelection))))
+        XCTAssertEqual(sync { model.log.records.count }, 2, "0 rows on every refusal")
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 2)
+    }
+
+    func testFavoriteWritesCarryTheirKindAndRetryWithTheSameIDsAfterNotApplied() throws {
+        let state = try favoritesState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try selection(model, "legacy:favorite:a", record: "r1")
+        let b = try selection(model, "legacy:favorite:b", record: "r2")
+
+        guard case .failed(.unconfirmed) = wait({ model.addFavoriteRecords(day: day, selections: [a, b], completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { model.pendingSave?.kind }, .favoriteBatch)
+        XCTAssertEqual(wait { model.updateFavorite(id: "legacy:favorite:a", name: "x", proteinText: "1", completion: $0) }, .failed(.unconfirmed(operationID: sync { model.pendingSave?.operationID })))
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [a, b], completion: $0) }, .ok)
+        sync { model.select(day) }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r1", "r2"], "exactly once with the session's IDs")
+
+        let editStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let editModel = makeModel(store: editStore, state: try editStore.load())
+        guard case .failed(.unconfirmed) = wait({ editModel.updateFavorite(id: "legacy:favorite:a", name: "x", proteinText: "1", completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { editModel.pendingSave?.kind }, .favoriteEdit)
+        let deleteStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let deleteModel = makeModel(store: deleteStore, state: try deleteStore.load())
+        guard case .failed(.unconfirmed) = wait({ deleteModel.deleteFavorite(id: "legacy:favorite:a", completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { deleteModel.pendingSave?.kind }, .favoriteDelete)
+    }
+
+    func testRealReplaceFailureBlocksFavoriteManagementUntilTheReadSucceeds() throws {
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace(), state: favoritesState())
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try selection(model, "legacy:favorite:a", record: "r1")
+        guard case .failed(.unconfirmed(let pendingID)) = wait({ model.addFavoriteRecords(day: day, selections: [a], completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(wait { model.deleteFavorite(id: "legacy:favorite:b", completion: $0) }, .failed(.unconfirmed(operationID: pendingID)))
+        XCTAssertEqual(wait { model.updateFavorite(id: "legacy:favorite:b", name: "y", proteinText: "2", completion: $0) }, .failed(.unconfirmed(operationID: pendingID)))
+        guard case .failed(.reconfirmFailed) = wait({ model.reconfirm(completion: $0) }) else { return XCTFail() }
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok)
+        sync { model.select(day) }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r1"], "the batch had landed")
+        XCTAssertEqual(sync { model.favorites.count }, 3, "nothing else was written while blocked")
     }
 }
 
