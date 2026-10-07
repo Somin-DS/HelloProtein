@@ -211,3 +211,35 @@
 "renewal_goal_review_missing" = "Goal needs review: the previous value is missing";
 "renewal_goal_review_empty" = "Goal needs review: the previous value is empty";
 "renewal_error_reconfirm_message" = "We haven’t confirmed the save status yet. Please check again.";
+
+/* Add sheet: favorites (2026-10-07) */
+"renewal_tab_manual" = "Manual";
+"renewal_tab_favorites" = "Favorites";
+"renewal_favorite_also_save" = "Also save as favorite";
+"renewal_favorite_selected_summary" = "%1$ld selected · %2$@ g protein";
+"renewal_favorite_add_count" = "Add %ld";
+"renewal_favorite_target_day" = "Adds to %@";
+"renewal_switch_tab_title" = "Discard your input or selection and switch tabs?";
+"renewal_switch_tab_message" = "What you typed or selected on this tab will be lost.";
+"renewal_switch_tab_stay" = "Stay here";
+"renewal_switch_tab_confirm" = "Discard and switch";
+"renewal_favorite_delete_title" = "Remove from favorites?";
+"renewal_favorite_delete_message" = "Your logged entries will stay.";
+"renewal_favorite_delete_confirm" = "Remove";
+"renewal_favorite_check_value" = "Check the saved protein amount before adding this item.";
+"renewal_favorite_unnamed" = "Unnamed";
+"renewal_favorite_empty" = "Save foods you eat often: turn on “Also save as favorite” when you add an entry.";
+"renewal_favorite_exists_title" = "Already in favorites";
+"renewal_favorite_exists_message" = "Your entry was saved. The favorite with the same name and amount was kept as it is.";
+"renewal_favorite_edit_title" = "Edit favorite";
+"renewal_favorite_name_placeholder" = "Favorite name (optional)";
+"renewal_favorite_edit_note" = "Changing a favorite doesn’t change entries you already logged.";
+"renewal_favorite_discard_selection_title" = "Discard the selection?";
+"renewal_favorite_discard_selection_message" = "Editing a favorite clears the items you selected.";
+"renewal_favorite_discard_selection_confirm" = "Discard";
+"renewal_favorite_select" = "Select %@";
+"renewal_favorite_deselect" = "Deselect %@";
+"renewal_favorite_edit" = "Edit %@";
+"renewal_favorite_delete_action" = "Delete %@";
+"renewal_error_selection_changed_title" = "Check the selection";
+"renewal_error_selection_changed_message" = "A selected favorite was changed or removed, or its amount can’t be logged. Nothing was added. Check the selection and try again.";

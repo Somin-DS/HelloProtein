@@ -4,6 +4,7 @@ import HelloProteinCore
 @available(iOS 15.0, *)
 struct RecordHomeView: View {
     @StateObject private var model: RecordHomeViewModel
+    @State private var addTarget: AddSheetTarget?
     @State private var editorTarget: EditorTarget?
     @State private var legacyTotalTarget: LegacyTotalTarget?
     @State private var goalTarget: GoalEditorTarget?
@@ -54,7 +55,9 @@ struct RecordHomeView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 Button {
-                    editorTarget = EditorTarget(day: model.selectedDay, record: nil)
+                    // The selected day is fixed for the sheet's whole session:
+                    // past days can be logged, and midnight does not move it.
+                    addTarget = AddSheetTarget(day: model.selectedDay)
                 } label: {
                     Label { Text("renewal_add") } icon: { Image(systemName: "plus") }
                         .font(.headline)
@@ -68,6 +71,9 @@ struct RecordHomeView: View {
                 .background(RenewalTheme.canvas)
             }
             .actionErrorAlert($homeError)
+            .sheet(item: $addTarget) { target in
+                AddSheet(target: target, model: model)
+            }
             .sheet(item: $editorTarget) { target in
                 RecordEditorSheet(target: target, model: model)
             }
@@ -204,14 +210,15 @@ struct RecordHomeView: View {
 
 // MARK: - Sheet targets (fixed at presentation time)
 
+/// Editing an existing record. New records go through `AddSheet`.
 @available(iOS 15.0, *)
 struct EditorTarget: Identifiable {
     let id = UUID()
     let day: CalendarDay
-    let record: FoodRecord?
-    /// Record ID used by every save attempt of this editing session, so a retry
-    /// after a failed or unconfirmed save can never add a second record.
-    let newRecordID = UUID().uuidString
+    let record: FoodRecord
+    /// Favorite ID used by every save attempt of this session when "also save
+    /// as favorite" is on, so a retry never creates a second favorite.
+    let favoriteID = UUID().uuidString
 }
 
 @available(iOS 15.0, *)
@@ -230,6 +237,10 @@ private struct RecordEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var protein: String
+    /// Part of this edit's draft: creates a favorite from the saved values in
+    /// the same commit. It never removes or toggles an existing favorite.
+    @State private var saveAsFavorite = false
+    @State private var favoriteExistsNotice = false
     /// The strings the fields opened with, taken once per editing session.
     /// "Dirty" is an exact comparison against them, so a typed space counts.
     @State private var initial: [String]
@@ -244,10 +255,8 @@ private struct RecordEditorSheet: View {
     init(target: EditorTarget, model: RecordHomeViewModel) {
         self.target = target
         self.model = model
-        let name = target.record?.name ?? ""
-        let protein = target.record.map {
-            ProteinInput.format(centigrams: $0.protein.centigrams, decimalSeparator: model.decimalSeparator)
-        } ?? ""
+        let name = target.record.name ?? ""
+        let protein = ProteinInput.format(centigrams: target.record.protein.centigrams, decimalSeparator: model.decimalSeparator)
         _name = State(initialValue: name)
         _protein = State(initialValue: protein)
         _initial = State(initialValue: [name, protein])
@@ -255,16 +264,17 @@ private struct RecordEditorSheet: View {
 
     private var locked: Bool { model.isBusy || saveUnconfirmed }
     private var hasPendingSave: Bool { saveUnconfirmed || model.pendingSave != nil }
-    private var isDirty: Bool { EditorDismissPolicy.isDirty(initial: initial, current: [name, protein]) }
+    private var isDirty: Bool {
+        AddSheetPolicy.isManualDirty(initial: initial, current: [name, protein],
+                                     initialFavorite: false, currentFavorite: saveAsFavorite)
+    }
     private var closeDecision: EditorCloseDecision {
         EditorDismissPolicy.decision(isBusy: model.isBusy, hasPendingSave: hasPendingSave, isDirty: isDirty)
     }
     /// Describes the stored record, never the unsaved field values.
     private var deleteSummary: String? {
-        target.record.map {
-            EditorPromptText.deleteTarget(name: $0.name, day: target.day, centigrams: $0.protein.centigrams,
-                                          decimalSeparator: model.decimalSeparator)
-        }
+        EditorPromptText.deleteTarget(name: target.record.name, day: target.day, centigrams: target.record.protein.centigrams,
+                                      decimalSeparator: model.decimalSeparator)
     }
 
     var body: some View {
@@ -287,22 +297,30 @@ private struct RecordEditorSheet: View {
                             .accessibilityLabel(Text("renewal_protein_placeholder"))
                             .disabled(locked)
                             .opacity(locked ? 0.5 : 1)
+                        Toggle(isOn: $saveAsFavorite) {
+                            Text("renewal_favorite_also_save").font(.subheadline)
+                        }
+                        .frame(minHeight: 44)
+                        .disabled(locked)
+                        .accessibilityIdentifier("renewal.edit.favoriteToggle")
                     }
                     .renewalCard()
+                    .alert(Text("renewal_favorite_exists_title"), isPresented: $favoriteExistsNotice) {
+                        // After the alert has finished closing, so the dismiss is not swallowed.
+                        Button { DispatchQueue.main.async { dismiss() } } label: { Text("renewal_ok") }
+                    } message: { Text("renewal_favorite_exists_message") }
                     if saveUnconfirmed {
                         PendingSaveSection(model: model, onConfirmed: { dismiss() }, onNotApplied: {
                             saveUnconfirmed = false
                             showError(.notApplied)
                         }, onError: { showError($0) })
                     }
-                    if target.record != nil {
-                        Button(role: .destructive) { show(.delete) } label: {
-                            Text("renewal_delete").frame(maxWidth: .infinity, minHeight: 44)
-                        }
-                        .foregroundColor(RenewalTheme.danger)
-                        .disabled(locked)
-                        .opacity(locked ? 0.5 : 1)
+                    Button(role: .destructive) { show(.delete) } label: {
+                        Text("renewal_delete").frame(maxWidth: .infinity, minHeight: 44)
                     }
+                    .foregroundColor(RenewalTheme.danger)
+                    .disabled(locked)
+                    .opacity(locked ? 0.5 : 1)
                 }
                 .padding(RenewalTheme.pageInset)
                 .editorPromptAlert($prompt, deleteSummary: deleteSummary, onConfirm: confirm)
@@ -310,7 +328,7 @@ private struct RecordEditorSheet: View {
                                                 onAttemptToDismiss: { requestClose() }))
             }
             .background(RenewalTheme.canvas)
-            .navigationTitle(Text(LocalizedStringKey(target.record == nil ? "renewal_add" : "renewal_edit")))
+            .navigationTitle(Text("renewal_edit"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -345,7 +363,7 @@ private struct RecordEditorSheet: View {
     }
 
     private func show(_ next: EditorPrompt) {
-        guard error == nil, prompt == nil else { return }
+        guard error == nil, prompt == nil, !favoriteExistsNotice else { return }
         prompt = next
     }
 
@@ -389,22 +407,24 @@ private struct RecordEditorSheet: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let record = target.record {
-            model.updateRecord(day: target.day, id: record.id, name: trimmed.isEmpty ? nil : trimmed,
-                               proteinText: protein, completion: handle)
-        } else {
-            model.addRecord(day: target.day, id: target.newRecordID, name: trimmed.isEmpty ? nil : trimmed,
-                            proteinText: protein, completion: handle)
+        model.updateRecord(day: target.day, id: target.record.id, name: trimmed.isEmpty ? nil : trimmed,
+                           proteinText: protein, favoriteID: saveAsFavorite ? target.favoriteID : nil) { result in
+            if case .success(.alreadyExisted) = result {
+                // The edit is saved; say that the favorite was not duplicated, then close.
+                prompt = nil
+                favoriteExistsNotice = true
+                return
+            }
+            handle(result.map { _ in () })
         }
     }
 
     /// Runs only from the delete confirmation, once per confirmation.
     private func delete() {
-        guard let record = target.record,
-              EditorDismissPolicy.canDelete(isBusy: model.isBusy, hasPendingSave: hasPendingSave,
+        guard EditorDismissPolicy.canDelete(isBusy: model.isBusy, hasPendingSave: hasPendingSave,
                                             deleteInFlight: deleteInFlight) else { return }
         deleteInFlight = true
-        model.deleteRecord(day: target.day, id: record.id) { result in
+        model.deleteRecord(day: target.day, id: target.record.id) { result in
             deleteInFlight = false
             handle(result)
         }
@@ -639,6 +659,7 @@ enum ActionErrorText {
         case .unconfirmed, .reconfirmFailed: return RenewalStrings.text("renewal_error_unconfirmed_title")
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_title")
         case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_title")
+        case .selectionChanged: return RenewalStrings.text("renewal_error_selection_changed_title")
         }
     }
 
@@ -661,6 +682,7 @@ enum ActionErrorText {
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_message")
         case .reconfirmFailed: return RenewalStrings.text("renewal_error_reconfirm_message")
         case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_message")
+        case .selectionChanged: return RenewalStrings.text("renewal_error_selection_changed_message")
         }
     }
 }

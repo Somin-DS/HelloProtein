@@ -209,3 +209,35 @@
 "renewal_goal_review_missing" = "목표 확인 필요: 이전 값이 없어요";
 "renewal_goal_review_empty" = "목표 확인 필요: 이전 값이 비어 있어요";
 "renewal_error_reconfirm_message" = "저장 결과를 아직 확인하지 못했어요. 다시 확인해 주세요.";
+
+/* Add sheet: favorites (2026-10-07) */
+"renewal_tab_manual" = "직접 입력";
+"renewal_tab_favorites" = "즐겨찾기";
+"renewal_favorite_also_save" = "즐겨찾기에도 저장";
+"renewal_favorite_selected_summary" = "%1$ld개 선택 · 단백질 %2$@ g";
+"renewal_favorite_add_count" = "%ld개 추가";
+"renewal_favorite_target_day" = "%@에 추가";
+"renewal_switch_tab_title" = "입력/선택을 버리고 이동할까요?";
+"renewal_switch_tab_message" = "이 탭에서 입력하거나 선택한 내용은 사라져요.";
+"renewal_switch_tab_stay" = "머무르기";
+"renewal_switch_tab_confirm" = "버리고 이동";
+"renewal_favorite_delete_title" = "즐겨찾기에서 삭제할까요?";
+"renewal_favorite_delete_message" = "기존 섭취 기록은 유지돼요.";
+"renewal_favorite_delete_confirm" = "삭제";
+"renewal_favorite_check_value" = "저장된 단백질량을 확인해야 기록에 추가할 수 있어요.";
+"renewal_favorite_unnamed" = "이름 없음";
+"renewal_favorite_empty" = "자주 먹는 음식을 저장해 보세요. 직접 입력에서 ‘즐겨찾기에도 저장’을 켜면 돼요.";
+"renewal_favorite_exists_title" = "이미 즐겨찾기에 있어요";
+"renewal_favorite_exists_message" = "기록은 저장됐어요. 같은 이름과 양의 즐겨찾기는 그대로 두었어요.";
+"renewal_favorite_edit_title" = "즐겨찾기 편집";
+"renewal_favorite_name_placeholder" = "즐겨찾기 이름 (선택)";
+"renewal_favorite_edit_note" = "즐겨찾기를 바꿔도 이미 기록한 항목은 바뀌지 않아요.";
+"renewal_favorite_discard_selection_title" = "선택을 버릴까요?";
+"renewal_favorite_discard_selection_message" = "즐겨찾기를 편집하면 선택한 항목이 지워져요.";
+"renewal_favorite_discard_selection_confirm" = "버리기";
+"renewal_favorite_select" = "%@ 선택";
+"renewal_favorite_deselect" = "%@ 선택 해제";
+"renewal_favorite_edit" = "%@ 편집";
+"renewal_favorite_delete_action" = "%@ 삭제";
+"renewal_error_selection_changed_title" = "선택을 다시 확인해 주세요";
+"renewal_error_selection_changed_message" = "선택한 즐겨찾기가 바뀌었거나 삭제됐거나 양을 기록할 수 없어요. 아무것도 추가되지 않았어요. 선택을 확인한 뒤 다시 시도해 주세요.";
