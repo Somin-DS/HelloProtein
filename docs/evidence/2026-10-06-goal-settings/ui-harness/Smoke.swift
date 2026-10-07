@@ -982,17 +982,18 @@ final class Smoke: XCTestCase {
         capture("goal-review-cleared")
     }
 
-    /// DEBUG clock: the day advances 8 s after launch while the sheet is open.
+    /// DEBUG clock: the day advances 30 s after launch while the sheet is open.
     func test25GoalDateChanged() {
         configure()
-        app.launchArguments += ["-HelloProteinAdvanceDayAfterSeconds", "8"]
+        app.launchArguments += ["-HelloProteinAdvanceDayAfterSeconds", "30"]
         app.launch()
         let today = todayLocal
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+        let previousGoal = homeGoalText()
         openGoalSheet()
         XCTAssertTrue(app.staticTexts["renewal.goal.appliesFrom"].label.contains(longDate(today)), app.staticTexts["renewal.goal.appliesFrom"].label)
         replace(goalField(), with: "142")
-        sleep(9)
+        sleep(31)
         goalSave().tap()
         XCTAssertTrue(alert(L["dateChanged"]!).waitForExistence(timeout: 5), app.debugDescription)
         capture("goal-date-changed")
@@ -1006,10 +1007,19 @@ final class Smoke: XCTestCase {
         XCTAssertFalse(update.exists)
         XCTAssertEqual(goalField().value as? String, "142")
         goalSave().tap()
-        XCTAssertTrue(goalEntry().waitForExistence(timeout: 5))
-        // The home is still on the old "today": the new goal starts tomorrow, so today's goal is unchanged.
-        XCTAssertFalse(app.staticTexts[ko ? "목표 142g" : "Goal 142g"].exists, "a goal starting tomorrow is not shown as today's")
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 5), "sheet closed")
+        // Selection remains on the old day, so there must be no goal entry.
+        XCTAssertFalse(goalEntry().exists)
+        XCTAssertEqual(homeGoalText(), previousGoal, "the old day's goal is preserved")
         capture("goal-date-changed-home")
+        app.buttons[ko ? "오늘" : "Today"].tap()
+        XCTAssertTrue(goalEntry().waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts[ko ? "목표 142g" : "Goal 142g"].waitForExistence(timeout: 5))
+        openGoalSheet()
+        XCTAssertEqual(goalField().value as? String, "142")
+        XCTAssertTrue(app.staticTexts["renewal.goal.appliesFrom"].label.contains(longDate(tomorrow)))
+        capture("goal-date-updated-confirmed")
+        app.buttons[L["cancel"]!].tap()
     }
 
     /// Real afterReplace failure on the goal sheet, then home re-check.
