@@ -70,8 +70,15 @@ run label `fav-final`. 결과 번들 `/private/tmp/hp-iphone-ui/results/fav-fina
 
 ## 코드 리뷰 반영
 
-`oh-my-claudecode:code-reviewer`(opus): 차단 결함 없음. 반영 — 즐겨찾기 쪽 실패 시 기록 미반영·미확정 재시도 테스트 추가, 확정 후처리를 `AddSheetPolicy.afterConfirmed`로 분리해 테스트, 중복 알림 OK의 dismiss를 alert 종료 후로 지연, 편집 취소를 미확정 중 잠금, 삭제 확정 후 선택에서 제거, `%ld` 포맷·미사용 키 정리, 문서 주석. 남긴 항목 — `updateFavorite`가 이름을 항상 trim(새 기록과 같은 검증 규칙), 변경 없는 편집 저장도 쓰기, `pruneStaleSelections`가 마지막 확정 상태 기준.
+`oh-my-claudecode:code-reviewer`(opus): 차단 결함 없음. 반영 — 즐겨찾기 쪽 실패 시 기록 미반영·미확정 재시도 테스트 추가, 확정 후처리를 `AddSheetPolicy.afterConfirmed`로 분리해 테스트, 중복 알림 OK의 dismiss를 alert 종료 후로 지연, 편집 취소를 미확정 중 잠금, 삭제 확정 후 선택에서 제거, `%ld` 포맷·미사용 키 정리, 문서 주석. 남긴 항목 — `updateFavorite`가 이름을 항상 trim(새 기록과 같은 검증 규칙), 변경 없는 편집 저장도 쓰기, `pruneStaleSelections`가 마지막 확정 상태 기준(아래 PR #8 후속 수정에서 해결).
 
 ## 저장 계약
 
 schema·commit 경로·이관 판정·`legacySourceID`·플래그 기본값·최소 OS 변경 없음(`MigrationCore` diff 없음, `HelloProteinCore`는 순수 helper와 `AppState.setFavorites`만 추가). 무료 즐겨찾기 개수 제한 없음. DEBUG 인자는 기존 것만 사용했고 Release 바이너리에 문자열 없음(위 표).
+
+## PR #8 리뷰 후속 수정
+
+- 선택한 즐겨찾기가 저장소에서 수정·삭제되어 배치가 거부되면, 최신 상태를 다시 읽고 VM을 갱신한 뒤 `.selectionChanged`를 전달한다. 시트의 선택 정리와 재선택이 최신 값으로 동작한다. 실패한 배치나 갱신은 쓰기를 수행하지 않는다.
+- 갱신 읽기 실패는 저장소 오류로 전달하고 기존 화면·초안·선택을 유지한다. 미확정 저장으로 취급하지 않으며, 재시도에서 읽기가 회복되면 재선택할 수 있다.
+- 회귀 테스트 2개 추가: 별도 저장소 writer의 수정/삭제 후 실패 콜백 이전 목록 갱신 및 동일 record ID 재선택 성공; 읽기 실패 후 상태 보존·쓰기 없음·재시도 성공.
+- 검증: iPhone SE / iOS 26.5 시뮬레이터 앱 테스트 **86개 통과, 0 실패**, Debug 빌드 성공. 로그 `/private/tmp/hp-pr8-fix-tests.log`, 결과 `/private/tmp/hp-iphone-build/Logs/Test/Test-ProteinTracker-2026.10.07_19-12-07-+0900.xcresult`. 앞선 리뷰에서 Core 56개 통과. 이번 후속 수정에서는 UI 하네스·Release 빌드를 다시 실행하지 않았다.

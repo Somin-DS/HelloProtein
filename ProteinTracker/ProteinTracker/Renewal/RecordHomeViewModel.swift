@@ -373,6 +373,7 @@ final class RecordHomeViewModel: ObservableObject {
         let operationID = UUID().uuidString
         workQueue.async {
             let result: Result<AppState, ActionError>
+            var reloadedState: AppState?
             do {
                 result = .success(try store.modify(operationID: operationID, change))
             } catch let error as ActionError {
@@ -390,11 +391,28 @@ final class RecordHomeViewModel: ObservableObject {
             } catch let error as ProteinInputError {
                 result = .failure(.input(error))
             } catch let error as FavoriteBatchError {
-                result = .failure(Self.actionError(for: error))
+                let actionError = Self.actionError(for: error)
+                if actionError == .selectionChanged {
+                    // The failed transaction wrote nothing. Refresh before the
+                    // sheet prunes snapshots, so re-selection uses current values.
+                    do {
+                        reloadedState = try store.load()
+                        result = .failure(actionError)
+                    } catch {
+                        result = .failure(.storage(String(describing: error)))
+                    }
+                } else {
+                    result = .failure(actionError)
+                }
             } catch {
                 result = .failure(.integrity(String(describing: error)))
             }
+            let confirmedState = reloadedState
             self.mainQueue.async {
+                if let confirmedState = confirmedState {
+                    self.state = confirmedState
+                    self.refresh()
+                }
                 self.isBusy = false
                 switch result {
                 case .success(let state):

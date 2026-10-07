@@ -433,8 +433,16 @@ final class RecordHomeViewModelTests: XCTestCase {
         let inner: AppStateStore
         private(set) var modifyCalls = 0
         private(set) var loadCalls = 0
+        var failNextLoad = false
         init(inner: AppStateStore) { self.inner = inner }
-        func load() throws -> AppState { loadCalls += 1; return try inner.load() }
+        func load() throws -> AppState {
+            loadCalls += 1
+            if failNextLoad {
+                failNextLoad = false
+                throw NSError(domain: "TestReadFailure", code: 1)
+            }
+            return try inner.load()
+        }
         var unconfirmedOperationID: String? { inner.unconfirmedOperationID }
         var hasUnconfirmedCommit: Bool { inner.hasUnconfirmedCommit }
         func modify(operationID: String?, _ change: (inout AppState) throws -> Void) throws -> AppState {
@@ -875,6 +883,64 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [], completion: $0) }, .failed(.integrity(String(describing: FavoriteBatchError.emptySelection))))
         XCTAssertEqual(sync { model.log.records.count }, 2, "0 rows on every refusal")
         XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 2)
+    }
+
+    func testStaleFavoriteBatchRefreshesBeforeCompletionAndAllowsReselection() throws {
+        for deleted in [false, true] {
+            let state = try favoritesState()
+            let disk = FileAppStateStore(fileURL: storeURL)
+            try disk.commit(state)
+            let store = CountingStore(inner: disk)
+            let model = makeModel(store: store, state: state)
+            let day = try CalendarDay(iso8601: "2026-09-20")
+            let a = try selection(model, "legacy:favorite:a", record: "r1")
+            let b = try selection(model, "legacy:favorite:b", record: "r2")
+            // A separate writer changes disk without updating the screen model.
+            _ = try FileAppStateStore(fileURL: storeURL).modify(operationID: "external") { latest in
+                try latest.setFavorites(deleted
+                    ? FavoriteCollection.removing(id: a.favoriteID, from: latest.favorites)
+                    : FavoriteCollection.replacing(id: a.favoriteID, name: "Updated", proteinCentigrams: 2400, in: latest.favorites))
+            }
+            let latest = try disk.load()
+            XCTAssertEqual(wait { completion in
+                model.addFavoriteRecords(day: day, selections: [a, b]) { result in
+                    XCTAssertEqual(model.favorites, FavoriteCollection.ordered(latest.favorites))
+                    completion(result)
+                }
+            }, .failed(.selectionChanged))
+            XCTAssertEqual(store.loadCalls, 1)
+            XCTAssertEqual(try disk.load(), latest, "failed batch and refresh write nothing")
+            let picks = try deleted ? [selection(model, b.favoriteID, record: "r2")]
+                : [selection(model, a.favoriteID, record: "r1"), selection(model, b.favoriteID, record: "r2")]
+            XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: picks, completion: $0) }, .ok)
+            XCTAssertEqual(try disk.load().log(for: day)?.records.map(\.id), deleted ? ["r2"] : ["r1", "r2"])
+        }
+    }
+
+    func testStaleFavoriteReloadFailureKeepsStateAndCanRetry() throws {
+        let state = try favoritesState()
+        let disk = FileAppStateStore(fileURL: storeURL)
+        try disk.commit(state)
+        let store = CountingStore(inner: disk)
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try selection(model, "legacy:favorite:a", record: "r1")
+        _ = try disk.modify(operationID: "external") { latest in
+            try latest.setFavorites(FavoriteCollection.replacing(id: a.favoriteID, name: "Updated", proteinCentigrams: 2400, in: latest.favorites))
+        }
+        let latest = try disk.load()
+        store.failNextLoad = true
+        guard case .failed(.storage) = wait({ model.addFavoriteRecords(day: day, selections: [a], completion: $0) }) else {
+            return XCTFail("a failed refresh must surface a storage error")
+        }
+        XCTAssertEqual(sync { model.state }, state)
+        XCTAssertFalse(sync { model.isBusy })
+        XCTAssertNil(sync { model.pendingSave })
+        XCTAssertEqual(try disk.load(), latest)
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [a], completion: $0) }, .failed(.selectionChanged))
+        let refreshed = try selection(model, a.favoriteID, record: "r1")
+        XCTAssertEqual(wait { model.addFavoriteRecords(day: day, selections: [refreshed], completion: $0) }, .ok)
+        XCTAssertEqual(try disk.load().log(for: day)?.records.map(\.id), ["r1"])
     }
 
     func testFavoriteWritesCarryTheirKindAndRetryWithTheSameIDsAfterNotApplied() throws {
