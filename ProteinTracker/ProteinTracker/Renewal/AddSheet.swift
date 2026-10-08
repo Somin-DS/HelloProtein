@@ -12,17 +12,31 @@ struct AddSheetTarget: Identifiable {
     let manualFavoriteID = UUID().uuidString
 }
 
-/// The add sheet: a manual entry tab and a favorites tab. Only the current
+/// The add sheet: manual entry, search and favorites tabs. Only the current
 /// tab holds a draft; switching with unsaved input or a selection asks first.
 /// Favorites are read from the last confirmed state and managed in place
-/// (edit mode, delete); records from favorites are added as one commit.
+/// (edit mode, delete); records from favorites or search results are added
+/// as one commit. Search lookups live in `SearchSessionModel`; every write
+/// (history, language, records) goes through the view model from here.
 @available(iOS 15.0, *)
 struct AddSheet: View {
     let target: AddSheetTarget
     @ObservedObject var model: RecordHomeViewModel
+    @StateObject private var search: SearchSessionModel
     @Environment(\.dismiss) private var dismiss
 
+    init(target: AddSheetTarget, model: RecordHomeViewModel,
+         makeSearchProvider: @escaping (SearchLanguage) -> FoodSearchProvider) {
+        self.target = target
+        self.model = model
+        _search = StateObject(wrappedValue: SearchSessionModel(language: model.searchLanguage.resolved,
+                                                               makeProvider: makeSearchProvider))
+    }
+
     @State private var tab: AddTab = .manual
+    // Search tab
+    /// The last executed search's term could not be recorded; searching went on.
+    @State private var historyNotSaved = false
     // Manual tab
     @State private var name = ""
     @State private var protein = ""
@@ -62,7 +76,14 @@ struct AddSheet: View {
     private var favoritesDirty: Bool {
         AddSheetPolicy.isFavoritesDirty(selectionCount: selected.count, editorDirty: editorDirty)
     }
-    private var currentTabDirty: Bool { tab == .manual ? manualDirty : favoritesDirty }
+    private var searchDirty: Bool { AddSheetPolicy.isSearchDirty(selectionCount: search.selected.count) }
+    private var currentTabDirty: Bool {
+        switch tab {
+        case .manual: return manualDirty
+        case .search: return searchDirty
+        case .favorites: return favoritesDirty
+        }
+    }
     private var closeDecision: EditorCloseDecision {
         EditorDismissPolicy.decision(isBusy: model.isBusy, hasPendingSave: hasPendingSave, isDirty: currentTabDirty)
     }
@@ -86,6 +107,7 @@ struct AddSheet: View {
                     VStack(alignment: .leading, spacing: 20) {
                         switch tab {
                         case .manual: manualTab
+                        case .search: searchTab
                         case .favorites: favoritesTab
                         }
                         if saveUnconfirmed {
@@ -102,6 +124,7 @@ struct AddSheet: View {
                 }
                 .actionErrorAlert($error)
                 if tab == .favorites, editing == nil { selectionBar }
+                if tab == .search, search.hasSelection { searchSelectionBar }
             }
             .background(RenewalTheme.canvas)
             .navigationTitle(Text("renewal_add"))
@@ -127,6 +150,8 @@ struct AddSheet: View {
         .navigationViewStyle(.stack)
         .tint(RenewalTheme.action)
         .preferredColorScheme(.light)
+        // Closing the sheet (by any route) cancels the lookup and forgets the results.
+        .onDisappear { search.invalidate() }
     }
 
     // MARK: Tabs
@@ -134,6 +159,7 @@ struct AddSheet: View {
     private var tabBar: some View {
         HStack(spacing: 0) {
             tabButton(.manual, key: "renewal_tab_manual")
+            tabButton(.search, key: "renewal_tab_search")
             tabButton(.favorites, key: "renewal_tab_favorites")
         }
         .padding(.horizontal, RenewalTheme.pageInset)
@@ -179,12 +205,191 @@ struct AddSheet: View {
             name = ""
             protein = ""
             saveAsFavorite = false
+        case .search:
+            // Cancels any request and forgets results and selection; the
+            // next visit starts from the saved language and recent list.
+            search.invalidate()
+            historyNotSaved = false
         case .favorites:
             selected = []
             snapshots = [:]
             editing = nil
         }
         tab = value
+    }
+
+    // MARK: Search tab
+
+    private var searchTab: some View {
+        SearchTab(session: search, model: model, targetDay: target.day, locked: locked, historyNotSaved: historyNotSaved,
+                  actions: SearchTabActions(
+                    search: { query in requestSearch(.newSearch(query)) },
+                    recent: { term in requestSearch(.recentSearch(term)) },
+                    deleteRecent: { term in requestDeleteRecent(term) },
+                    pickLanguage: { language in requestLanguage(language) },
+                    useName: { item in requestUseName(item) }))
+    }
+
+    /// A new search, a recent tap or a language pick: blocked while locked,
+    /// asks when a selection would be lost, otherwise runs at once.
+    private func requestSearch(_ reason: SearchDiscardReason) {
+        switch AddSheetPolicy.searchActionDecision(isBusy: model.isBusy, hasPendingSave: hasPendingSave,
+                                                   selectionCount: search.selected.count) {
+        case .blocked, .stay: break
+        case .confirm: show(.discardSearch(reason))
+        case .switchNow: performSearchAction(reason)
+        }
+    }
+
+    private func requestLanguage(_ language: SearchLanguage) {
+        guard AddSheetPolicy.languageChangeIsNeeded(current: model.searchLanguage, picked: language) else { return }
+        // A fallback setting that already resolves to this language: the
+        // write confirms it, results of this language stay, so no prompt.
+        if search.language == language {
+            guard !locked else { return }
+            return changeLanguage(language)
+        }
+        requestSearch(.languageChange(language))
+    }
+
+    private func performSearchAction(_ reason: SearchDiscardReason) {
+        guard !locked else { return }
+        switch reason {
+        case .newSearch(let query): runSearch(query)
+        case .recentSearch(let term): runSearch(term.value)
+        case .languageChange(let language): changeLanguage(language)
+        }
+    }
+
+    /// An explicit search: the term is recorded first (one attempt, with its
+    /// own new ID), whatever that write's outcome the lookup then runs once
+    /// for this generation. A later reconfirm never re-searches or re-writes.
+    private func runSearch(_ query: String) {
+        historyNotSaved = false
+        guard SearchSessionModel.normalized(query) != nil else {
+            // A blank query shows the recent list again; nothing is written or requested.
+            search.invalidate()
+            return
+        }
+        search.execute(query: query) { trimmed, proceed in
+            model.recordSearchTerm(query: trimmed, newID: UUID().uuidString) { result in
+                switch result {
+                case .success:
+                    break
+                case .failure(.unconfirmed(let operationID)):
+                    sessionOperation = .searchHistory
+                    saveUnconfirmed = true
+                    showError(.unconfirmed(operationID: operationID))
+                case .failure:
+                    // The term is not in the list; the search itself is unaffected.
+                    historyNotSaved = true
+                }
+                proceed()
+            }
+        }
+    }
+
+    /// The language is a separate write. Results and selection are dropped
+    /// only once the new language is confirmed in the file.
+    private func changeLanguage(_ language: SearchLanguage) {
+        model.setSearchLanguage(language) { result in
+            switch result {
+            case .success:
+                search.applyLanguage(language)
+            case .failure(.unconfirmed(let operationID)):
+                sessionOperation = .searchLanguage
+                saveUnconfirmed = true
+                showError(.unconfirmed(operationID: operationID))
+            case .failure(let failure):
+                showError(failure)
+            }
+        }
+    }
+
+    private func requestDeleteRecent(_ term: SearchTerm) {
+        guard !locked else { return }
+        show(.deleteSearchTerm(term))
+    }
+
+    /// Runs only from the confirmation, once per confirmation.
+    private func performDeleteRecent(_ term: SearchTerm) {
+        guard EditorDismissPolicy.canDelete(isBusy: model.isBusy, hasPendingSave: hasPendingSave,
+                                            deleteInFlight: deleteInFlight) else { return }
+        deleteInFlight = true
+        model.deleteSearchTerm(id: term.id) { result in
+            deleteInFlight = false
+            switch result {
+            case .success: break
+            case .failure(.unconfirmed(let operationID)):
+                sessionOperation = .searchHistoryDelete
+                saveUnconfirmed = true
+                showError(.unconfirmed(operationID: operationID))
+            case .failure(let failure):
+                showError(failure)
+            }
+        }
+    }
+
+    /// "Use name in manual entry" for a row that cannot be added directly.
+    private func requestUseName(_ item: SearchResultItem) {
+        guard !locked else { return }
+        if search.hasSelection { show(.copyNameToManual(name: item.name)) } else { copyNameToManual(item.name) }
+    }
+
+    /// One transition: the search tab is left, only the name is carried over.
+    private func copyNameToManual(_ name: String) {
+        guard !locked else { return }
+        search.invalidate()
+        historyNotSaved = false
+        let draft = AddSheetPolicy.manualDraft(copyingName: name)
+        self.name = draft.name
+        protein = draft.protein
+        saveAsFavorite = draft.saveAsFavorite
+        tab = .manual
+    }
+
+    private var searchTotal: Int64? { search.totalCentigrams }
+    private var canAddSearch: Bool {
+        AddSheetPolicy.canAddSelection(locked: locked, selectionCount: search.selected.count, totalCentigrams: searchTotal)
+    }
+
+    private var searchSelectionBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(RenewalStrings.format("renewal_favorite_selected_summary", search.selected.count,
+                                       searchTotal.map { ProteinInput.format(centigrams: $0, decimalSeparator: model.decimalSeparator) }
+                                       ?? RenewalStrings.text("renewal_total_error")))
+                .font(.subheadline).monospacedDigit()
+                .accessibilityIdentifier("renewal.search.summary")
+            Button { addSearchSelected() } label: {
+                Text(RenewalStrings.format("renewal_search_add_count", search.selected.count)).font(.headline)
+            }
+            .buttonStyle(RenewalPrimaryButtonStyle())
+            .disabled(!canAddSearch)
+            .accessibilityIdentifier("renewal.search.addSelected")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, RenewalTheme.pageInset)
+        .padding(.vertical, 12)
+        .background(RenewalTheme.canvas)
+    }
+
+    /// Writes the confirmed snapshot (name, verified protein, reference
+    /// amount) with the session's record IDs; no provider is consulted again.
+    private func addSearchSelected() {
+        guard canAddSearch else { return }
+        let batch = search.selections
+        model.addSearchRecords(day: target.day, selections: batch) { result in
+            switch result {
+            case .success:
+                dismiss()
+            case .failure(.unconfirmed(let operationID)):
+                sessionOperation = .searchBatch
+                saveUnconfirmed = true
+                showError(.unconfirmed(operationID: operationID))
+            case .failure(let failure):
+                showError(failure)
+            }
+        }
     }
 
     // MARK: Manual tab
@@ -488,6 +693,11 @@ struct AddSheet: View {
         case .stay:
             // A confirmed delete may have removed a selected favorite.
             pruneStaleSelections()
+            // A confirmed language change takes effect now: results and
+            // selection of the old language are dropped, the draft stays.
+            // A confirmed history write or delete changes nothing here: no
+            // re-search, no second write.
+            if sessionOperation == .searchLanguage { search.applyLanguage(model.searchLanguage.resolved) }
         }
         sessionOperation = nil
     }
@@ -537,6 +747,14 @@ struct AddSheet: View {
         case .discardEdit:
             guard !locked else { return }
             editing = nil
+        case .discardSearch(let reason):
+            // Agreeing drops the selection only through the action itself: a
+            // language change keeps it until the new language is confirmed.
+            DispatchQueue.main.async { performSearchAction(reason) }
+        case .deleteSearchTerm(let term):
+            DispatchQueue.main.async { performDeleteRecent(term) }
+        case .copyNameToManual(let name):
+            copyNameToManual(name)
         }
     }
 }
@@ -571,6 +789,9 @@ enum AddSheetPromptText {
         case .switchTab: return RenewalStrings.text("renewal_switch_tab_title")
         case .discardSelection: return RenewalStrings.text("renewal_favorite_discard_selection_title")
         case .deleteFavorite: return RenewalStrings.text("renewal_favorite_delete_title")
+        case .discardSearch: return RenewalStrings.text("renewal_search_discard_title")
+        case .deleteSearchTerm: return RenewalStrings.text("renewal_search_delete_recent_title")
+        case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_title")
         }
     }
 
@@ -585,6 +806,19 @@ enum AddSheetPromptText {
             let amount = ProteinInput.format(centigrams: favorite.proteinCentigrams, decimalSeparator: decimalSeparator)
             return AddSheet.displayName(favorite) + " · " + amount + " g\n"
                 + RenewalStrings.text("renewal_favorite_delete_message")
+        case .discardSearch(let reason):
+            switch reason {
+            case .newSearch(let query):
+                return RenewalStrings.text(SearchSessionModel.normalized(query) == nil
+                                           ? "renewal_search_discard_clear_message" : "renewal_search_discard_new_message")
+            case .recentSearch: return RenewalStrings.text("renewal_search_discard_recent_message")
+            case .languageChange: return RenewalStrings.text("renewal_search_discard_language_message")
+            }
+        case .deleteSearchTerm(let term):
+            // The stored term, shown as the list shows it.
+            let label = SearchSessionModel.normalized(term.value) ?? RenewalStrings.text("renewal_search_recent_blank")
+            return RenewalStrings.format("renewal_search_delete_recent_message", label)
+        case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_message")
         }
     }
 
@@ -593,7 +827,8 @@ enum AddSheetPromptText {
         case .discard, .discardEdit: return RenewalStrings.text("renewal_discard_keep")
         case .pendingClose: return RenewalStrings.text("renewal_pending_close_stay")
         case .switchTab: return RenewalStrings.text("renewal_switch_tab_stay")
-        case .discardSelection, .deleteFavorite: return RenewalStrings.text("renewal_cancel")
+        case .discardSelection, .deleteFavorite, .discardSearch, .deleteSearchTerm, .copyNameToManual:
+            return RenewalStrings.text("renewal_cancel")
         }
     }
 
@@ -604,6 +839,9 @@ enum AddSheetPromptText {
         case .switchTab: return RenewalStrings.text("renewal_switch_tab_confirm")
         case .discardSelection: return RenewalStrings.text("renewal_favorite_discard_selection_confirm")
         case .deleteFavorite: return RenewalStrings.text("renewal_favorite_delete_confirm")
+        case .discardSearch: return RenewalStrings.text("renewal_search_discard_confirm")
+        case .deleteSearchTerm: return RenewalStrings.text("renewal_search_delete_recent_confirm")
+        case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_confirm")
         }
     }
 

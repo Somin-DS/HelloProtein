@@ -122,6 +122,18 @@
 		A60000000000000000000017 /* AddSheetPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000007 /* AddSheetPolicy.swift */; };
 		A60000000000000000000027 /* AddSheetPolicy.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000007 /* AddSheetPolicy.swift */; };
 		A60000000000000000000028 /* AddSheetPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000008 /* AddSheetPolicyTests.swift */; };
+		A60000000000000000000019 /* FoodSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000009 /* FoodSearchProvider.swift */; };
+		A60000000000000000000029 /* FoodSearchProvider.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000009 /* FoodSearchProvider.swift */; };
+		A6000000000000000000001A /* CatalogJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000A /* CatalogJSON.swift */; };
+		A6000000000000000000002A /* CatalogJSON.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000A /* CatalogJSON.swift */; };
+		A6000000000000000000001B /* EnglishCatalogProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000B /* EnglishCatalogProvider.swift */; };
+		A6000000000000000000002B /* EnglishCatalogProvider.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000B /* EnglishCatalogProvider.swift */; };
+		A6000000000000000000001C /* SearchSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000C /* SearchSessionModel.swift */; };
+		A6000000000000000000002C /* SearchSessionModel.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000C /* SearchSessionModel.swift */; };
+		A6000000000000000000001D /* SearchTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000D /* SearchTab.swift */; };
+		A6000000000000000000002D /* SearchTab.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000D /* SearchTab.swift */; };
+		A6000000000000000000002E /* SearchSessionModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000E /* SearchSessionModelTests.swift */; };
+		A6000000000000000000002F /* EnglishCatalogProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6000000000000000000000F /* EnglishCatalogProviderTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -209,6 +221,13 @@
 		A60000000000000000000006 /* AddSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheet.swift; sourceTree = "<group>"; };
 		A60000000000000000000007 /* AddSheetPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheetPolicy.swift; sourceTree = "<group>"; };
 		A60000000000000000000008 /* AddSheetPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheetPolicyTests.swift; sourceTree = "<group>"; };
+		A60000000000000000000009 /* FoodSearchProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FoodSearchProvider.swift; path = Search/FoodSearchProvider.swift; sourceTree = "<group>"; };
+		A6000000000000000000000A /* CatalogJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CatalogJSON.swift; path = Search/CatalogJSON.swift; sourceTree = "<group>"; };
+		A6000000000000000000000B /* EnglishCatalogProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EnglishCatalogProvider.swift; path = Search/EnglishCatalogProvider.swift; sourceTree = "<group>"; };
+		A6000000000000000000000C /* SearchSessionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchSessionModel.swift; path = Search/SearchSessionModel.swift; sourceTree = "<group>"; };
+		A6000000000000000000000D /* SearchTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SearchTab.swift; path = Search/SearchTab.swift; sourceTree = "<group>"; };
+		A6000000000000000000000E /* SearchSessionModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSessionModelTests.swift; sourceTree = "<group>"; };
+		A6000000000000000000000F /* EnglishCatalogProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishCatalogProviderTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -268,6 +287,8 @@
 				A40000000000000000000003 /* RenewalLaunchPolicyTests.swift */,
 				A60000000000000000000003 /* EditorDismissPolicyTests.swift */,
 				A60000000000000000000008 /* AddSheetPolicyTests.swift */,
+				A6000000000000000000000E /* SearchSessionModelTests.swift */,
+				A6000000000000000000000F /* EnglishCatalogProviderTests.swift */,
 				A60000000000000000000004 /* RecoveryViewControllerTests.swift */,
 				A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */,
 			);
@@ -284,6 +305,11 @@
 				A60000000000000000000005 /* GoalEditorSheet.swift */,
 				A60000000000000000000006 /* AddSheet.swift */,
 				A60000000000000000000007 /* AddSheetPolicy.swift */,
+				A60000000000000000000009 /* FoodSearchProvider.swift */,
+				A6000000000000000000000A /* CatalogJSON.swift */,
+				A6000000000000000000000B /* EnglishCatalogProvider.swift */,
+				A6000000000000000000000C /* SearchSessionModel.swift */,
+				A6000000000000000000000D /* SearchTab.swift */,
 				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
 				A30000000000000000000008 /* RenewalStrings.swift */,
                 A50000000000000000000006 /* GoalProgressPresentation.swift */,
@@ -590,6 +616,13 @@
 				A60000000000000000000026 /* AddSheet.swift in Test Sources */,
 				A60000000000000000000027 /* AddSheetPolicy.swift in Test Sources */,
 				A60000000000000000000028 /* AddSheetPolicyTests.swift in Sources */,
+				A60000000000000000000029 /* FoodSearchProvider.swift in Test Sources */,
+				A6000000000000000000002A /* CatalogJSON.swift in Test Sources */,
+				A6000000000000000000002B /* EnglishCatalogProvider.swift in Test Sources */,
+				A6000000000000000000002C /* SearchSessionModel.swift in Test Sources */,
+				A6000000000000000000002D /* SearchTab.swift in Test Sources */,
+				A6000000000000000000002E /* SearchSessionModelTests.swift in Sources */,
+				A6000000000000000000002F /* EnglishCatalogProviderTests.swift in Sources */,
 				A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */,
 				A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */,
                 A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
@@ -637,6 +670,11 @@
 				A60000000000000000000015 /* GoalEditorSheet.swift in Sources */,
 				A60000000000000000000016 /* AddSheet.swift in Sources */,
 				A60000000000000000000017 /* AddSheetPolicy.swift in Sources */,
+				A60000000000000000000019 /* FoodSearchProvider.swift in Sources */,
+				A6000000000000000000001A /* CatalogJSON.swift in Sources */,
+				A6000000000000000000001B /* EnglishCatalogProvider.swift in Sources */,
+				A6000000000000000000001C /* SearchSessionModel.swift in Sources */,
+				A6000000000000000000001D /* SearchTab.swift in Sources */,
 				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,
 				37F3B8682755FFAB00641C80 /* Date.swift in Sources */,
 				3752AD84274FD853001C5079 /* SearchViewController.swift in Sources */,

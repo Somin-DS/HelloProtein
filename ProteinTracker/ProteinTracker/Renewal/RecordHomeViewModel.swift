@@ -54,6 +54,12 @@ final class RecordHomeViewModel: ObservableObject {
         case favoriteBatch
         case favoriteEdit
         case favoriteDelete
+        /// N records from search results.
+        case searchBatch
+        /// An executed search term recorded in the recent-searches list.
+        case searchHistory
+        case searchHistoryDelete
+        case searchLanguage
         case goal
         case legacyTotal
         /// Left blocked by a commit from before this screen existed.
@@ -88,6 +94,10 @@ final class RecordHomeViewModel: ObservableObject {
     @Published private(set) var goalReview = GoalReview(needsReview: false, raw: nil)
     /// Favorites in display (position) order, from the last confirmed state.
     @Published private(set) var favorites: [FavoriteFood] = []
+    /// Recent searches in display (position) order, from the last confirmed state.
+    @Published private(set) var searchHistory: [SearchTerm] = []
+    /// The confirmed food-search language setting (raw value kept as stored).
+    @Published private(set) var searchLanguage: SearchLanguageSetting = .interpret(raw: nil)
 
     struct GoalReview: Equatable {
         let needsReview: Bool
@@ -293,6 +303,57 @@ final class RecordHomeViewModel: ObservableObject {
         }
     }
 
+    // MARK: Search
+
+    /// Adds one record per selected search result to `day` in a single
+    /// commit, with the verified reference quantity each result showed. The
+    /// snapshot the user confirmed is written as is; no provider is consulted
+    /// again. Record IDs come from the selections, so a retry never adds twice.
+    func addSearchRecords(day: CalendarDay, selections: [SearchSelection],
+                          completion: @escaping (Result<Void, ActionError>) -> Void) {
+        perform(day: day, kind: .searchBatch, completion: completion) { state in
+            let records = try SearchRecordBatch.records(for: selections, on: day)
+            var log = try state.log(for: day) ?? DailyLog(day: day)
+            for record in records { try log.add(record) }
+            try state.upsert(log)
+        }
+    }
+
+    /// Records an explicitly executed search in the recent-searches list: an
+    /// exact (trimmed) match moves to the front keeping its identity, otherwise
+    /// a new entry with `newID` is inserted. `newID` is fixed by the caller for
+    /// the attempt and its retries. A blank query is refused without a write.
+    func recordSearchTerm(query: String, newID: String, completion: @escaping (Result<Void, ActionError>) -> Void) {
+        guard SearchHistoryCollection.normalizedQuery(query) != nil else { return completion(.failure(.input(.empty))) }
+        perform(day: selectedDay, kind: .searchHistory, completion: completion) { state in
+            do { try state.setSearchHistory(SearchHistoryCollection.recording(query: query, newID: newID, in: state.searchHistory)) }
+            catch SearchHistoryError.blankQuery { throw ActionError.input(.empty) }
+            catch let error as SearchHistoryError { throw ActionError.integrity(String(describing: error)) }
+        }
+    }
+
+    /// Removes exactly that recent search. Nothing else changes.
+    func deleteSearchTerm(id: String, completion: @escaping (Result<Void, ActionError>) -> Void) {
+        perform(day: selectedDay, kind: .searchHistoryDelete, completion: completion) { state in
+            do { try state.setSearchHistory(SearchHistoryCollection.removing(id: id, from: state.searchHistory)) }
+            catch SearchHistoryError.notFound { throw ActionError.notFound }
+        }
+    }
+
+    /// Stores the food-search language as the raw value `interpret` reads
+    /// back. Selecting the language that is already confirmed is a no-op
+    /// without a write; a fallback setting (unknown raw value) is replaced
+    /// only by this explicit choice, never corrected by a read.
+    func setSearchLanguage(_ language: SearchLanguage, completion: @escaping (Result<Void, ActionError>) -> Void) {
+        if let pending = pendingSave { return completion(.failure(.unconfirmed(operationID: pending.operationID))) }
+        guard !isBusy else { return completion(.failure(.busy)) }
+        let current = state.settings.searchLanguage
+        if !current.isFallback, current.resolved == language { return completion(.success(())) }
+        perform(day: selectedDay, kind: .searchLanguage, completion: completion) { state in
+            state.settings.searchLanguage = .confirmed(language)
+        }
+    }
+
     // MARK: Goal
 
     /// The goal in effect on `day` from the last confirmed state, or nil when
@@ -390,6 +451,8 @@ final class RecordHomeViewModel: ObservableObject {
                 result = .failure(.storage(String(describing: error)))
             } catch let error as ProteinInputError {
                 result = .failure(.input(error))
+            } catch let error as SearchBatchError {
+                result = .failure(Self.actionError(for: error))
             } catch let error as FavoriteBatchError {
                 let actionError = Self.actionError(for: error)
                 if actionError == .selectionChanged {
@@ -441,6 +504,16 @@ final class RecordHomeViewModel: ObservableObject {
         }
     }
 
+    /// A search selection that can no longer be logged is the user's to
+    /// re-check; the rest are programming errors.
+    private static func actionError(for error: SearchBatchError) -> ActionError {
+        switch error {
+        case .invalidAmount: return .selectionChanged
+        case .arithmeticOverflow: return .input(.overflow)
+        case .emptySelection, .duplicateSelection, .duplicateRecordID: return .integrity(String(describing: error))
+        }
+    }
+
     private func refresh() {
         log = state.log(for: selectedDay) ?? ((try? DailyLog(day: selectedDay)) ?? log)
         totalCentigrams = try? log.totalProteinCentigrams()
@@ -448,6 +521,8 @@ final class RecordHomeViewModel: ObservableObject {
         goals = state.goals
         goalReview = GoalReview(needsReview: state.settings.goalNeedsReview, raw: state.settings.legacyTargetRaw)
         favorites = FavoriteCollection.ordered(state.favorites)
+        searchHistory = SearchHistoryCollection.ordered(state.searchHistory)
+        searchLanguage = state.settings.searchLanguage
     }
 
     static func goalState(for day: CalendarDay, in state: AppState) -> GoalState {

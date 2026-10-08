@@ -1,0 +1,42 @@
+[
+ {
+  "index": 0,
+  "Food": "Butter, salted",
+  "Protein": 0.85
+ },
+ {
+  "index": 1,
+  "Food": "Butter, whipped, with salt",
+  "Protein": 0.49
+ },
+ {
+  "index": 2,
+  "Food": "Butter oil, anhydrous",
+  "Protein": 0.28
+ },
+ {
+  "index": 4,
+  "Food": "Cheese, brick",
+  "Protein": 23.24
+ },
+ {
+  "index": 5,
+  "Food": "Cheese, brie",
+  "Protein": 20.75
+ },
+ {
+  "index": 941,
+  "Food": "Celeriac, raw",
+  "Protein": 1.5
+ },
+ {
+  "index": 1458,
+  "Food": "Veal, leg (top round), separable lean and fat, cooked, braised",
+  "Protein": 36.16
+ },
+ {
+  "index": 2331,
+  "Food": "Vitamin D as ingredient",
+  "Protein": 0
+ }
+]

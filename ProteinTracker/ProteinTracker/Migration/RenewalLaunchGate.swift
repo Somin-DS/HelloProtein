@@ -28,6 +28,9 @@ final class RenewalLaunchGate {
     /// jumps one day ahead `n` seconds after launch, which is how a midnight
     /// crossing inside an open sheet is reproduced deterministically.
     static let advanceDayArgument = "-HelloProteinAdvanceDayAfterSeconds"
+    /// `-HelloProteinSearchFailOnce network|localData|timeout|service`: the
+    /// first food lookup after launch fails that way; later ones are real.
+    static let searchFailArgument = "-HelloProteinSearchFailOnce"
     private let saveOutcomeStore: SaveOutcomeInjectingStore?
     private let launchedAt = Date()
     #endif
@@ -41,6 +44,19 @@ final class RenewalLaunchGate {
         }
         #endif
         return Date.init
+    }
+
+    /// Food lookup per language for the record screen. Real providers in
+    /// Release; DEBUG may wrap the first request in a simulated failure.
+    var searchProviderFactory: (SearchLanguage) -> FoodSearchProvider {
+        #if DEBUG
+        if let failure = RenewalLaunchPolicy.value(of: Self.searchFailArgument, in: arguments)
+            .flatMap(FailingOnceSearchProvider.Failure.init(rawValue:)) {
+            let wrapper = FailingOnceSearchProvider(inner: SearchProviderFactory.make(for: .english), failure: failure)
+            return { language in language == .english ? wrapper : SearchProviderFactory.make(for: language) }
+        }
+        #endif
+        return { SearchProviderFactory.make(for: $0) }
     }
 
     /// The store handed to the record screen. In Release this is the verified
