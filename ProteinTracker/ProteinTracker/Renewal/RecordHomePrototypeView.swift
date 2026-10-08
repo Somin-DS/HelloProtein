@@ -11,9 +11,13 @@ struct RecordHomeView: View {
     @State private var showingDatePicker = false
     @State private var homeError: RecordHomeViewModel.ActionError?
     @Environment(\.scenePhase) private var scenePhase
+    /// Food lookup per confirmed language; injected so UI runs can use doubles.
+    private let makeSearchProvider: (SearchLanguage) -> FoodSearchProvider
 
-    init(model: RecordHomeViewModel) {
+    init(model: RecordHomeViewModel,
+         makeSearchProvider: @escaping (SearchLanguage) -> FoodSearchProvider = { SearchProviderFactory.make(for: $0) }) {
         _model = StateObject(wrappedValue: model)
+        self.makeSearchProvider = makeSearchProvider
     }
 
     var body: some View {
@@ -72,7 +76,7 @@ struct RecordHomeView: View {
             }
             .actionErrorAlert($homeError)
             .sheet(item: $addTarget) { target in
-                AddSheet(target: target, model: model)
+                AddSheet(target: target, model: model, makeSearchProvider: makeSearchProvider)
             }
             .sheet(item: $editorTarget) { target in
                 RecordEditorSheet(target: target, model: model)
@@ -283,6 +287,13 @@ private struct RecordEditorSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
+                        if let quantity = target.record.quantity {
+                            // The stored reference amount is shown, kept by the
+                            // save, and never presented as a verified value of
+                            // whatever the user types below.
+                            Text(QuantityText.reference(quantity)).font(.footnote).foregroundColor(RenewalTheme.secondary)
+                                .accessibilityIdentifier("renewal.edit.reference")
+                        }
                         // Input is locked while a save is running or unconfirmed:
                         // the reconfirm decides about the values that were sent,
                         // so an edit typed in the meantime would be lost with the

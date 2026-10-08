@@ -29,13 +29,13 @@ final class RecordHomeViewModelTests: XCTestCase {
         XCTAssertEqual(GoalProgressPresentation(total: 1, goal: 0).fraction, 0)
     }
 
-    private var directory: URL!
-    private var storeURL: URL { directory.appendingPathComponent("app-state.json") }
-    private let queue = DispatchQueue(label: "vm-tests")
-    private let seoul = TimeZone(identifier: "Asia/Seoul")!
-    private let now = Date(timeIntervalSince1970: 1_790_638_200) // 2026-09-28T23:30Z → 09-29 in Seoul
+    fileprivate var directory: URL!
+    fileprivate var storeURL: URL { directory.appendingPathComponent("app-state.json") }
+    fileprivate let queue = DispatchQueue(label: "vm-tests")
+    fileprivate let seoul = TimeZone(identifier: "Asia/Seoul")!
+    fileprivate let now = Date(timeIntervalSince1970: 1_790_638_200) // 2026-09-28T23:30Z → 09-29 in Seoul
     /// What the model's injected clock returns; tests move it past midnight.
-    private var clock: Date!
+    fileprivate var clock: Date!
 
     override func setUpWithError() throws {
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("VMTests-\(UUID().uuidString)")
@@ -48,7 +48,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
-    private func seededState() throws -> AppState {
+    fileprivate func seededState() throws -> AppState {
         let legacyDay = try CalendarDay(iso8601: "2026-09-20")
         let log = try DailyLog(day: legacyDay, legacyAdjustmentCentigrams: 7_000, legacyAggregate: LegacyAggregate(
             sourceID: "legacy:stat:1", importedTotalCentigrams: 7_000, importedDetailSumCentigrams: 0,
@@ -64,7 +64,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         )
     }
 
-    private func makeModel(writer: StoreFileWriter = DefaultStoreFileWriter(),
+    fileprivate func makeModel(writer: StoreFileWriter = DefaultStoreFileWriter(),
                            hooks: StoreCommitHooks = StoreCommitHooks(),
                            state: AppState? = nil) throws -> (RecordHomeViewModel, FileAppStateStore) {
         let state = try state ?? seededState()
@@ -73,13 +73,13 @@ final class RecordHomeViewModelTests: XCTestCase {
         return (makeModel(store: store, state: state), store)
     }
 
-    private func makeModel(store: AppStateStore, state: AppState) -> RecordHomeViewModel {
+    fileprivate func makeModel(store: AppStateStore, state: AppState) -> RecordHomeViewModel {
         RecordHomeViewModel(store: store, state: state, now: { self.clock }, timeZone: seoul,
                             decimalSeparator: ".", workQueue: queue, mainQueue: queue)
     }
 
     /// Fires the final read-back failure exactly once by revoking read access right after the rename.
-    private func unreadableAfterFirstReplace() -> StoreCommitHooks {
+    fileprivate func unreadableAfterFirstReplace() -> StoreCommitHooks {
         let url = storeURL
         var armed = true
         return StoreCommitHooks { stage in
@@ -90,7 +90,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         }
     }
 
-    private func restoreStoreAccess() throws {
+    fileprivate func restoreStoreAccess() throws {
         try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: storeURL.path)
     }
 
@@ -105,7 +105,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         }
     }
 
-    private func wait(_ body: (@escaping (Result<Void, RecordHomeViewModel.ActionError>) -> Void) -> Void) -> Outcome {
+    fileprivate func wait(_ body: (@escaping (Result<Void, RecordHomeViewModel.ActionError>) -> Void) -> Void) -> Outcome {
         let expectation = expectation(description: "action")
         var captured: Outcome!
         body { result in captured = Outcome(result); expectation.fulfill() }
@@ -113,7 +113,7 @@ final class RecordHomeViewModelTests: XCTestCase {
         return captured
     }
 
-    private func sync<T>(_ body: @escaping () -> T) -> T { queue.sync(execute: body) }
+    fileprivate func sync<T>(_ body: @escaping () -> T) -> T { queue.sync(execute: body) }
 
     func testTodayComesFromInjectedClockAndZone() throws {
         let (model, _) = try makeModel()
@@ -983,6 +983,175 @@ final class RecordHomeViewModelTests: XCTestCase {
         sync { model.select(day) }
         XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r1"], "the batch had landed")
         XCTAssertEqual(sync { model.favorites.count }, 3, "nothing else was written while blocked")
+    }
+}
+
+@available(iOS 15.0, *)
+extension RecordHomeViewModelTests {
+    private func searchState(language raw: String? = "Korean(한글)") throws -> AppState {
+        let base = try seededState()
+        return try AppState(
+            logs: base.logs, favorites: base.favorites,
+            searchHistory: [SearchTerm(id: "legacy:search:b", value: "milk", position: 1, legacySourceID: "b"),
+                            SearchTerm(id: "legacy:search:a", value: "egg", position: 0, legacySourceID: "a"),
+                            SearchTerm(id: "legacy:search:c", value: " Egg ", position: 5, legacySourceID: "c"),
+                            SearchTerm(id: "legacy:search:d", value: "", position: 3, legacySourceID: "d")],
+            settings: AppSettings(searchLanguage: .interpret(raw: raw), legacyTargetRaw: "120", goalNeedsReview: false),
+            goals: base.goals, migration: base.migration)
+    }
+
+    private func searchSelection(_ key: String, record: String, name: String, centigrams: Int64) throws -> SearchSelection {
+        SearchSelection(itemKey: key, recordID: record, name: name, proteinCentigrams: centigrams,
+                        quantity: try FoodQuantity(value: "100", unit: .gram))
+    }
+
+    func testSearchHistoryAndLanguageAreMirroredFromTheConfirmedState() throws {
+        let (model, _) = try makeModel(state: searchState())
+        XCTAssertEqual(sync { model.searchHistory.map(\.id) }, ["legacy:search:a", "legacy:search:b", "legacy:search:d", "legacy:search:c"])
+        XCTAssertEqual(sync { model.searchHistory.map(\.value) }, ["egg", "milk", "", " Egg "], "verbatim, including blank and untrimmed")
+        XCTAssertEqual(sync { model.searchLanguage }, .confirmed(.korean))
+        let (fallback, _) = try makeModel(state: searchState(language: "english"))
+        XCTAssertEqual(sync { fallback.searchLanguage }, SearchLanguageSetting(raw: "english", resolved: .english, isFallback: true), "an unknown raw value is kept, not corrected")
+    }
+
+    func testRecordingASearchTermMovesTheFirstMatchOrInsertsAndABlankQueryWritesNothing() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        XCTAssertEqual(wait { model.recordSearchTerm(query: "   ", newID: "n", completion: $0) }, .failed(.input(.empty)))
+        XCTAssertEqual(store.modifyCalls, 0)
+        XCTAssertEqual(wait { model.recordSearchTerm(query: " milk ", newID: "unused", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.searchHistory.map(\.id) }, ["legacy:search:b", "legacy:search:a", "legacy:search:d", "legacy:search:c"])
+        XCTAssertEqual(sync { model.searchHistory.map(\.position) }, [0, 1, 2, 3])
+        XCTAssertEqual(sync { model.searchHistory.first?.legacySourceID }, "b")
+        XCTAssertEqual(wait { model.recordSearchTerm(query: " tofu", newID: "new", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.searchHistory.first.map { [$0.id, $0.value] } }, ["new", "tofu"])
+        XCTAssertEqual(sync { model.searchHistory.count }, 5, "no duplicate is merged or dropped")
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().searchHistory.count, 5)
+        XCTAssertEqual(sync { model.favorites }, FavoriteCollection.ordered(state.favorites))
+        XCTAssertEqual(sync { model.state.logs }, state.logs, "history writes never touch logs or favorites")
+    }
+
+    func testDeletingASearchTermRemovesExactlyThatIDAndReportsAMissingOne() throws {
+        let (model, _) = try makeModel(state: searchState())
+        XCTAssertEqual(wait { model.deleteSearchTerm(id: "legacy:search:d", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.searchHistory.map(\.id) }, ["legacy:search:a", "legacy:search:b", "legacy:search:c"])
+        XCTAssertEqual(sync { model.searchHistory.map(\.position) }, [0, 1, 5], "no renumbering on delete")
+        XCTAssertEqual(wait { model.deleteSearchTerm(id: "legacy:search:d", completion: $0) }, .failed(.notFound))
+    }
+
+    func testLanguageChangeWritesOnlyWhenNeededAndKeepsTheRestOfTheState() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        XCTAssertEqual(wait { model.setSearchLanguage(.korean, completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 0, "the confirmed language is a no-op")
+        XCTAssertEqual(wait { model.setSearchLanguage(.english, completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        XCTAssertEqual(sync { model.searchLanguage }, .confirmed(.english))
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load()
+        XCTAssertEqual(reloaded.settings.searchLanguage.raw, "English(영어)")
+        XCTAssertEqual(reloaded.settings.legacyTargetRaw, "120")
+        XCTAssertEqual(reloaded.searchHistory, state.searchHistory)
+
+        // A fallback raw value is replaced by an explicit pick, even of the resolved language.
+        let fallbackState = try searchState(language: "english")
+        let fallbackStore = FileAppStateStore(fileURL: storeURL)
+        try fallbackStore.commit(fallbackState)
+        let fallback = makeModel(store: CountingStore(inner: fallbackStore), state: fallbackState)
+        XCTAssertEqual(wait { fallback.setSearchLanguage(.english, completion: $0) }, .ok)
+        XCTAssertEqual(try fallbackStore.load().settings.searchLanguage, .confirmed(.english))
+    }
+
+    func testSearchBatchAddsEveryRecordWithItsReferenceAmountToTheFixedDayOrNothing() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try searchSelection("en|v|1", record: "r1", name: "Cheese, brie", centigrams: 2_075)
+        let b = try searchSelection("en|v|2", record: "r2", name: "Butter, salted", centigrams: 85)
+        sync { model.select(try! CalendarDay(iso8601: "2026-09-29")) }
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [b, a], completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        sync { model.select(day) }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r2", "r1"])
+        XCTAssertEqual(sync { model.log.records.map(\.source) }, [.search, .search])
+        XCTAssertEqual(sync { model.log.records.map(\.quantity?.value) }, ["100", "100"])
+        XCTAssertEqual(sync { model.log.records.map(\.quantity?.unit) }, [.gram, .gram])
+        XCTAssertEqual(sync { model.totalCentigrams }, 7_000 + 85 + 2_075, "the legacy adjustment is kept")
+
+        let bad = try searchSelection("en|v|3", record: "r3", name: "Zero", centigrams: 0)
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [a, bad], completion: $0) }, .failed(.selectionChanged))
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [a, a], completion: $0) }, .failed(.integrity(String(describing: SearchBatchError.duplicateSelection("en|v|1")))))
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [], completion: $0) }, .failed(.integrity(String(describing: SearchBatchError.emptySelection))))
+        let huge = try searchSelection("en|v|9", record: "r9", name: "Huge", centigrams: .max)
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [huge, a], completion: $0) }, .failed(.input(.overflow)))
+        XCTAssertEqual(sync { model.log.records.count }, 2, "0 rows on every refusal")
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 2)
+
+        // Editing a search record keeps its quantity and source.
+        XCTAssertEqual(wait { model.updateRecord(day: day, id: "r1", name: "Brie", proteinText: "21", completion: $0) }, .ok)
+        let edited = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        XCTAssertEqual(edited.quantity?.value, "100")
+        XCTAssertEqual(edited.source, .search)
+        XCTAssertEqual(edited.protein.centigrams, 2_100)
+    }
+
+    func testSearchWritesCarryTheirKindAndRetryWithTheSameIDsAfterNotApplied() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try searchSelection("en|v|1", record: "r1", name: "Brie", centigrams: 2_075)
+
+        let batchStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let batch = makeModel(store: batchStore, state: state)
+        guard case .failed(.unconfirmed) = wait({ batch.addSearchRecords(day: day, selections: [a], completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { batch.pendingSave?.kind }, .searchBatch)
+        XCTAssertEqual(wait { batch.recordSearchTerm(query: "x", newID: "n", completion: $0) }, .failed(.unconfirmed(operationID: sync { batch.pendingSave?.operationID })))
+        XCTAssertEqual(wait { batch.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertEqual(wait { batch.addSearchRecords(day: day, selections: [a], completion: $0) }, .ok)
+        sync { batch.select(day) }
+        XCTAssertEqual(sync { batch.log.records.map(\.id) }, ["r1"], "exactly once with the session's ID")
+
+        let historyStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let history = makeModel(store: historyStore, state: try historyStore.load())
+        guard case .failed(.unconfirmed) = wait({ history.recordSearchTerm(query: "tofu", newID: "new", completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { history.pendingSave?.kind }, .searchHistory)
+        XCTAssertEqual(wait { history.reconfirm(completion: $0) }, .failed(.notApplied))
+        XCTAssertNil(sync { history.searchHistory.first { $0.id == "new" } }, "not applied, not revived by the reconfirm")
+        XCTAssertEqual(wait { history.recordSearchTerm(query: "tofu", newID: "new", completion: $0) }, .ok, "an explicit retry may reuse the attempt's ID")
+
+        let deleteStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .notApplied)
+        let delete = makeModel(store: deleteStore, state: try deleteStore.load())
+        guard case .failed(.unconfirmed) = wait({ delete.deleteSearchTerm(id: "legacy:search:a", completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { delete.pendingSave?.kind }, .searchHistoryDelete)
+
+        let languageStore = SaveOutcomeInjectingStore(inner: FileAppStateStore(fileURL: storeURL), mode: .readFailure)
+        let language = makeModel(store: languageStore, state: try languageStore.load())
+        guard case .failed(.unconfirmed) = wait({ language.setSearchLanguage(.english, completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(sync { language.pendingSave?.kind }, .searchLanguage)
+        XCTAssertEqual(sync { language.searchLanguage }, .confirmed(.korean), "the screen keeps the confirmed language until the read succeeds")
+        guard case .failed(.reconfirmFailed) = wait({ language.reconfirm(completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(wait { language.reconfirm(completion: $0) }, .ok)
+        XCTAssertEqual(sync { language.searchLanguage }, .confirmed(.english))
+    }
+
+    func testRealReplaceFailureOnASearchBatchBlocksSearchWritesUntilTheReadSucceeds() throws {
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace(), state: searchState())
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let a = try searchSelection("en|v|1", record: "r1", name: "Brie", centigrams: 2_075)
+        guard case .failed(.unconfirmed(let pendingID)) = wait({ model.addSearchRecords(day: day, selections: [a], completion: $0) }) else { return XCTFail() }
+        XCTAssertEqual(wait { model.setSearchLanguage(.english, completion: $0) }, .failed(.unconfirmed(operationID: pendingID)))
+        XCTAssertEqual(wait { model.deleteSearchTerm(id: "legacy:search:a", completion: $0) }, .failed(.unconfirmed(operationID: pendingID)))
+        guard case .failed(.reconfirmFailed) = wait({ model.reconfirm(completion: $0) }) else { return XCTFail() }
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok)
+        sync { model.select(day) }
+        XCTAssertEqual(sync { model.log.records.map(\.id) }, ["r1"], "the batch had landed")
+        XCTAssertEqual(sync { model.searchHistory.count }, 4, "nothing else was written while blocked")
     }
 }
 

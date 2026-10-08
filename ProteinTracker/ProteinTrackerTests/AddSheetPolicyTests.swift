@@ -64,6 +64,10 @@ final class AddSheetPolicyTests: XCTestCase {
     func testConfirmedPendingOutcomeDependsOnTheOperation() {
         XCTAssertEqual(AddSheetPolicy.afterConfirmed(.record), .close)
         XCTAssertEqual(AddSheetPolicy.afterConfirmed(.favoriteBatch), .close)
+        XCTAssertEqual(AddSheetPolicy.afterConfirmed(.searchBatch), .close)
+        XCTAssertEqual(AddSheetPolicy.afterConfirmed(.searchHistory), .stay, "no re-search, no second write")
+        XCTAssertEqual(AddSheetPolicy.afterConfirmed(.searchHistoryDelete), .stay)
+        XCTAssertEqual(AddSheetPolicy.afterConfirmed(.searchLanguage), .stay)
         XCTAssertEqual(AddSheetPolicy.afterConfirmed(.favoriteEdit), .leaveEdit)
         XCTAssertEqual(AddSheetPolicy.afterConfirmed(.favoriteDelete), .stay)
         XCTAssertEqual(AddSheetPolicy.afterConfirmed(.unknown), .stay)
@@ -72,8 +76,37 @@ final class AddSheetPolicyTests: XCTestCase {
 
     func testPromptIdentitiesAreDistinct() throws {
         let favorite = try FavoriteFood(id: "x", name: "X", proteinCentigrams: 1, position: 0)
-        let prompts: [AddSheetPrompt] = [.discard, .pendingClose, .switchTab(.manual), .switchTab(.favorites),
-                                         .discardSelection(favoriteID: "x"), .deleteFavorite(favorite), .discardEdit]
+        let term = try SearchTerm(id: "t", value: "egg", position: 0)
+        let prompts: [AddSheetPrompt] = [.discard, .pendingClose, .switchTab(.manual), .switchTab(.search), .switchTab(.favorites),
+                                         .discardSelection(favoriteID: "x"), .deleteFavorite(favorite), .discardEdit,
+                                         .discardSearch(.newSearch("egg")), .discardSearch(.recentSearch(term)),
+                                         .discardSearch(.languageChange(.english)), .discardSearch(.languageChange(.korean)),
+                                         .deleteSearchTerm(term), .copyNameToManual(name: "Brie")]
         XCTAssertEqual(Set(prompts.map(\.id)).count, prompts.count)
+    }
+
+    func testSearchTabIsDirtyOnlyWithASelectionAndSearchActionsAskOnlyThen() {
+        XCTAssertFalse(AddSheetPolicy.isSearchDirty(selectionCount: 0), "typed text, results and the recent list are not a draft")
+        XCTAssertTrue(AddSheetPolicy.isSearchDirty(selectionCount: 1))
+        XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: true, hasPendingSave: false, selectionCount: 0), .blocked)
+        XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: false, hasPendingSave: true, selectionCount: 0), .blocked)
+        XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: false, hasPendingSave: false, selectionCount: 2), .confirm)
+        XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: false, hasPendingSave: false, selectionCount: 0), .switchNow)
+    }
+
+    func testLanguagePickWritesOnlyWhenItChangesSomething() {
+        XCTAssertFalse(AddSheetPolicy.languageChangeIsNeeded(current: .confirmed(.korean), picked: .korean))
+        XCTAssertTrue(AddSheetPolicy.languageChangeIsNeeded(current: .confirmed(.korean), picked: .english))
+        XCTAssertTrue(AddSheetPolicy.languageChangeIsNeeded(current: .interpret(raw: "english"), picked: .english), "a fallback is replaced by the explicit pick")
+        XCTAssertTrue(AddSheetPolicy.languageChangeIsNeeded(current: .interpret(raw: nil), picked: .english))
+    }
+
+    func testCopyingANameToManualEntryCarriesOnlyTheName() {
+        let draft = AddSheetPolicy.manualDraft(copyingName: "Cheese, brie")
+        XCTAssertEqual(draft.name, "Cheese, brie")
+        XCTAssertEqual(draft.protein, "")
+        XCTAssertFalse(draft.saveAsFavorite)
+        XCTAssertTrue(AddSheetPolicy.isManualDirty(initial: ["", ""], current: [draft.name, draft.protein],
+                                                   initialFavorite: false, currentFavorite: draft.saveAsFavorite))
     }
 }
