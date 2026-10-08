@@ -31,14 +31,14 @@ final class EnglishCatalogProviderTests: XCTestCase {
     func testBundledCatalogMatchesThePinnedEditionSoRowIDsStayStable() throws {
         let data = try Data(contentsOf: catalogURL)
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-        XCTAssertEqual(digest, "cd856775ea108b0a450d7d317427495692b0c57fbe6467f8ec0a2901a4f863b4",
+        XCTAssertEqual(digest, "d6a04da54c50f21d9a14d65af4f53f9e0a8048ab24f33fe59b87f9fbdba92d0e",
                        "Protein-En.json changed: bump EnglishCatalogProvider.catalogVersion and re-verify the edition")
         let rows = try load()
         XCTAssertEqual(rows.count, 2_332)
-        XCTAssertEqual(EnglishCatalogProvider.catalogVersion, "protein-en.2332.1")
-        XCTAssertEqual(rows.first, .init(index: 0, name: "Butter, salted", rawProtein: "0.85"))
-        XCTAssertEqual(rows[5], .init(index: 5, name: "Cheese, brie", rawProtein: "20.75"))
-        XCTAssertEqual(rows.last, .init(index: 2_331, name: "Vitamin D as ingredient", rawProtein: "0"))
+        XCTAssertEqual(EnglishCatalogProvider.catalogVersion, "protein-en.2332.2")
+        XCTAssertEqual(rows.first, .init(index: 0, name: "Butter, salted", rawProtein: "0.85", verifiedFDCID: "173410"))
+        XCTAssertEqual(rows[5], .init(index: 5, name: "Cheese, brie", rawProtein: "20.75", verifiedFDCID: "172177"))
+        XCTAssertEqual(rows.last?.name, "Vitamin D as ingredient")
         XCTAssertEqual(rows.filter { $0.rawProtein == "0" }.count, 144)
         XCTAssertEqual(Set(rows.map(\.name)).count, rows.count, "names are unique in this edition")
     }
@@ -53,35 +53,53 @@ final class EnglishCatalogProviderTests: XCTestCase {
         XCTAssertEqual(item.proteinCentigrams, 2_324)
         XCTAssertFalse(item.rounded)
         XCTAssertEqual(item.reference?.quantity, try FoodQuantity(value: "100", unit: .gram))
-        XCTAssertEqual(item.id, "usda-sr-legacy-local|protein-en.2332.1|\(brick.index)")
+        XCTAssertEqual(item.id, "usda-sr-legacy-local|protein-en.2332.2|\(brick.index)")
         XCTAssertTrue(item.isSelectable)
         XCTAssertEqual(item.sourceKey, "renewal_search_source_usda")
 
         // Every row converts without an error; only zero rows are unavailable.
         for row in rows {
             let converted = EnglishCatalogProvider.item(row)
-            XCTAssertTrue(converted.unavailability == nil || converted.unavailability == .zeroProtein, "\(row.name) \(row.rawProtein)")
-            XCTAssertEqual(converted.isSelectable, row.rawProtein != "0", row.name)
+            XCTAssertTrue(converted.unavailability == nil || converted.unavailability == .zeroProtein || converted.unavailability == .unknownReference)
+            XCTAssertEqual(converted.isSelectable, row.verifiedFDCID != nil && row.rawProtein != "0", row.name)
         }
     }
 
     func testRowConversionReportsRoundingZeroAndInvalidValuesWithoutFixingThem() {
-        let rounded = EnglishCatalogProvider.item(.init(index: 1, name: "x", rawProtein: "1.005"))
+        let rounded = EnglishCatalogProvider.item(.init(index: 1, name: "x", rawProtein: "1.005", verifiedFDCID: "fixture"))
         XCTAssertEqual(rounded.proteinCentigrams, 101)
         XCTAssertTrue(rounded.rounded)
-        let tiny = EnglishCatalogProvider.item(.init(index: 2, name: "y", rawProtein: "0.004"))
+        let tiny = EnglishCatalogProvider.item(.init(index: 2, name: "y", rawProtein: "0.004", verifiedFDCID: "fixture"))
         XCTAssertNil(tiny.proteinCentigrams)
         XCTAssertEqual(tiny.unavailability, .zeroProtein)
         XCTAssertFalse(tiny.isSelectable)
-        let exponent = EnglishCatalogProvider.item(.init(index: 3, name: "z", rawProtein: "1e2"))
+        let exponent = EnglishCatalogProvider.item(.init(index: 3, name: "z", rawProtein: "1e2", verifiedFDCID: "fixture"))
         XCTAssertEqual(exponent.unavailability, .invalidProtein)
         XCTAssertEqual(exponent.rawProtein, "1e2", "shown verbatim")
-        let negative = EnglishCatalogProvider.item(.init(index: 4, name: "n", rawProtein: "-2"))
+        let negative = EnglishCatalogProvider.item(.init(index: 4, name: "n", rawProtein: "-2", verifiedFDCID: "fixture"))
         XCTAssertEqual(negative.unavailability, .negativeProtein)
         XCTAssertFalse(negative.isSelectable)
-        let huge = EnglishCatalogProvider.item(.init(index: 5, name: "h", rawProtein: "99999999999999999999"))
+        let huge = EnglishCatalogProvider.item(.init(index: 5, name: "h", rawProtein: "99999999999999999999", verifiedFDCID: "fixture"))
         XCTAssertEqual(huge.unavailability, .proteinOutOfRange)
         XCTAssertFalse(huge.isSelectable)
+    }
+
+    func testUnverifiedRowsNeverReceiveAReferenceOrUSDAAttribution() throws {
+        let rows = try load()
+        XCTAssertEqual(rows.filter { $0.verifiedFDCID != nil }.count, 2196)
+        XCTAssertEqual(rows.filter { $0.verifiedFDCID == nil }.count, 136)
+        for row in rows where row.verifiedFDCID == nil {
+            let item = EnglishCatalogProvider.item(row)
+            XCTAssertFalse(item.isSelectable)
+            XCTAssertNil(item.reference)
+            XCTAssertEqual(item.unavailability, .unknownReference)
+            XCTAssertEqual(item.sourceKey, "renewal_search_source_unverified")
+        }
+        // A known value mismatch and a missing name must not silently become 100 g records.
+        XCTAssertNil(EnglishCatalogProvider.item(rows[7]).reference)
+        XCTAssertNil(EnglishCatalogProvider.item(rows[318]).reference)
+        let missingMetadata = try EnglishCatalogProvider.parse(Data(#"[{"Food":"Unknown","Protein":23}]"#.utf8))
+        XCTAssertFalse(EnglishCatalogProvider.item(missingMetadata[0]).isSelectable)
     }
 
     // MARK: Filtering

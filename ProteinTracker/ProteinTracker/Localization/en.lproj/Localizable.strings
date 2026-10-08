@@ -302,3 +302,5 @@
 "renewal_unit_milliliter" = "ml";
 "renewal_unit_serving" = "serving";
 "renewal_unit_piece" = "piece";
+
+"renewal_search_source_unverified" = "Legacy catalog · source not verified";

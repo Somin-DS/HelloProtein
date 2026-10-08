@@ -6,7 +6,7 @@
 
 | 공급자 | 결론 |
 | --- | --- |
-| 영어 로컬 카탈로그 `Assets/Protein-En.json` | **검증 완료.** USDA FoodData Central의 SR Legacy(2018-04 최종판) 단백질(g, 100 g 가식부 기준) 부분집합으로 확인. CC0 1.0(공공 영역). 앱에서 자동 추가 허용(`FoodQuantity("100", .gram)`). |
+| 영어 로컬 카탈로그 `Assets/Protein-En.json` | **후속 전체 대조로 정정.** 2,196행은 공식 SR Legacy CSV와 이름·단백질 값이 정확히 일치. 34행 값 불일치, 102행 이름 미대응. 정확히 일치한 행만 100 g 기준을 부여하며 나머지는 자동 추가 불가. [전체 대조](../2026-10-08-search-correction/README.md). |
 | 한국어 식약처 `I2790`(레거시 코드가 쓰던 서비스) | **사용 불가.** 공개 샘플 호출이 `ERROR-310 해당하는 서비스를 찾을 수 없습니다`를 돌려준다. 정보 페이지 자체가 `식품영양성분DB(~2023)`로 종료 표기. 게다가 단백질 필드는 100 g이 아니라 **1회제공량당**이었다. |
 | 한국어 후속 후보 공공데이터포털 15127578 | **미검증.** 이 환경에서 `www.data.go.kr`가 연결 시간 초과(40 s)로 열리지 않아 공식 계약(파라미터·필드·페이지·오류코드)을 읽지 못했다. 계정·키 발급이 필요하므로 사용자 결정 사항이다. |
 
@@ -23,7 +23,7 @@
 | 기준량 | SR-Legacy 문서 PDF `https://www.ars.usda.gov/ARSUserFiles/80400525/Data/SR-Legacy/SR-Legacy_Doc.pdf` Nutrient Data 파일 정의: `Nutr_Val N 10.3 N Amount in 100 g, edible portion`. 7,793 품목, SR28(2015) 기반 최종판(“This is the last release of the database in its current format”). | 2026-10-07 |
 | 이용·재배포 | API 가이드 `https://fdc.nal.usda.gov/api-guide/`: 데이터는 “CC0 1.0 Universal (CC0 1.0)”, “in the public domain and they are not copyrighted”. | 2026-10-07 |
 | 출처 표기 | API 가이드 제안 인용 “U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, 2019. fdc.nal.usda.gov.” SR-Legacy PDF 제안 인용 “US Department of Agriculture (USDA), Agricultural Research Service, Nutrient Data Laboratory. USDA National Nutrient Database for Standard Reference, Legacy. Version Current: April 2018.” 앱 결과 행에는 `renewal_search_source_usda`(“USDA FoodData Central, SR Legacy”)를 표시. | 2026-10-07 |
-| 식별자 | 파일에는 NDB 번호·fdcId가 없다. 로컬 항목 ID는 `usda-sr-legacy-local|protein-en.2332.1|<행 위치>`로 만든다(`EnglishCatalogProvider.catalogVersion`). 파일 교체 시 버전을 올려야 하며 `EnglishCatalogProviderTests`가 SHA·행 수·버전을 고정한다. 이름만으로 다른 데이터셋과 합치지 않는다. | 2026-10-07 |
+| 식별자 | 파일에는 NDB 번호·fdcId가 없다. 로컬 항목 ID는 `usda-sr-legacy-local|protein-en.2332.2|<행 위치>`로 만든다(`EnglishCatalogProvider.catalogVersion`). 파일 교체 시 버전을 올려야 하며 `EnglishCatalogProviderTests`가 SHA·행 수·버전을 고정한다. 이름만으로 다른 데이터셋과 합치지 않는다. | 2026-10-07 |
 
 ### 행 대응 대조 (API `DEMO_KEY`, `https://api.nal.usda.gov/fdc/v1/foods/search?dataType=SR%20Legacy`)
 
@@ -41,7 +41,7 @@
 ### 앱 처리 규칙(구현 반영)
 
 - 숫자는 텍스트로 유지해 Decimal 자리수로 변환(`CatalogJSON`, `ProteinGramsText`). 3번째 소수 자리에서 half-up: `1.005 → 101 cg`(반올림 안내 표시), `0.004 → 0`(선택 불가).
-- 0 g 144행은 보이되 선택 불가(`zeroProtein`), 지수·음수·숫자 아님은 `invalidProtein`로 구분 표시. 기준량은 모든 행이 100 g이므로 `unknownReference`는 이 공급자에서 생기지 않는다.
+- 0 g 144행은 보이되 선택 불가(`zeroProtein`), 지수·음수·숫자 아님은 `invalidProtein`로 구분 표시. 후속 수정에서 원본 대조에 실패한 136행은 `unknownReference`로 자동 추가를 차단한다.
 - 저장 시 `FoodRecord(source: .search, quantity: FoodQuantity("100", .gram))`. 공급자 ID는 `legacySourceID`에 넣지 않는다.
 - 필터: trim 후 대소문자·발음부호 무시 부분 일치, 파일 순서 유지, 빈 검색어는 결과 없음(최근 검색 표시). 페이지 없음(`nextPage == nil`).
 
@@ -79,7 +79,11 @@
 | 한국어 오류 | [fixtures/i2790-sample-error-310.json](fixtures/i2790-sample-error-310.json) |
 | 한국어 정상·0건·페이지 끝 | **없음** — 서비스 응답을 받을 수 없어 계약 테스트를 만들지 않았다. |
 
+## 후속 정정
+
+2026-10-08 공식 CSV 전체 대조로 위 표본 검증의 한계를 해결했다. 기존 파일 전체를 SR Legacy 부분집합이라고 단정한 결론은 철회한다. 원문은 유지하고 정확 일치 2,196행에만 VerifiedFDCID를 추가했다. 기존 SHA는 메타데이터 추가 전 파일의 값이다. 최신 SHA·재현 절차·불일치 목록은 [수정 증거](../2026-10-08-search-correction/README.md)와 보고서를 따른다.
+
 ## 미해결
 
-- 소수 2자리 정확 일치: FDC API는 1자리만 제공하므로(상세 엔드포인트 2026-10-08 01:25Z 확인) SR-Legacy 원본 배포본 대조가 남아 있다. 대조한 4건은 반올림 수준에서 모두 일치했다.
+- 원본 대조 결과 136행의 현재 값 또는 출처는 여전히 미확인이다. 기존 값은 보존하고 자동 기록은 차단한다.
 - 한국어 후속 공급자 계약: 위 선택지 표 참조. 결정 전까지 한국어 검색은 ‘사용 불가’ 상태다.

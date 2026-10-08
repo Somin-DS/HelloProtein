@@ -1,21 +1,23 @@
 import Foundation
 import HelloProteinCore
 
-/// The bundled English catalog: a subset of USDA FoodData Central "SR Legacy"
-/// (protein in grams per 100 g, public domain). Rows are identified by the
+/// The legacy English catalog, with per-row exact-match attestations against
+/// the official USDA SR Legacy archive. Only attested rows use its 100 g reference.
+/// Rows are identified by the
 /// catalog version and their fixed position in the file; the version must
 /// change whenever the file is replaced (`EnglishCatalogProviderTests` pins
 /// the file's digest and row count to this constant).
 final class EnglishCatalogProvider: FoodSearchProvider {
     static let identifier = "usda-sr-legacy-local"
     /// Bumped together with the file. "2332" is the row count of this edition.
-    static let catalogVersion = "protein-en.2332.1"
+    static let catalogVersion = "protein-en.2332.2"
     static let resourceName = "Protein-En"
 
     struct Row: Equatable {
         let index: Int
         let name: String
         let rawProtein: String
+        var verifiedFDCID: String? = nil
     }
 
     let providerID: String = EnglishCatalogProvider.identifier
@@ -52,13 +54,13 @@ final class EnglishCatalogProvider: FoodSearchProvider {
         catch { return .failure(.localData(String(describing: error))) }
     }
 
-    /// `[{"Food": String, "Protein": Number}]`, nothing else is accepted.
+    /// Food and Protein are required; VerifiedFDCID is optional verification metadata.
     static func parse(_ data: Data) throws -> [Row] {
         guard let items = try CatalogJSON.parse(data).arrayValue else { throw CatalogJSON.ParseError(offset: 0, reason: "top level is not an array") }
         return try items.enumerated().map { index, item in
             guard let name = item["Food"]?.stringValue else { throw CatalogJSON.ParseError(offset: index, reason: "row \(index) has no Food string") }
             guard case .number(let protein)? = item["Protein"] else { throw CatalogJSON.ParseError(offset: index, reason: "row \(index) has no Protein number") }
-            return Row(index: index, name: name, rawProtein: protein)
+            return Row(index: index, name: name, rawProtein: protein, verifiedFDCID: item["VerifiedFDCID"]?.stringValue)
         }
     }
 
@@ -109,9 +111,15 @@ final class EnglishCatalogProvider: FoodSearchProvider {
         } catch {
             unavailability = .invalidProtein
         }
+        // Only exact name/value matches against the pinned official archive
+        // have a verified reference. Unmatched legacy values stay visible.
+        let verified = row.verifiedFDCID?.isEmpty == false
+        if !verified { unavailability = .unknownReference }
         return SearchResultItem(providerID: identifier, dataVersion: catalogVersion, itemID: String(row.index),
                                 name: row.name, rawProtein: row.rawProtein, proteinCentigrams: centigrams, rounded: rounded,
-                                reference: per100g, sourceKey: "renewal_search_source_usda", unavailability: unavailability)
+                                reference: verified ? per100g : nil,
+                                sourceKey: verified ? "renewal_search_source_usda" : "renewal_search_source_unverified",
+                                unavailability: unavailability)
     }
 }
 

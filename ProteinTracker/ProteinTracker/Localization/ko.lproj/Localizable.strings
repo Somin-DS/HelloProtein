@@ -300,3 +300,5 @@
 "renewal_unit_milliliter" = "ml";
 "renewal_unit_serving" = "인분";
 "renewal_unit_piece" = "개";
+
+"renewal_search_source_unverified" = "기존 카탈로그 · 출처 미확인";
