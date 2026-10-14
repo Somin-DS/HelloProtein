@@ -168,3 +168,6 @@ PR #8은 `6d61319`로 main에 병합됐다. 리뷰 후속 `60a013e`는 즐겨찾
 
 브랜치 `feat/renewal-quantity-q1`에서 Q1을 구현했다. 정확한 비례 계산기(`PortionCalculation`, Double 없음, 최종 1회 half-up), 섭취량 입력 파서(9/3자리), `FoodRecord.calculationBasis`와 기록 불변식, schema 3 승격(원본 schema 2 바이트 백업·SHA-256·별도 승격 증거·중단 재개)을 추가했고 기존 기록은 basis nil로 보존한다. Core 87·MigrationCore 82·앱 123 테스트 통과, Debug/Release 빌드 성공, 시뮬레이터 2대의 실제 schema 2 파일을 승격해 전후 내용이 schemaVersion만 다름을 확인했다. [Q1 증거](evidence/2026-10-14-quantity-statistics/README.md). Q2 섭취량 화면과 S1 통계는 미착수이며 이번 업데이트 전체는 아직 완료가 아니다. 실기기 설치·머지는 수행하지 않았다.
 
+### 2026-10-14 Q2 섭취량 화면과 세션 구현
+
+브랜치 `feat/renewal-quantity-q2`(Q1 위)에서 Q2를 구현했다. 검색 결과의 선택 행에 ‘섭취량 변경’ 버튼과 시트 내부 편집 화면(기준·먹은 양·기록될 단백질, 적용은 세션 초안만 변경), 행별 수량 초안과 stale 적용 거부, 일괄 추가 시 basis와 적용 수량을 가진 기록 저장, 홈의 basis 기록 편집기(먹은 양 재계산, 명시적 ‘단백질 직접 수정’ 전환), 기존 basis 없는 기록의 편집 유지. 앱 테스트 131 통과·0 실패, Release 빌드 성공, SE/17 UI 하네스 4종 통과. [증거](evidence/2026-10-14-quantity-statistics/README.md). S1 통계와 통합 시나리오는 미착수이며 이번 업데이트 전체는 아직 완료가 아니다. 실기기 설치·머지는 수행하지 않았다.
