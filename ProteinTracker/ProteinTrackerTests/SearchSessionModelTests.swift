@@ -282,3 +282,140 @@ final class SearchSessionModelTests: XCTestCase {
         XCTAssertEqual(sync { session.queryDraft }, "")
     }
 }
+
+// MARK: - Amount drafts
+
+@available(iOS 15.0, *)
+final class SearchSessionAmountTests: XCTestCase {
+    private let queue = DispatchQueue(label: "search-amount-tests")
+    private var providers: [SearchLanguage: ScriptedSearchProvider] = [:]
+    private var idCounter = 0
+
+    /// 23 g per 100 g, exactly reproducible: rows get a basis.
+    private func item(_ id: String, name: String? = nil, raw: String = "23", centigrams: Int64? = 2_300, reference: String = "100") -> SearchResultItem {
+        SearchResultItem(providerID: "scripted", dataVersion: "v1", itemID: id, name: name ?? "Food \(id)", rawProtein: raw,
+                         proteinCentigrams: centigrams, rounded: false,
+                         reference: SearchReferenceAmount(quantity: try! FoodQuantity(value: reference, unit: .gram)),
+                         sourceKey: "renewal_search_source_usda", unavailability: nil)
+    }
+
+    private func makeSession() -> SearchSessionModel {
+        providers = [.english: ScriptedSearchProvider(providerID: "en"), .korean: ScriptedSearchProvider(providerID: "ko")]
+        let providers = self.providers
+        return SearchSessionModel(language: .english, makeProvider: { providers[$0]! }, mainQueue: queue,
+                                  makeID: { [unowned self] in self.idCounter += 1; return "rec-\(self.idCounter)" })
+    }
+
+    private func sync<T>(_ body: @escaping () -> T) -> T { queue.sync(execute: body) }
+    private func drain() { queue.sync {} }
+    private var en: ScriptedSearchProvider { providers[.english]! }
+
+    private func searched(_ session: SearchSessionModel, _ query: String, _ items: [SearchResultItem], next: SearchPageRequest? = nil) {
+        sync { session.execute(query: query, recordHistory: { _, proceed in proceed() }) }
+        drain()
+        en.requests.last!.deliver(.success(SearchResultPage(items: items, nextPage: next)))
+        drain()
+    }
+
+    private func grams(_ value: String) -> FoodQuantity { try! FoodQuantity(value: value, unit: .gram) }
+
+    func testAmountsApplyPerRowKeepOrderAndRecordIDsAndFollowTheRowsSelection() throws {
+        let session = makeSession()
+        searched(session, "egg", [item("1"), item("2", raw: "12.18", centigrams: 1_218), item("3", raw: "23", centigrams: 900)])
+        sync { session.toggle(session.results[1]); session.toggle(session.results[0]); session.toggle(session.results[2]) }
+        let before = sync { session.selections }
+        XCTAssertEqual(before.map(\.quantity.value), ["100", "100", "100"], "default: the reference amount")
+        XCTAssertEqual(before.map(\.proteinCentigrams), [1_218, 2_300, 900])
+        XCTAssertEqual(before.map { $0.basis != nil }, [true, true, false], "a row whose value the calculation would not reproduce has no basis")
+        XCTAssertNil(sync { session.amountEditTarget(for: session.results[2]) }, "no basis, no editor")
+
+        // Different amounts on two rows.
+        let target2 = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[1]) })
+        XCTAssertEqual(target2.current, grams("100"))
+        XCTAssertEqual(target2.recordID, "rec-1")
+        XCTAssertEqual(sync { session.applyAmount(self.grams("150"), for: target2) }, .applied)
+        let target1 = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[0]) })
+        XCTAssertEqual(sync { session.applyAmount(self.grams("0.5"), for: target1) }, .applied)
+        let after = sync { session.selections }
+        XCTAssertEqual(after.map(\.recordID), ["rec-1", "rec-2", "rec-3"], "order and IDs untouched")
+        XCTAssertEqual(after.map(\.quantity.value), ["150", "0.5", "100"])
+        XCTAssertEqual(after.map(\.proteinCentigrams), [1_827, 12, 900], "12.18 × 1.5 = 18.27; 23 × 0.005 = 0.115 → 0.12")
+        XCTAssertEqual(after[0].basis?.origin, .providerSnapshot)
+        XCTAssertEqual(sync { session.totalCentigrams }, 1_827 + 12 + 900)
+        XCTAssertEqual(sync { session.appliedAmount(for: session.results[1])?.centigrams }, 1_827)
+        XCTAssertNil(sync { session.appliedAmount(for: session.results[2]) })
+        XCTAssertEqual(sync { session.amountDrafts.count }, 2)
+        // Re-opening starts from the applied amount.
+        XCTAssertEqual(sync { session.amountEditTarget(for: session.results[1])?.current }, grams("150"))
+
+        // Deselecting drops the row's amount; re-selecting starts from the
+        // reference amount with the same record ID.
+        sync { session.toggle(session.results[1]) }
+        XCTAssertEqual(sync { session.amountDrafts.count }, 1)
+        sync { session.toggle(session.results[1]) }
+        XCTAssertEqual(sync { session.selections.map(\.recordID) }, ["rec-2", "rec-3", "rec-1"])
+        XCTAssertEqual(sync { session.selections.map(\.quantity.value) }, ["0.5", "100", "100"])
+        XCTAssertEqual(sync { session.selections.last?.proteinCentigrams }, 1_218)
+
+        // A typed query changes nothing; a new search clears amounts with the selection.
+        sync { session.queryDraft = "milk" }
+        XCTAssertEqual(sync { session.amountDrafts.count }, 1)
+        searched(session, "milk", [item("1")])
+        XCTAssertTrue(sync { session.amountDrafts.isEmpty })
+        XCTAssertTrue(sync { session.selected.isEmpty })
+    }
+
+    func testApplyRefusesAStaleTargetWithoutChangingAnything() throws {
+        let session = makeSession()
+        let next = SearchPageRequest(startIndex: 2, endIndex: 3)
+        searched(session, "egg", [item("1"), item("2")], next: next)
+        sync { session.toggle(session.results[0]); session.toggle(session.results[1]) }
+        let target1 = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[0]) })
+        let target2 = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[1]) })
+
+        // An amount the basis cannot turn into a record is refused.
+        XCTAssertEqual(sync { session.applyAmount(self.grams("0.01"), for: target1) }, .selectionChanged)
+        XCTAssertEqual(sync { session.applyAmount(try! FoodQuantity(value: "150", unit: .milliliter), for: target1) }, .selectionChanged, "unit mismatch")
+        XCTAssertTrue(sync { session.amountDrafts.isEmpty })
+
+        // The row changed on a later page: its selection was dropped and
+        // the old editor target no longer applies.
+        sync { session.loadMore() }
+        drain()
+        en.requests[1].deliver(.success(SearchResultPage(items: [item("1", name: "Renamed")], nextPage: nil)))
+        drain()
+        XCTAssertEqual(sync { session.droppedSelectionIDs }, ["scripted|v1|1"])
+        XCTAssertEqual(sync { session.applyAmount(self.grams("150"), for: target1) }, .selectionChanged)
+        XCTAssertNil(sync { session.amountEditTarget(for: target1.item) }, "the shown row is not the snapshot any more")
+        XCTAssertEqual(sync { session.applyAmount(self.grams("150"), for: target2) }, .applied, "the untouched row still applies")
+
+        // Deselected meanwhile.
+        sync { session.toggle(session.results[1]) }
+        XCTAssertEqual(sync { session.applyAmount(self.grams("200"), for: target2) }, .selectionChanged)
+        XCTAssertTrue(sync { session.amountDrafts.isEmpty })
+
+        // A new generation (new search, language change, leaving) invalidates every target.
+        sync { session.toggle(session.results[1]) }
+        let target2b = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[1]) })
+        XCTAssertEqual(target2b.current, grams("100"), "re-selection starts from the reference amount again")
+        sync { session.applyLanguage(.korean) }
+        XCTAssertEqual(sync { session.applyAmount(self.grams("150"), for: target2b) }, .selectionChanged)
+        XCTAssertTrue(sync { session.selected.isEmpty })
+    }
+
+    func testFinalSaveFreezesAppliedAmountsAgainstLatePages() throws {
+        let session = makeSession()
+        searched(session, "egg", [item("1")], next: SearchPageRequest(startIndex: 1, endIndex: 2))
+        sync { session.toggle(session.results[0]) }
+        let target = try XCTUnwrap(sync { session.amountEditTarget(for: session.results[0]) })
+        XCTAssertEqual(sync { session.applyAmount(self.grams("150"), for: target) }, .applied)
+        sync { session.loadMore() }
+        let batch = sync { session.selections }
+        sync { session.cancelPagesKeepingResults() }
+        en.requests[1].deliver(.success(SearchResultPage(items: [item("1", raw: "30", centigrams: 3_000)], nextPage: nil)))
+        drain()
+        XCTAssertEqual(sync { session.selections }, batch, "the frozen batch keeps amount and basis")
+        XCTAssertEqual(batch.first?.quantity.value, "150")
+        XCTAssertEqual(batch.first?.proteinCentigrams, 3_450)
+    }
+}

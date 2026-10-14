@@ -51,6 +51,8 @@ enum AddSheetPrompt: Equatable, Identifiable {
     /// Copy a result's name into manual entry (unknown reference amount),
     /// dropping the search selection.
     case copyNameToManual(name: String)
+    /// Leave the amount editor with a changed, unapplied amount.
+    case discardAmountEdit
 
     var id: String {
         switch self {
@@ -63,6 +65,7 @@ enum AddSheetPrompt: Equatable, Identifiable {
         case .discardSearch(let reason): return "discardSearch.\(reason.id)"
         case .deleteSearchTerm(let term): return "deleteSearchTerm.\(term.id)"
         case .copyNameToManual(let name): return "copyNameToManual.\(name)"
+        case .discardAmountEdit: return "discardAmountEdit"
         }
     }
 }
@@ -115,10 +118,18 @@ enum AddSheetPolicy {
         selectionCount > 0 || editorDirty
     }
 
-    /// The search tab is dirty only when results are selected. Typed query
-    /// text, shown results and an expanded recent list are not worth a prompt.
-    static func isSearchDirty(selectionCount: Int) -> Bool {
-        selectionCount > 0
+    /// The search tab is dirty when results are selected or an amount was
+    /// applied to one (an applied amount only exists for a selected row, but
+    /// it is named so the prompt covers it explicitly). Typed query text,
+    /// shown results and an expanded recent list are not worth a prompt.
+    static func isSearchDirty(selectionCount: Int, amountDraftCount: Int) -> Bool {
+        selectionCount > 0 || amountDraftCount > 0
+    }
+
+    /// Opening the amount editor for a selected row: never while a write is
+    /// running or unconfirmed, and only for a row that can be recalculated.
+    static func canEditAmount(locked: Bool, isSelected: Bool, hasBasis: Bool) -> Bool {
+        !locked && isSelected && hasBasis
     }
 
     /// Starting a new search, re-running a recent one or changing the
