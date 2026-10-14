@@ -36,6 +36,10 @@ final class SearchSessionModel: ObservableObject {
     @Published private(set) var pageError: SearchProviderError?
     /// IDs whose content changed between pages and were dropped from the selection.
     @Published private(set) var droppedSelectionIDs: [String] = []
+    /// Amounts applied per selected result (by result ID). Absent means the
+    /// row's reference amount. Dropped with the row's selection, with a new
+    /// generation and with the whole selection; never written anywhere.
+    @Published private(set) var amountDrafts: [String: FoodQuantity] = [:]
 
     private var snapshots: [String: SearchResultItem] = [:]
     /// Record IDs per result for the current generation; a re-selection
@@ -64,13 +68,30 @@ final class SearchSessionModel: ObservableObject {
 
     var hasSelection: Bool { !selected.isEmpty }
     var isSearching: Bool { status == .searching }
+    /// One selection per selected row in selection order. A row with a basis
+    /// carries it and the applied (or reference) amount with the protein
+    /// computed from the basis; a row without one is the verified snapshot
+    /// as shown, the old way.
     var selections: [SearchSelection] {
         selected.compactMap { id in
             guard let item = snapshots[id], let centigrams = item.proteinCentigrams, let reference = item.reference,
                   let recordID = recordIDs[id] else { return nil }
+            if let basis = item.calculationBasis {
+                let quantity = amountDrafts[id] ?? basis.referenceQuantity
+                guard let computed = try? basis.protein(for: quantity) else { return nil }
+                return SearchSelection(itemKey: id, recordID: recordID, name: item.name,
+                                       proteinCentigrams: computed.centigrams, quantity: quantity, basis: basis)
+            }
             return SearchSelection(itemKey: id, recordID: recordID, name: item.name,
                                    proteinCentigrams: centigrams, quantity: reference.quantity)
         }
+    }
+    /// The amount applied to a selected row and the protein it yields, or nil
+    /// when the row is at its reference amount (or has no basis).
+    func appliedAmount(for item: SearchResultItem) -> (quantity: FoodQuantity, centigrams: Int64)? {
+        guard let quantity = amountDrafts[item.id], let basis = snapshots[item.id]?.calculationBasis,
+              let computed = try? basis.protein(for: quantity) else { return nil }
+        return (quantity, computed.centigrams)
     }
     /// nil when the checked sum overflows.
     var totalCentigrams: Int64? { try? SearchRecordBatch.totalCentigrams(selections) }
@@ -123,6 +144,7 @@ final class SearchSessionModel: ObservableObject {
         recordIDs = [:]
         nextPage = nil
         droppedSelectionIDs = []
+        amountDrafts = [:]
     }
 
     private func request(query: String, generation current: Int) {
@@ -183,6 +205,7 @@ final class SearchSessionModel: ObservableObject {
                     if selected.contains(item.id) {
                         selected.removeAll { $0 == item.id }
                         snapshots[item.id] = nil
+                        amountDrafts[item.id] = nil
                         dropped.append(item.id)
                     }
                     // Show the new value only after discarding its old selection.
@@ -204,8 +227,11 @@ final class SearchSessionModel: ObservableObject {
     func toggle(_ item: SearchResultItem) {
         guard item.isSelectable else { return }
         if let index = selected.firstIndex(of: item.id) {
+            // Deselecting forgets the applied amount; a re-selection starts
+            // from the reference amount with the same record ID.
             selected.remove(at: index)
             snapshots[item.id] = nil
+            amountDrafts[item.id] = nil
         } else {
             if recordIDs[item.id] == nil { recordIDs[item.id] = makeID() }
             snapshots[item.id] = item
@@ -216,6 +242,50 @@ final class SearchSessionModel: ObservableObject {
     func clearSelection() {
         selected = []
         snapshots = [:]
+        amountDrafts = [:]
+    }
+
+    // MARK: Amount editing
+
+    /// What the amount editor was opened with: the exact row snapshot, its
+    /// basis, the session's record ID and the amount to start from. Apply is
+    /// checked against all of it, so a changed row never receives an old amount.
+    struct AmountEditTarget: Equatable, Identifiable {
+        let item: SearchResultItem
+        let basis: CalculationBasis
+        let recordID: String
+        /// The applied amount, or the reference amount when none was applied.
+        let current: FoodQuantity
+        let generation: Int
+        var id: String { item.id }
+    }
+
+    enum AmountApplyOutcome: Equatable {
+        case applied
+        /// The row is no longer selected, or its snapshot or the search
+        /// generation changed meanwhile. Nothing was changed; re-select.
+        case selectionChanged
+    }
+
+    /// nil when the row is not selected as this very snapshot or has no basis.
+    func amountEditTarget(for item: SearchResultItem) -> AmountEditTarget? {
+        guard selected.contains(item.id), let snapshot = snapshots[item.id], snapshot == item,
+              let basis = snapshot.calculationBasis, let recordID = recordIDs[item.id] else { return nil }
+        return AmountEditTarget(item: snapshot, basis: basis, recordID: recordID,
+                                current: amountDrafts[item.id] ?? basis.referenceQuantity, generation: generation)
+    }
+
+    /// Stores `quantity` for the row the editor was opened for, provided the
+    /// row is still selected with the same snapshot, record ID and search
+    /// generation and the basis can compute it. Selection order and record
+    /// ID are untouched. The amount is the session's draft only; no write.
+    func applyAmount(_ quantity: FoodQuantity, for target: AmountEditTarget) -> AmountApplyOutcome {
+        guard target.generation == generation, selected.contains(target.id), snapshots[target.id] == target.item,
+              recordIDs[target.id] == target.recordID, snapshots[target.id]?.calculationBasis == target.basis,
+              quantity.unit == target.basis.referenceQuantity.unit,
+              (try? target.basis.protein(for: quantity)) != nil else { return .selectionChanged }
+        amountDrafts[target.id] = quantity
+        return .applied
     }
 
     /// Freeze the displayed snapshot while a language or record write runs.

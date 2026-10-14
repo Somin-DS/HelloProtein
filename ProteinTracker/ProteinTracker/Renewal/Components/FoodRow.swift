@@ -9,8 +9,12 @@ struct FoodRow: View {
 
     private var name: String { record.name ?? RenewalStrings.text("renewal_manual_entry") }
     private var amount: String { ProteinInput.format(centigrams: record.protein.centigrams, decimalSeparator: decimalSeparator) + " g" }
-    /// The stored reference amount, e.g. "per 100 g", for search records.
-    private var reference: String? { record.quantity.map(QuantityText.reference) }
+    /// For a record with a basis the stored quantity is the amount eaten;
+    /// for older search records it is the reference amount, e.g. "per 100 g".
+    private var reference: String? {
+        guard let quantity = record.quantity else { return nil }
+        return record.calculationBasis == nil ? QuantityText.reference(quantity) : PortionText.eaten(quantity)
+    }
 
     var body: some View {
         Group {

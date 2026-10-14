@@ -86,8 +86,13 @@ final class AddSheetPolicyTests: XCTestCase {
     }
 
     func testSearchTabIsDirtyOnlyWithASelectionAndSearchActionsAskOnlyThen() {
-        XCTAssertFalse(AddSheetPolicy.isSearchDirty(selectionCount: 0), "typed text, results and the recent list are not a draft")
-        XCTAssertTrue(AddSheetPolicy.isSearchDirty(selectionCount: 1))
+        XCTAssertFalse(AddSheetPolicy.isSearchDirty(selectionCount: 0, amountDraftCount: 0), "typed text, results and the recent list are not a draft")
+        XCTAssertTrue(AddSheetPolicy.isSearchDirty(selectionCount: 1, amountDraftCount: 0))
+        XCTAssertTrue(AddSheetPolicy.isSearchDirty(selectionCount: 0, amountDraftCount: 1), "an applied amount is a draft in its own right")
+        XCTAssertTrue(AddSheetPolicy.canEditAmount(locked: false, isSelected: true, hasBasis: true))
+        XCTAssertFalse(AddSheetPolicy.canEditAmount(locked: true, isSelected: true, hasBasis: true))
+        XCTAssertFalse(AddSheetPolicy.canEditAmount(locked: false, isSelected: false, hasBasis: true))
+        XCTAssertFalse(AddSheetPolicy.canEditAmount(locked: false, isSelected: true, hasBasis: false), "no basis, no amount editing")
         XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: true, hasPendingSave: false, selectionCount: 0), .blocked)
         XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: false, hasPendingSave: true, selectionCount: 0), .blocked)
         XCTAssertEqual(AddSheetPolicy.searchActionDecision(isBusy: false, hasPendingSave: false, selectionCount: 2), .confirm)
@@ -108,5 +113,72 @@ final class AddSheetPolicyTests: XCTestCase {
         XCTAssertFalse(draft.saveAsFavorite)
         XCTAssertTrue(AddSheetPolicy.isManualDirty(initial: ["", ""], current: [draft.name, draft.protein],
                                                    initialFavorite: false, currentFavorite: draft.saveAsFavorite))
+    }
+}
+
+@available(iOS 15.0, *)
+final class PortionEditorPolicyTests: XCTestCase {
+    private var per100g: FoodQuantity { try! FoodQuantity(value: "100", unit: .gram) }
+    private var basis: CalculationBasis {
+        try! CalculationBasis.providerSnapshot(proteinGramsText: "12.18", referenceQuantity: per100g,
+                                               providerID: "mfds", dataVersion: "2026-10", itemID: "D000001")
+    }
+
+    private func item(raw: String = "12.18", centigrams: Int64? = 1_218, reference: String? = "100",
+                      unavailability: SearchItemUnavailability? = nil) -> SearchResultItem {
+        SearchResultItem(providerID: "mfds", dataVersion: "2026-10", itemID: "D1", name: "Chicken", rawProtein: raw,
+                         proteinCentigrams: centigrams, rounded: false,
+                         reference: reference.map { SearchReferenceAmount(quantity: try! FoodQuantity(value: $0, unit: .gram)) },
+                         sourceKey: "renewal_search_source_mfds", unavailability: unavailability)
+    }
+
+    func testPreviewComputesFromTheBasisInTheUsersSeparatorAndNamesEveryError() throws {
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "150", decimalSeparator: "."),
+                       .valid(quantity: try FoodQuantity(value: "150", unit: .gram), centigrams: 1_827, rounded: false))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: " 150,5 ", decimalSeparator: ",").centigrams, 1_833, "150.5 → 18.3309 → 18.33")
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "150.5", decimalSeparator: ",").quantity?.value, "150.5", "a lone point is the decimal point in a comma locale")
+        if case .valid(_, _, let rounded) = PortionEditorPolicy.preview(basis: basis, amountText: "150.5", decimalSeparator: ".") {
+            XCTAssertTrue(rounded)
+        } else { XCTFail() }
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "", decimalSeparator: "."), .input(.empty))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "abc", decimalSeparator: "."), .input(.notANumber))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "1e3", decimalSeparator: "."), .input(.notANumber))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "0", decimalSeparator: "."), .input(.zero))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "-5", decimalSeparator: "."), .input(.negative))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "1 000", decimalSeparator: "."), .input(.groupingNotAllowed))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "1.5.5", decimalSeparator: "."), .input(.mixedSeparators))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "1234567890", decimalSeparator: "."), .input(.tooManyIntegerDigits))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "1.2345", decimalSeparator: "."), .input(.tooManyFractionDigits))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: basis, amountText: "0.01", decimalSeparator: "."), .calculation(.roundsToZero))
+        let huge = try CalculationBasis.userDefined(proteinGramsText: "999999999999999999", referenceQuantity: FoodQuantity(value: "1", unit: .gram))
+        XCTAssertEqual(PortionEditorPolicy.preview(basis: huge, amountText: "999999999", decimalSeparator: "."), .calculation(.overflow))
+        XCTAssertNil(PortionEditorPolicy.preview(basis: basis, amountText: "x", decimalSeparator: ".").centigrams, "no stale result for a bad input")
+    }
+
+    func testDirtyApplyAndTextHelpers() throws {
+        XCTAssertFalse(PortionEditorPolicy.isDirty(initial: "150", current: "150"))
+        XCTAssertTrue(PortionEditorPolicy.isDirty(initial: "150", current: "150 "), "exact text, like the other editors")
+        let valid = PortionEditorPolicy.preview(basis: basis, amountText: "150", decimalSeparator: ".")
+        XCTAssertTrue(PortionEditorPolicy.canApply(valid, locked: false))
+        XCTAssertFalse(PortionEditorPolicy.canApply(valid, locked: true))
+        XCTAssertFalse(PortionEditorPolicy.canApply(.input(.empty), locked: false))
+        XCTAssertEqual(PortionEditorPolicy.amountText(try FoodQuantity(value: "150.5", unit: .gram), decimalSeparator: ","), "150,5")
+        let raw = try CalculationBasis.userDefined(proteinGramsText: "1.005", referenceQuantity: per100g)
+        XCTAssertEqual(PortionEditorPolicy.basisProteinText(raw, decimalSeparator: ","), "1,005", "full stored precision, never 1.01")
+    }
+
+    func testResultRowsGetABasisOnlyWhenTheyCanBeRecalculatedExactly() throws {
+        let editable = try XCTUnwrap(item().calculationBasis)
+        XCTAssertEqual(editable.origin, .providerSnapshot)
+        XCTAssertEqual(editable.proteinGramsText, "12.18")
+        XCTAssertEqual(editable.provider?.itemID, "D1")
+        XCTAssertEqual(editable.referenceQuantity, per100g)
+        XCTAssertNotNil(item(raw: "1.005", centigrams: 101).calculationBasis, "the provider's half-up rounding is reproduced")
+        XCTAssertNil(item(raw: "12.18", centigrams: 1_219).calculationBasis, "a value the calculation would not reproduce gets no basis")
+        XCTAssertNil(item(reference: "0.0001").calculationBasis, "reference outside the amount editor's range")
+        XCTAssertNil(item(reference: "1234567890").calculationBasis)
+        XCTAssertNil(item(raw: "abc", centigrams: nil, unavailability: .invalidProtein).calculationBasis)
+        XCTAssertNil(item(reference: nil, unavailability: .unknownReference).calculationBasis)
+        XCTAssertNil(item(raw: "0.0000000001", centigrams: 0, unavailability: .zeroProtein).calculationBasis)
     }
 }

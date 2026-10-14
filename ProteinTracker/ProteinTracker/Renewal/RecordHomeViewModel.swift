@@ -44,6 +44,11 @@ final class RecordHomeViewModel: ObservableObject {
         /// its stored amount cannot be a record. Nothing was written; the
         /// user re-checks the selection.
         case selectionChanged
+        /// The amount eaten could not be read as a quantity. Nothing was written.
+        case amount(PortionInputError)
+        /// The amount is a valid number but the stored basis cannot turn it
+        /// into a record (rounds to zero, overflow). Nothing was written.
+        case calculation(PortionCalculationError)
     }
 
     /// What a write was for. The sheet that issued it decides what a
@@ -214,6 +219,9 @@ final class RecordHomeViewModel: ObservableObject {
         do { protein = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
         catch let error as ProteinInputError { return completion(.failure(.input(error))) }
         catch { return completion(.failure(.integrity(String(describing: error)))) }
+        if isNoOpEdit(day: day, id: id, favoriteID: favoriteID, { try $0.withChanges(name: .some(name), protein: protein) }) {
+            return completion(.success(.notRequested))
+        }
         var outcome = FavoriteOutcome.notRequested
         perform(day: day, kind: .record, completion: { completion($0.map { outcome }) }) { state in
             guard var log = state.log(for: day), let existing = log.record(id: id) else {
@@ -223,6 +231,102 @@ final class RecordHomeViewModel: ObservableObject {
             try state.upsert(log)
             outcome = try Self.saveFavorite(id: favoriteID, name: name, protein: protein, in: &state)
         }
+    }
+
+    /// Changes the amount eaten of a record with a basis (and its name); the
+    /// protein is recomputed from the stored basis, never from the previously
+    /// rounded value, so returning to an earlier amount gives the earlier
+    /// result. ID, day, source and basis stay. A record without a basis is
+    /// never offered this edit; asking anyway is an integrity failure.
+    func updateRecordAmount(day: CalendarDay, id: String, name: String?, amountText: String,
+                            favoriteID: String?, completion: @escaping (Result<FavoriteOutcome, ActionError>) -> Void) {
+        let decimal: PortionDecimal
+        do { decimal = try PortionInput.parseQuantity(amountText, decimalSeparator: decimalSeparator) }
+        catch let error as PortionInputError { return completion(.failure(.amount(error))) }
+        catch { return completion(.failure(.integrity(String(describing: error)))) }
+        if isNoOpEdit(day: day, id: id, favoriteID: favoriteID, { existing in
+            guard let basis = existing.calculationBasis else { throw RecordDomainError.quantityNotEditable }
+            return try existing.withQuantity(FoodQuantity(value: decimal.canonical, unit: basis.referenceQuantity.unit),
+                                             name: .some(name))
+        }) {
+            return completion(.success(.notRequested))
+        }
+        var outcome = FavoriteOutcome.notRequested
+        perform(day: day, kind: .record, completion: { completion($0.map { outcome }) }) { state in
+            guard var log = state.log(for: day), let existing = log.record(id: id) else {
+                throw ActionError.notFound
+            }
+            guard let basis = existing.calculationBasis else {
+                throw ActionError.integrity(String(describing: RecordDomainError.quantityNotEditable))
+            }
+            let quantity = try FoodQuantity(value: decimal.canonical, unit: basis.referenceQuantity.unit)
+            let updated: FoodRecord
+            do { updated = try existing.withQuantity(quantity, name: .some(name)) }
+            catch RecordDomainError.portion(let error) { throw ActionError.calculation(error) }
+            try log.update(updated)
+            try state.upsert(log)
+            outcome = try Self.saveFavorite(id: favoriteID, name: name, protein: updated.protein, in: &state)
+        }
+    }
+
+    /// The explicit "enter the protein yourself" edit of a record with a
+    /// basis: the stored amount is kept and becomes, with the entered
+    /// protein, a new user-defined basis; provider identifiers are dropped.
+    /// Later amount edits use that basis. The entered value must also fit
+    /// the basis text limits (18 significant digits), reported as overflow.
+    /// Entering the protein the record already has is not a decision to
+    /// replace its basis: the provider basis stays and only the name changes.
+    func updateRecordDirectProtein(day: CalendarDay, id: String, name: String?, proteinText: String,
+                                   favoriteID: String?, completion: @escaping (Result<FavoriteOutcome, ActionError>) -> Void) {
+        let protein: ProteinAmount
+        do { protein = try ProteinInput.parse(proteinText, decimalSeparator: decimalSeparator) }
+        catch let error as ProteinInputError { return completion(.failure(.input(error))) }
+        catch { return completion(.failure(.integrity(String(describing: error)))) }
+        if isNoOpEdit(day: day, id: id, favoriteID: favoriteID, { try Self.directProteinEdit($0, protein: protein, name: name) }) {
+            return completion(.success(.notRequested))
+        }
+        var outcome = FavoriteOutcome.notRequested
+        perform(day: day, kind: .record, completion: { completion($0.map { outcome }) }) { state in
+            guard var log = state.log(for: day), let existing = log.record(id: id) else {
+                throw ActionError.notFound
+            }
+            guard existing.calculationBasis != nil else {
+                throw ActionError.integrity(String(describing: RecordDomainError.quantityNotEditable))
+            }
+            let updated: FoodRecord
+            do { updated = try Self.directProteinEdit(existing, protein: protein, name: name) }
+            catch RecordDomainError.invalidBasis(let reason) {
+                // The only basis limit a parsed protein can break is the
+                // significant-digit limit of its text; anything else is a
+                // stored record that should not exist.
+                let digits = (try? PortionDecimal(canonical: ProteinInput.format(centigrams: protein.centigrams)))?
+                    .significantDigitCount ?? 0
+                if digits > CalculationBasisLimits.maxSignificantDigits { throw ActionError.input(.overflow) }
+                throw ActionError.integrity(reason)
+            }
+            try log.update(updated)
+            try state.upsert(log)
+            outcome = try Self.saveFavorite(id: favoriteID, name: name, protein: updated.protein, in: &state)
+        }
+    }
+
+    /// The record `updateRecordDirectProtein` writes: the same protein keeps
+    /// the basis (a name-only edit); a different one replaces it.
+    private static func directProteinEdit(_ existing: FoodRecord, protein: ProteinAmount, name: String?) throws -> FoodRecord {
+        if protein == existing.protein { return try existing.withChanges(name: .some(name)) }
+        return try existing.withDirectProtein(protein, name: .some(name))
+    }
+
+    /// A save whose result equals the stored record, with no favorite
+    /// requested, is reported as success without a commit: nothing changes
+    /// in the file and no operation ID is spent. Checked against the loaded
+    /// state; a record that cannot be found or edited here is left to the
+    /// real write, which reports the error.
+    private func isNoOpEdit(day: CalendarDay, id: String, favoriteID: String?,
+                            _ edit: (FoodRecord) throws -> FoodRecord) -> Bool {
+        guard favoriteID == nil, pendingSave == nil, !isBusy,
+              let existing = state.log(for: day)?.record(id: id), let updated = try? edit(existing) else { return false }
+        return updated == existing
     }
 
     /// The favorite half of a record save. The name is stored trimmed (empty
@@ -451,6 +555,8 @@ final class RecordHomeViewModel: ObservableObject {
                 result = .failure(.storage(String(describing: error)))
             } catch let error as ProteinInputError {
                 result = .failure(.input(error))
+            } catch RecordDomainError.portion(let error) {
+                result = .failure(.calculation(error))
             } catch let error as SearchBatchError {
                 result = .failure(Self.actionError(for: error))
             } catch let error as FavoriteBatchError {
