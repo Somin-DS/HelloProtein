@@ -285,14 +285,18 @@ final class SchemaPromotionTests: XCTestCase {
         XCTAssertTrue(evidence.inspectSchemaPromotion().isMissing)
     }
 
-    func testPromotionEvidenceForADifferentOriginalStops() throws {
+    func testPromotionEvidenceForADifferentOriginalStopsBeforeWritingABackup() throws {
         try writeSchema2()
         try evidence.writeSchemaPromotionEvidence(SchemaPromotionEvidence(fromSchemaVersion: 2, toSchemaVersion: 3, backupSHA256: "deadbeef",
                                                                           backupByteCount: 1, promotedAt: "x", operationID: "schema-promotion-x"))
+        let before = try snapshot(evidenceDirectory)
         let storeBefore = try Data(contentsOf: storeURL)
         let recovery = try recovery(makeCoordinator().launch())
         XCTAssertEqual(recovery.kind, .schemaBackupMismatch)
+        XCTAssertFalse(recovery.canRetry)
         XCTAssertEqual(try Data(contentsOf: storeURL), storeBefore)
+        XCTAssertEqual(try snapshot(evidenceDirectory), before, "no backup is written on a stop path")
+        XCTAssertTrue(evidence.inspectSchema2Backup().isMissing)
     }
 
     func testCorruptAndUnreadableSchemaBackupsStopBeforeAnyWrite() throws {
@@ -411,6 +415,14 @@ final class SchemaPromotionTests: XCTestCase {
         XCTAssertEqual(try readyState(makeCoordinator().launch()), promoted)
         XCTAssertEqual(try snapshot(evidenceDirectory), before, "the valid file wins; without a backup no evidence is reconstructed")
         XCTAssertEqual(try Data(contentsOf: storeURL), storeBefore)
+
+        // A backup of some other schema 2 document next to the file: the
+        // marker is not reconstructed from it, and the file still opens.
+        try evidence.writeSchema2Backup(Data(schema2JSON(lastOperationID: "op-other").utf8))
+        let withOtherBackup = try snapshot(evidenceDirectory)
+        XCTAssertEqual(try readyState(makeCoordinator().launch()), promoted)
+        XCTAssertEqual(try snapshot(evidenceDirectory), withOtherBackup, "no marker for a backup that is not this store's original")
+        XCTAssertTrue(evidence.inspectSchemaPromotion().isMissing)
     }
 
     // MARK: Other origins land on the current schema directly

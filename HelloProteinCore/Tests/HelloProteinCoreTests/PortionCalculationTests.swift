@@ -117,6 +117,18 @@ final class PortionCalculationTests: XCTestCase {
                                                                actualQuantity: FoodQuantity(value: "100", unit: .milliliter))) {
             XCTAssertEqual($0 as? PortionCalculationError, .unitMismatch)
         }
+        // A raw reference of 19 or 20 digits fits UInt64 but not the long
+        // division; it is refused as a value, never a crash.
+        for reference in ["9999999999999999999", "1000000000000000000", "12345678901234567890"] {
+            XCTAssertThrowsError(try PortionCalculation.centigrams(proteinGramsText: "999999999999999999",
+                                                                   referenceQuantity: FoodQuantity(value: reference, unit: .gram),
+                                                                   actualQuantity: huge), reference) {
+                XCTAssertEqual($0 as? PortionCalculationError, .invalidValue)
+            }
+        }
+        XCTAssertEqual(try PortionCalculation.centigrams(proteinGramsText: "1", referenceQuantity: FoodQuantity(value: "999999999999999999", unit: .gram),
+                                                         actualQuantity: FoodQuantity(value: "999999999999999999", unit: .gram)).centigrams, 100,
+                       "18-digit references (the basis limit) still divide")
     }
 
     func testDigitArithmeticIsExact() {
@@ -160,6 +172,9 @@ final class PortionCalculationTests: XCTestCase {
         XCTAssertThrowsError(try PortionInput.parseQuantity("1\u{00A0}000", decimalSeparator: ",")) {
             XCTAssertEqual($0 as? PortionInputError, .groupingNotAllowed)
         }
+        XCTAssertThrowsError(try PortionInput.parseQuantity("\u{2212}5")) { XCTAssertEqual($0 as? PortionInputError, .negative) }
+        XCTAssertThrowsError(try PortionInput.parseQuantity("+5")) { XCTAssertEqual($0 as? PortionInputError, .notANumber) }
+        XCTAssertThrowsError(try PortionInput.parseQuantity("5-")) { XCTAssertEqual($0 as? PortionInputError, .notANumber) }
     }
 
     func testEditableQuantityValueFollowsTheInputRange() {
@@ -196,6 +211,8 @@ final class PortionCalculationTests: XCTestCase {
         let basis = try providerBasis(protein: "1.005")
         XCTAssertEqual(basis.proteinGramsText, "1.005")
         XCTAssertEqual(try providerBasis(protein: "01.2300").proteinGramsText, "1.23", "canonical text")
+        XCTAssertEqual(try providerBasis(reference: FoodQuantity(value: "100.0", unit: .gram)).referenceQuantity,
+                       try FoodQuantity(value: "100", unit: .gram), "the reference is stored canonical too, so equal values compare equal")
         XCTAssertEqual(try providerBasis(protein: "123456789.123456789").proteinGramsText, "123456789.123456789", "18 significant, 9 fraction")
         XCTAssertThrowsError(try providerBasis(protein: "1234567890.123456789")) {
             guard case .invalidBasis(let reason)? = $0 as? RecordDomainError else { return XCTFail("\($0)") }
@@ -283,7 +300,12 @@ final class PortionCalculationTests: XCTestCase {
         XCTAssertEqual(direct.calculationBasis?.proteinGramsText, "20")
         XCTAssertEqual(direct.calculationBasis?.referenceQuantity, record.quantity)
         XCTAssertEqual(try direct.withQuantity(FoodQuantity(value: "300", unit: .gram)).protein.centigrams, 4_000, "later amount edits use the new basis")
-        XCTAssertEqual(try record.withChanges(protein: ProteinAmount(centigrams: 2_000)), direct, "the generic edit routes a changed protein the same way")
+        XCTAssertThrowsError(try record.withChanges(protein: ProteinAmount(centigrams: 2_000)), "the generic edit never drops a basis silently") {
+            XCTAssertEqual($0 as? RecordDomainError, .proteinLockedByBasis)
+        }
+        XCTAssertThrowsError(try record.withChanges(name: .some("x"), protein: ProteinAmount(centigrams: 2_000))) {
+            XCTAssertEqual($0 as? RecordDomainError, .proteinLockedByBasis)
+        }
         XCTAssertThrowsError(try record.withDirectProtein(ProteinAmount(centigrams: Int64.max))) {
             guard case .invalidBasis(let reason)? = $0 as? RecordDomainError else { return XCTFail("\($0)") }
             XCTAssertTrue(reason.contains("significant"), reason)

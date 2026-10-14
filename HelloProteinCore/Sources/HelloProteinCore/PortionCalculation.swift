@@ -104,9 +104,9 @@ public enum PortionInput {
                 remaining = remaining.dropFirst()
                 continue
             }
-            if first == "-" || first == "+" {
+            if first == "-" || first == "+" || first == "\u{2212}" {
                 // A sign anywhere is not an amount; a leading minus is reported as negative.
-                if normalized.isEmpty && first == "-" { throw PortionInputError.negative }
+                if normalized.isEmpty && first != "+" { throw PortionInputError.negative }
                 throw PortionInputError.notANumber
             }
             if first == " " || first == "\u{00A0}" || first == "\u{202F}" || first == "'" || first == "’" || first == "_" {
@@ -177,8 +177,10 @@ public enum PortionCalculation {
     /// `rounded`.
     static func centigrams(protein: PortionDecimal, actual: PortionDecimal, reference: PortionDecimal) throws -> Result {
         let numerator = DigitArithmetic.multiply(protein.scaledDigits, actual.scaledDigits)
-        guard let divisor = DigitArithmetic.uint64(reference.scaledDigits) else {
-            // A reference with more than 19 digits is outside every basis limit.
+        // Long division keeps `remainder × 10 + digit` in UInt64 only while the
+        // divisor stays below 10^18; basis limits guarantee that, a raw caller
+        // does not.
+        guard let divisor = DigitArithmetic.uint64(reference.scaledDigits), divisor < DigitArithmetic.maxDivisor else {
             throw PortionCalculationError.invalidValue
         }
         // Shift so that the integer quotient is in milligrams (3 fraction digits).
@@ -240,8 +242,11 @@ enum DigitArithmetic {
     /// Long division by a non-zero `UInt64`. The running remainder stays below
     /// the divisor, so `remainder × 10 + digit` fits comfortably in `UInt64`
     /// for any divisor below 10^18 (basis values have at most 18 digits).
+    /// Divisors must stay below this (10^18) so the running remainder never overflows.
+    static let maxDivisor: UInt64 = 1_000_000_000_000_000_000
+
     static func divide(_ digits: [UInt8], by divisor: UInt64) -> (quotient: [UInt8], remainder: UInt64) {
-        precondition(divisor > 0)
+        precondition(divisor > 0 && divisor < maxDivisor)
         var quotient: [UInt8] = []
         var remainder: UInt64 = 0
         for digit in digits {

@@ -351,7 +351,7 @@ public struct CalculationBasis: Codable, Equatable, Sendable {
 
     public init(proteinGramsText: String, referenceQuantity: FoodQuantity, origin: Origin, provider: ProviderReference?) throws {
         let protein = try CalculationBasisLimits.check(proteinGramsText, field: "proteinGramsText")
-        _ = try CalculationBasisLimits.check(referenceQuantity.value, field: "referenceQuantity")
+        let reference = try CalculationBasisLimits.check(referenceQuantity.value, field: "referenceQuantity")
         switch origin {
         case .providerSnapshot:
             guard provider != nil else { throw RecordDomainError.invalidBasis("providerSnapshot without provider") }
@@ -359,7 +359,7 @@ public struct CalculationBasis: Codable, Equatable, Sendable {
             guard provider == nil else { throw RecordDomainError.invalidBasis("userDefined with provider") }
         }
         self.proteinGramsText = protein.canonical
-        self.referenceQuantity = referenceQuantity
+        self.referenceQuantity = try FoodQuantity(value: reference.canonical, unit: referenceQuantity.unit)
         self.origin = origin
         self.provider = provider
     }
@@ -477,13 +477,15 @@ public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
     }
 
     /// Returns a validated copy with only the given fields changed. A protein
-    /// change on a record with a basis replaces the basis by a user-defined
-    /// one (the current quantity and the entered protein), because a provider
-    /// snapshot cannot stay attached to a value it did not produce; the same
-    /// protein keeps the basis untouched.
+    /// change on a record with a basis is refused: a provider snapshot cannot
+    /// stay attached to a value it did not produce, and dropping it is an
+    /// explicit decision (`withDirectProtein`). The same protein and a name
+    /// change keep the basis untouched.
     public func withChanges(name: String?? = nil, protein: ProteinAmount? = nil) throws -> FoodRecord {
         if let protein, protein != self.protein, calculationBasis != nil {
-            return try withDirectProtein(protein, name: name)
+            // Never silently: the caller decides between `withQuantity` and
+            // the explicit `withDirectProtein`, which replaces the basis.
+            throw RecordDomainError.proteinLockedByBasis
         }
         return try FoodRecord(
             id: id,
@@ -850,6 +852,9 @@ public enum RecordDomainError: Error, Equatable {
     case invalidBasis(String)
     /// The amount eaten cannot be changed on a record without a basis.
     case quantityNotEditable
+    /// The protein of a record with a basis is a computed value; it changes
+    /// through the amount or through the explicit direct-protein edit.
+    case proteinLockedByBasis
     case portion(PortionCalculationError)
 }
 

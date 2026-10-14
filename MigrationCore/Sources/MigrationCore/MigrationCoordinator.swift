@@ -292,7 +292,7 @@ public final class MigrationCoordinator {
             // next to it neither blocks the user nor gets overwritten; only a
             // genuinely missing marker is (re)written.
             recordCompletionIfMissing(state.migration)
-            recordPromotionIfMissing()
+            recordPromotionIfMissing(state)
             return finish(state)
         case .corrupt(let reason):
             return .recovery(.init(kind: .storeCorrupt, detail: reason, backupAvailable: backupAvailable, canRetry: true))
@@ -476,6 +476,17 @@ public final class MigrationCoordinator {
         }
         let digest = LegacyFingerprint.sha256Hex(of: data)
 
+        // Promotion evidence left by an earlier run must describe this very
+        // original; otherwise two different schema 2 files are involved and
+        // nothing, not even a backup, is written.
+        let promotion = evidence.inspectSchemaPromotion()
+        if let problem = evidenceProblem(promotion, label: "schemaPromotion") { return .recovery(problem) }
+        if let promotion = promotion.value, promotion.backupSHA256 != digest {
+            return .recovery(.init(kind: .schemaBackupMismatch,
+                                   detail: "promotion evidence \(promotion.backupSHA256) does not match store \(digest)",
+                                   backupAvailable: backupAvailable, canRetry: false))
+        }
+
         let existing = evidence.inspectSchema2Backup()
         if let problem = evidenceProblem(existing, label: "schema2Backup") { return .recovery(problem) }
         if let backup = existing.value {
@@ -494,16 +505,6 @@ public final class MigrationCoordinator {
 
         do { try environment.interrupt(.afterBackup) }
         catch { return interrupted(.afterBackup) }
-
-        // Promotion evidence left by an earlier run must describe this very
-        // original; otherwise two different schema 2 files are involved.
-        let promotion = evidence.inspectSchemaPromotion()
-        if let problem = evidenceProblem(promotion, label: "schemaPromotion") { return .recovery(problem) }
-        if let promotion = promotion.value, promotion.backupSHA256 != digest {
-            return .recovery(.init(kind: .schemaBackupMismatch,
-                                   detail: "promotion evidence \(promotion.backupSHA256) does not match store \(digest)",
-                                   backupAvailable: backupAvailable, canRetry: false))
-        }
 
         do { try environment.interrupt(.afterMapping) }
         catch { return interrupted(.afterMapping) }
@@ -647,10 +648,14 @@ public final class MigrationCoordinator {
 
     /// A current-schema file next to a valid schema 2 backup but no promotion
     /// marker (the launch that promoted it was interrupted right after the
-    /// rename): the marker is written from the backup's digest. Without a
-    /// valid backup nothing is invented; a damaged marker is left as it is.
-    private func recordPromotionIfMissing() {
-        guard evidence.inspectSchemaPromotion().isMissing, let backup = evidence.inspectSchema2Backup().value else { return }
+    /// rename): the marker is written from the backup's digest, but only when
+    /// the backup decodes to exactly the content of the current file, so the
+    /// marker never ties the store to some other original. Without that
+    /// nothing is invented; a damaged marker is left as it is. `promotedAt`
+    /// is the time of this reconstruction.
+    private func recordPromotionIfMissing(_ state: AppState) {
+        guard evidence.inspectSchemaPromotion().isMissing, let backup = evidence.inspectSchema2Backup().value,
+              (try? AppState.decodeSchema2(backup.data)) == state else { return }
         try? evidence.writeSchemaPromotionEvidence(SchemaPromotionEvidence(
             fromSchemaVersion: AppState.promotableSchemaVersion,
             toSchemaVersion: AppState.currentSchemaVersion,
