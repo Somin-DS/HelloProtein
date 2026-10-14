@@ -74,9 +74,11 @@ public enum ProteinGramsText {
     }
 }
 
-/// One search result picked for a batch add, exactly as the user saw it. The
-/// amount and the reference quantity are the verified values the record will
-/// carry; `recordID` is fixed for the session so a retry never adds twice.
+/// One search result picked for a batch add, exactly as the user saw it.
+/// `quantity` is the amount the record will carry: the verified reference
+/// amount, or the amount the user applied when `basis` is present, in which
+/// case `proteinCentigrams` is the value computed from the basis for that
+/// amount. `recordID` is fixed for the session so a retry never adds twice.
 public struct SearchSelection: Equatable, Sendable {
     /// Provider-scoped identity of the result row, for duplicate detection only.
     public let itemKey: String
@@ -84,13 +86,18 @@ public struct SearchSelection: Equatable, Sendable {
     public let name: String
     public let proteinCentigrams: Int64
     public let quantity: FoodQuantity
+    /// nil for a row that could not become a basis (reference outside the
+    /// editable range or basis limits): the record is written the old way.
+    public let basis: CalculationBasis?
 
-    public init(itemKey: String, recordID: String, name: String, proteinCentigrams: Int64, quantity: FoodQuantity) {
+    public init(itemKey: String, recordID: String, name: String, proteinCentigrams: Int64, quantity: FoodQuantity,
+                basis: CalculationBasis? = nil) {
         self.itemKey = itemKey
         self.recordID = recordID
         self.name = name
         self.proteinCentigrams = proteinCentigrams
         self.quantity = quantity
+        self.basis = basis
     }
 }
 
@@ -100,6 +107,9 @@ public enum SearchBatchError: Error, Equatable {
     case duplicateRecordID(String)
     case invalidAmount(String)
     case arithmeticOverflow
+    /// The selection's protein is not what its basis yields for its amount,
+    /// or the basis and amount disagree (unit, range): the snapshot is stale.
+    case basisMismatch(String)
 }
 
 /// Builds the records for a multi-result add from search. Pure: no provider
@@ -118,7 +128,8 @@ public enum SearchRecordBatch {
     }
 
     /// Records for `day`, one per selection, in selection order, with
-    /// `source: .search` and the verified reference quantity.
+    /// `source: .search`, the selection's quantity and, when present, its
+    /// basis (re-checked against the protein here, never trusted).
     public static func records(for selections: [SearchSelection], on day: CalendarDay) throws -> [FoodRecord] {
         guard !selections.isEmpty else { throw SearchBatchError.emptySelection }
         var itemKeys = Set<String>()
@@ -134,8 +145,13 @@ public enum SearchRecordBatch {
             guard selection.proteinCentigrams > 0, let amount = try? ProteinAmount(centigrams: selection.proteinCentigrams) else {
                 throw SearchBatchError.invalidAmount(selection.itemKey)
             }
-            records.append(try FoodRecord(id: selection.recordID, day: day, name: selection.name,
-                                          quantity: selection.quantity, protein: amount, source: .search))
+            do {
+                records.append(try FoodRecord(id: selection.recordID, day: day, name: selection.name,
+                                              quantity: selection.quantity, protein: amount, source: .search,
+                                              legacySourceID: nil, calculationBasis: selection.basis))
+            } catch RecordDomainError.invalidBasis(let reason) {
+                throw SearchBatchError.basisMismatch("\(selection.itemKey): \(reason)")
+            }
         }
         _ = try totalCentigrams(selections)
         return records

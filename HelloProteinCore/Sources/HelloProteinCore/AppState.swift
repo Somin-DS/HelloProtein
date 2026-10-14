@@ -179,9 +179,16 @@ public enum AppStateError: Error, Equatable {
     case goalHistory(RecordDomainError)
 }
 
-/// Schema 2: everything the app persists, committed as one document.
+/// Schema 3: everything the app persists, committed as one document.
+///
+/// Schema 3 differs from schema 2 only by the optional `calculationBasis` on
+/// a food record. A schema 2 file is read by `decodeSchema2`, which checks
+/// the whole document under schema 2 rules and yields the same state with
+/// every basis nil; a schema 2 writer cannot accept a schema 3 file.
 public struct AppState: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
+    /// The last schema this build can promote from.
+    public static let promotableSchemaVersion = 2
 
     public let schemaVersion: Int
     public private(set) var logs: [DailyLog]
@@ -238,13 +245,25 @@ public struct AppState: Codable, Equatable, Sendable {
         case schemaVersion, logs, favorites, searchHistory, settings, goals, migration, lastOperationID
     }
 
+    /// Reads a schema 2 document as the current state (all bases nil). The
+    /// document must declare schema 2 and must not contain any schema 3
+    /// field; anything else is an error, never a partial read.
+    public static func decodeSchema2(_ data: Data) throws -> AppState {
+        let decoder = JSONDecoder()
+        decoder.userInfo[FoodRecord.decodingSchemaVersionKey] = promotableSchemaVersion
+        return try decoder.decode(AppState.self, from: data)
+    }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let version = try container.decode(Int.self, forKey: .schemaVersion)
-        guard version == Self.currentSchemaVersion else {
+        let expected = decoder.userInfo[FoodRecord.decodingSchemaVersionKey] as? Int ?? Self.currentSchemaVersion
+        guard version == expected else {
             throw AppStateError.unsupportedSchema(version)
         }
-        self.schemaVersion = version
+        // A schema 2 document becomes the current schema in memory; the file
+        // itself is only replaced by an explicit promotion.
+        self.schemaVersion = Self.currentSchemaVersion
         self.logs = try container.decode([DailyLog].self, forKey: .logs)
         self.favorites = try container.decode([FavoriteFood].self, forKey: .favorites)
         self.searchHistory = try container.decode([SearchTerm].self, forKey: .searchHistory)

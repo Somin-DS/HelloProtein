@@ -1,0 +1,67 @@
+{
+  "before": {
+    "schema": 2,
+    "sha256": "7a336ff928ba4cff7e7b4cc723f4ee252b7a1f1a1c52518eabeb0073437256ab",
+    "bytes": 8708,
+    "logs": 8,
+    "records": 41,
+    "favorites": 4,
+    "searchHistory": 5,
+    "goals": 2,
+    "lastOperationID": "87401456-5B7B-4C6F-81E4-34A826A908F5",
+    "migration": {
+      "completedAt": "2026-10-05T10:10:53.970Z",
+      "migrationVersion": 1,
+      "origin": "legacyImport",
+      "sourceFingerprint": "ceb069dbaa809aae5391cf7abc68ace17125ed375a372062b6c2f917d4e18b19",
+      "verification": {
+        "favoriteCount": 2,
+        "legacyCurrentTotalCentigrams": 5500,
+        "legacyDayCount": 4,
+        "legacyFoodCount": 2,
+        "legacyHistoryCount": 3,
+        "legacyHistoryTotalCentigrams": 8500,
+        "searchTermCount": 2
+      }
+    }
+  },
+  "after": {
+    "schema": 3,
+    "sha256": "faa6f2341b630ffad3f6642d32e52ce7a714d8e7cf584d1a05a093b9dc65ae64",
+    "bytes": 8708,
+    "logs": 8,
+    "records": 41,
+    "favorites": 4,
+    "searchHistory": 5,
+    "goals": 2,
+    "lastOperationID": "87401456-5B7B-4C6F-81E4-34A826A908F5",
+    "migration": {
+      "completedAt": "2026-10-05T10:10:53.970Z",
+      "migrationVersion": 1,
+      "origin": "legacyImport",
+      "sourceFingerprint": "ceb069dbaa809aae5391cf7abc68ace17125ed375a372062b6c2f917d4e18b19",
+      "verification": {
+        "favoriteCount": 2,
+        "legacyCurrentTotalCentigrams": 5500,
+        "legacyDayCount": 4,
+        "legacyFoodCount": 2,
+        "legacyHistoryCount": 3,
+        "legacyHistoryTotalCentigrams": 8500,
+        "searchTermCount": 2
+      }
+    }
+  },
+  "contentIdenticalExceptSchemaVersion": true,
+  "basisKeysInAfter": 0,
+  "backupIdenticalToBefore": true,
+  "backupSHA256": "7a336ff928ba4cff7e7b4cc723f4ee252b7a1f1a1c52518eabeb0073437256ab",
+  "promotion": {
+    "backupByteCount": 8708,
+    "backupSHA256": "7a336ff928ba4cff7e7b4cc723f4ee252b7a1f1a1c52518eabeb0073437256ab",
+    "evidenceFormatVersion": 1,
+    "fromSchemaVersion": 2,
+    "operationID": "schema-promotion-FCDDD961-F0A1-405C-97EF-0243365143EA",
+    "promotedAt": "2026-10-14T08:56:01.960Z",
+    "toSchemaVersion": 3
+  }
+}

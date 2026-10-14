@@ -120,12 +120,59 @@ public struct EvidenceUnusable: Error, Equatable {
     public let reason: Reason
 }
 
+/// The original schema 2 store file, byte for byte, kept next to the
+/// promoted file. It is never rewritten: a second launch that finds it
+/// verifies the digest instead.
+public struct SchemaBackup: Equatable {
+    public let data: Data
+    public let sha256: String
+
+    public init(data: Data) {
+        self.data = data
+        self.sha256 = LegacyFingerprint.sha256Hex(of: data)
+    }
+}
+
+/// Written after a schema promotion committed and was read back. Secondary
+/// evidence only: a valid current-schema store is opened with or without it.
+/// Its operation ID identifies the promotion and is never a user save ID.
+public struct SchemaPromotionEvidence: Codable, Equatable {
+    public static let currentFormatVersion = 1
+
+    public let evidenceFormatVersion: Int
+    public let fromSchemaVersion: Int
+    public let toSchemaVersion: Int
+    /// Digest and size of the backed-up original file.
+    public let backupSHA256: String
+    public let backupByteCount: Int
+    public let promotedAt: String
+    public let operationID: String
+
+    public init(fromSchemaVersion: Int, toSchemaVersion: Int, backupSHA256: String, backupByteCount: Int,
+                promotedAt: String, operationID: String, evidenceFormatVersion: Int = SchemaPromotionEvidence.currentFormatVersion) {
+        self.evidenceFormatVersion = evidenceFormatVersion
+        self.fromSchemaVersion = fromSchemaVersion
+        self.toSchemaVersion = toSchemaVersion
+        self.backupSHA256 = backupSHA256
+        self.backupByteCount = backupByteCount
+        self.promotedAt = promotedAt
+        self.operationID = operationID
+    }
+}
+
 public protocol MigrationEvidenceStore {
     func inspectBackup() -> EvidenceInspection<BackupRecord>
     func writeBackup(_ record: BackupRecord) throws
     func inspectCompletion() -> EvidenceInspection<CompletionEvidence>
     func writeCompletionEvidence(_ evidence: CompletionEvidence) throws
     func preserveSchema1File(at url: URL) throws
+    /// The schema 2 original kept for the schema 3 promotion. `corrupt` when
+    /// the bytes are present but are not a valid schema 2 document.
+    func inspectSchema2Backup() -> EvidenceInspection<SchemaBackup>
+    /// Writes the original bytes once; an existing file is never replaced.
+    func writeSchema2Backup(_ data: Data) throws
+    func inspectSchemaPromotion() -> EvidenceInspection<SchemaPromotionEvidence>
+    func writeSchemaPromotionEvidence(_ evidence: SchemaPromotionEvidence) throws
 }
 
 public extension MigrationEvidenceStore {
@@ -165,6 +212,12 @@ public enum RecoveryKind: String, Codable, Equatable {
     case evidenceUnreadable
     /// A completion marker or backup declares a newer format than this build.
     case evidenceUnsupported
+    /// The schema 2 original could not be backed up (or the backup could not
+    /// be read back), so the schema 3 promotion did not start.
+    case schemaBackupFailed
+    /// A schema 2 backup exists but does not match the schema 2 file that is
+    /// about to be promoted. Nothing is overwritten or promoted.
+    case schemaBackupMismatch
 }
 
 public struct RecoveryState: Equatable {
@@ -239,6 +292,7 @@ public final class MigrationCoordinator {
             // next to it neither blocks the user nor gets overwritten; only a
             // genuinely missing marker is (re)written.
             recordCompletionIfMissing(state.migration)
+            recordPromotionIfMissing()
             return finish(state)
         case .corrupt(let reason):
             return .recovery(.init(kind: .storeCorrupt, detail: reason, backupAvailable: backupAvailable, canRetry: true))
@@ -248,6 +302,8 @@ public final class MigrationCoordinator {
             return .recovery(.init(kind: .storeUnreadable, detail: reason, backupAvailable: backupAvailable, canRetry: true))
         case .legacySchema1(let logs):
             return upgradeSchema1(logs)
+        case .legacySchema2(let state):
+            return promoteSchema2(state)
         case .missing:
             return launchWithoutStore()
         }
@@ -302,6 +358,28 @@ public final class MigrationCoordinator {
             return .recovery(.init(
                 kind: .storeLost,
                 detail: "completed \(completion.migration.completedAt), store file missing",
+                backupAvailable: backupAvailable,
+                canRetry: false
+            ))
+        }
+        // Evidence of a schema promotion is evidence that a store existed:
+        // a missing file next to it is a loss, never a fresh install.
+        let promotion = evidence.inspectSchemaPromotion()
+        if let problem = evidenceProblem(promotion, label: "schemaPromotion") { return .recovery(problem) }
+        if let promotion = promotion.value {
+            return .recovery(.init(
+                kind: .storeLost,
+                detail: "schema \(promotion.toSchemaVersion) promoted \(promotion.promotedAt), store file missing",
+                backupAvailable: backupAvailable,
+                canRetry: false
+            ))
+        }
+        let schemaBackup = evidence.inspectSchema2Backup()
+        if let problem = evidenceProblem(schemaBackup, label: "schema2Backup") { return .recovery(problem) }
+        if schemaBackup.value != nil {
+            return .recovery(.init(
+                kind: .storeLost,
+                detail: "schema 2 backup present, store file missing",
                 backupAvailable: backupAvailable,
                 canRetry: false
             ))
@@ -374,6 +452,85 @@ public final class MigrationCoordinator {
         } catch {
             return commitFailure(error)
         }
+    }
+
+    /// Schema 2 → 3. The document was already read and validated under
+    /// schema 2 rules; `state` is the same content in the current schema with
+    /// every basis nil and the stored `lastOperationID` untouched. Order:
+    /// back up the exact original bytes (or verify the existing backup
+    /// matches them) → commit through the store's temp/verify/rename/reread
+    /// path → reload and compare → write the promotion evidence. A failure
+    /// before the rename leaves the schema 2 file for the next launch to
+    /// retry; a failure after it is reported as unconfirmed and the next
+    /// launch simply inspects the file.
+    private func promoteSchema2(_ state: AppState) -> LaunchOutcome {
+        do { try environment.interrupt(.beforeBackup) }
+        catch { return interrupted(.beforeBackup) }
+
+        let data: Data
+        do { data = try Data(contentsOf: store.fileURL) }
+        catch { return .recovery(.init(kind: .storeUnreadable, detail: String(describing: error), backupAvailable: backupAvailable, canRetry: true)) }
+        // The bytes being backed up must be the document that was inspected.
+        guard case .legacySchema2(let reread) = FileAppStateStore.inspect(data: data), reread == state else {
+            return .recovery(.init(kind: .verificationFailed, detail: "store changed while reading schema 2", backupAvailable: backupAvailable, canRetry: true))
+        }
+        let digest = LegacyFingerprint.sha256Hex(of: data)
+
+        let existing = evidence.inspectSchema2Backup()
+        if let problem = evidenceProblem(existing, label: "schema2Backup") { return .recovery(problem) }
+        if let backup = existing.value {
+            guard backup.sha256 == digest else {
+                return .recovery(.init(kind: .schemaBackupMismatch,
+                                       detail: "backup \(backup.sha256) does not match store \(digest)",
+                                       backupAvailable: backupAvailable, canRetry: false))
+            }
+        } else {
+            do { try evidence.writeSchema2Backup(data) }
+            catch { return .recovery(.init(kind: .schemaBackupFailed, detail: String(describing: error), backupAvailable: backupAvailable, canRetry: true)) }
+            guard evidence.inspectSchema2Backup().value?.sha256 == digest else {
+                return .recovery(.init(kind: .schemaBackupFailed, detail: "schema 2 backup could not be read back", backupAvailable: backupAvailable, canRetry: true))
+            }
+        }
+
+        do { try environment.interrupt(.afterBackup) }
+        catch { return interrupted(.afterBackup) }
+
+        // Promotion evidence left by an earlier run must describe this very
+        // original; otherwise two different schema 2 files are involved.
+        let promotion = evidence.inspectSchemaPromotion()
+        if let problem = evidenceProblem(promotion, label: "schemaPromotion") { return .recovery(problem) }
+        if let promotion = promotion.value, promotion.backupSHA256 != digest {
+            return .recovery(.init(kind: .schemaBackupMismatch,
+                                   detail: "promotion evidence \(promotion.backupSHA256) does not match store \(digest)",
+                                   backupAvailable: backupAvailable, canRetry: false))
+        }
+
+        do { try environment.interrupt(.afterMapping) }
+        catch { return interrupted(.afterMapping) }
+
+        do { try store.commit(state) }
+        catch { return commitFailure(error) }
+
+        do {
+            guard try store.load() == state else {
+                return .recovery(.init(kind: .verificationFailed, detail: "promoted state differs after reload", backupAvailable: backupAvailable, canRetry: true))
+            }
+        } catch {
+            return .recovery(.init(kind: .verificationFailed, detail: String(describing: error), backupAvailable: backupAvailable, canRetry: true))
+        }
+
+        if promotion.isMissing {
+            try? evidence.writeSchemaPromotionEvidence(SchemaPromotionEvidence(
+                fromSchemaVersion: AppState.promotableSchemaVersion,
+                toSchemaVersion: AppState.currentSchemaVersion,
+                backupSHA256: digest,
+                backupByteCount: data.count,
+                promotedAt: LegacySnapshotBuilder.instantString(environment.now()),
+                operationID: "schema-promotion-\(UUID().uuidString)"
+            ))
+        }
+        recordCompletionIfMissing(state.migration)
+        return finish(state)
     }
 
     private func migrate(from source: Source) -> LaunchOutcome {
@@ -488,6 +645,22 @@ public final class MigrationCoordinator {
         ))
     }
 
+    /// A current-schema file next to a valid schema 2 backup but no promotion
+    /// marker (the launch that promoted it was interrupted right after the
+    /// rename): the marker is written from the backup's digest. Without a
+    /// valid backup nothing is invented; a damaged marker is left as it is.
+    private func recordPromotionIfMissing() {
+        guard evidence.inspectSchemaPromotion().isMissing, let backup = evidence.inspectSchema2Backup().value else { return }
+        try? evidence.writeSchemaPromotionEvidence(SchemaPromotionEvidence(
+            fromSchemaVersion: AppState.promotableSchemaVersion,
+            toSchemaVersion: AppState.currentSchemaVersion,
+            backupSHA256: backup.sha256,
+            backupByteCount: backup.data.count,
+            promotedAt: LegacySnapshotBuilder.instantString(environment.now()),
+            operationID: "schema-promotion-\(UUID().uuidString)"
+        ))
+    }
+
     private func commitFailure(_ error: Error) -> LaunchOutcome {
         let storeError: StoreError?
         switch error {
@@ -522,6 +695,8 @@ public final class FileMigrationEvidenceStore: MigrationEvidenceStore {
     public var backupURL: URL { directory.appendingPathComponent("legacy-capture.json") }
     public var completionURL: URL { directory.appendingPathComponent("migration-completed.json") }
     public var schema1BackupURL: URL { directory.appendingPathComponent("schema1-app-state.json") }
+    public var schema2BackupURL: URL { directory.appendingPathComponent("schema2-app-state.json") }
+    public var schemaPromotionURL: URL { directory.appendingPathComponent("schema-promotion.json") }
 
     public init(directory: URL, fileManager: FileManager = .default, attributes: [FileAttributeKey: Any]? = nil) {
         self.directory = directory
@@ -570,6 +745,34 @@ public final class FileMigrationEvidenceStore: MigrationEvidenceStore {
         try ensureDirectory()
         if fileManager.fileExists(atPath: schema1BackupURL.path) { return }
         try fileManager.copyItem(at: url, to: schema1BackupURL)
+    }
+
+    public func inspectSchema2Backup() -> EvidenceInspection<SchemaBackup> {
+        guard fileManager.fileExists(atPath: schema2BackupURL.path) else { return .missing }
+        let data: Data
+        do { data = try Data(contentsOf: schema2BackupURL) }
+        catch { return .unreadable(String(describing: error)) }
+        switch FileAppStateStore.inspect(data: data) {
+        case .legacySchema2: return .valid(SchemaBackup(data: data))
+        case .corrupt(let reason): return .corrupt(reason)
+        case .ready, .legacySchema1, .unsupportedSchema, .missing, .unreadable:
+            return .corrupt("schema 2 backup is not a schema 2 document")
+        }
+    }
+
+    public func writeSchema2Backup(_ data: Data) throws {
+        try ensureDirectory()
+        if fileManager.fileExists(atPath: schema2BackupURL.path) { return }
+        try writeAtomically(data, to: schema2BackupURL)
+    }
+
+    public func inspectSchemaPromotion() -> EvidenceInspection<SchemaPromotionEvidence> {
+        inspect(SchemaPromotionEvidence.self, at: schemaPromotionURL, decoder: JSONDecoder(),
+                supportedVersion: SchemaPromotionEvidence.currentFormatVersion)
+    }
+
+    public func writeSchemaPromotionEvidence(_ evidence: SchemaPromotionEvidence) throws {
+        try writeAtomically(try encoder().encode(evidence), to: schemaPromotionURL)
     }
 
     private func encoder() -> JSONEncoder {

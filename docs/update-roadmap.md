@@ -156,3 +156,15 @@ PR #8은 `6d61319`로 main에 병합됐다. 리뷰 후속 `60a013e`는 즐겨찾
 ### 2026-10-14 한국어 검색 실연결 UI 검증 완료
 
 로컬 인증키 설정 후 iPhone SE / iOS 26.5 Release 시뮬레이터에서 실제 검색→선택→저장→재실행 유지, 다음 페이지, 0건 UI 테스트 3개가 통과했다. 저장 출처·단백질·기준량도 확인했다. [검증 결과와 화면 캡처](evidence/2026-10-14-korean-search/README.md)에 기록했다. 실기기 설치와 PR/머지는 수행하지 않았다.
+
+
+## 2026-10-14 PR 10 이후 섭취량과 통계 계획
+
+한국어 검색은 PR #10으로 main `3c37bcd`에 병합됐고 실 API UI 검증도 완료했다. 위 구현 당시의 키 미설정·PR 미생성 문구는 해당 시점의 이력이다. 다음 작업은 사용자 요청대로 **검색 음식 섭취량 입력과 통계**를 함께 진행한다.
+
+[섭취량과 통계 구현 계획](quantity-statistics-implementation-plan.md)과 [본사 7개 직무 공동 검토](reviews/2026-10-14-quantity-statistics-team-review.md)에 순서·계산·저장·화면·검증 기준을 확정했다. Q1 불변 계산 기준과 schema 3 승격 → Q2 섭취량 입력 및 신규 기록 재편집 → S1 최근 7/30일 통계 및 통합 검증 순서다. 기존 기록은 추정 없이 보존하며 통계는 무기록·0·signed 과거 합계와 날짜별 목표를 구분한다. 이번 산출은 plan과 검토 기록뿐이며 구현·PR·머지는 수행하지 않았다.
+
+### 2026-10-14 Q1 계산·저장 계약과 schema 3 승격 구현
+
+브랜치 `feat/renewal-quantity-q1`에서 Q1을 구현했다. 정확한 비례 계산기(`PortionCalculation`, Double 없음, 최종 1회 half-up), 섭취량 입력 파서(9/3자리), `FoodRecord.calculationBasis`와 기록 불변식, schema 3 승격(원본 schema 2 바이트 백업·SHA-256·별도 승격 증거·중단 재개)을 추가했고 기존 기록은 basis nil로 보존한다. Core 87·MigrationCore 82·앱 123 테스트 통과, Debug/Release 빌드 성공, 시뮬레이터 2대의 실제 schema 2 파일을 승격해 전후 내용이 schemaVersion만 다름을 확인했다. [Q1 증거](evidence/2026-10-14-quantity-statistics/README.md). Q2 섭취량 화면과 S1 통계는 미착수이며 이번 업데이트 전체는 아직 완료가 아니다. 실기기 설치·머지는 수행하지 않았다.
+

@@ -279,8 +279,130 @@ public struct FoodQuantity: Codable, Equatable, Sendable {
     }
 }
 
-/// An immutable food entry. Change it only through `withChanges`, which keeps
-/// the identity, day, quantity and source and re-validates the result.
+
+/// Limits for the values a calculation basis stores: positive decimals with
+/// at most 18 significant and 9 fraction digits. Older `FoodQuantity` values
+/// are not subject to these limits; only a basis is.
+public enum CalculationBasisLimits {
+    public static let maxSignificantDigits = 18
+    public static let maxFractionDigits = 9
+
+    static func check(_ text: String, field: String) throws -> PortionDecimal {
+        let decimal: PortionDecimal
+        do { decimal = try PortionDecimal(canonical: text) }
+        catch { throw RecordDomainError.invalidBasis("\(field): not a positive decimal") }
+        guard decimal.significantDigitCount <= maxSignificantDigits else {
+            throw RecordDomainError.invalidBasis("\(field): more than \(maxSignificantDigits) significant digits")
+        }
+        guard decimal.fractionDigitCount <= maxFractionDigits else {
+            throw RecordDomainError.invalidBasis("\(field): more than \(maxFractionDigits) fraction digits")
+        }
+        return decimal
+    }
+}
+
+/// The immutable data a record's protein was computed from: the provider's
+/// (or the user's) protein per reference amount. The amount eaten lives in
+/// `FoodRecord.quantity`; changing it recomputes `protein` from this basis
+/// and never from a previously rounded result. Never a health or accuracy
+/// claim; a provider snapshot is what the provider said at the time.
+public struct CalculationBasis: Codable, Equatable, Sendable {
+    public enum Origin: String, Codable, Sendable {
+        case providerSnapshot
+        case userDefined
+    }
+
+    /// Provider identity of the row the snapshot came from. Identifiers only;
+    /// never request URLs or keys.
+    public struct ProviderReference: Codable, Equatable, Sendable {
+        public let providerID: String
+        public let dataVersion: String
+        public let itemID: String
+
+        public init(providerID: String, dataVersion: String, itemID: String) throws {
+            for (name, value) in [("providerID", providerID), ("dataVersion", dataVersion), ("itemID", itemID)]
+            where value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                throw RecordDomainError.invalidBasis("\(name) is empty")
+            }
+            self.providerID = providerID
+            self.dataVersion = dataVersion
+            self.itemID = itemID
+        }
+
+        private enum CodingKeys: String, CodingKey { case providerID, dataVersion, itemID }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            try self.init(
+                providerID: container.decode(String.self, forKey: .providerID),
+                dataVersion: container.decode(String.self, forKey: .dataVersion),
+                itemID: container.decode(String.self, forKey: .itemID)
+            )
+        }
+    }
+
+    /// Protein in grams per `referenceQuantity`, as a verified decimal string
+    /// with its full precision (`1.005`, not a pre-rounded `1.01`).
+    public let proteinGramsText: String
+    public let referenceQuantity: FoodQuantity
+    public let origin: Origin
+    /// Present exactly when `origin` is `providerSnapshot`.
+    public let provider: ProviderReference?
+
+    public init(proteinGramsText: String, referenceQuantity: FoodQuantity, origin: Origin, provider: ProviderReference?) throws {
+        let protein = try CalculationBasisLimits.check(proteinGramsText, field: "proteinGramsText")
+        _ = try CalculationBasisLimits.check(referenceQuantity.value, field: "referenceQuantity")
+        switch origin {
+        case .providerSnapshot:
+            guard provider != nil else { throw RecordDomainError.invalidBasis("providerSnapshot without provider") }
+        case .userDefined:
+            guard provider == nil else { throw RecordDomainError.invalidBasis("userDefined with provider") }
+        }
+        self.proteinGramsText = protein.canonical
+        self.referenceQuantity = referenceQuantity
+        self.origin = origin
+        self.provider = provider
+    }
+
+    public static func providerSnapshot(proteinGramsText: String, referenceQuantity: FoodQuantity,
+                                        providerID: String, dataVersion: String, itemID: String) throws -> CalculationBasis {
+        try CalculationBasis(proteinGramsText: proteinGramsText, referenceQuantity: referenceQuantity, origin: .providerSnapshot,
+                             provider: ProviderReference(providerID: providerID, dataVersion: dataVersion, itemID: itemID))
+    }
+
+    public static func userDefined(proteinGramsText: String, referenceQuantity: FoodQuantity) throws -> CalculationBasis {
+        try CalculationBasis(proteinGramsText: proteinGramsText, referenceQuantity: referenceQuantity, origin: .userDefined, provider: nil)
+    }
+
+    /// The protein this basis yields for `quantity`; throws on unit mismatch,
+    /// a result that rounds to zero, or overflow.
+    public func protein(for quantity: FoodQuantity) throws -> PortionCalculation.Result {
+        try PortionCalculation.centigrams(proteinGramsText: proteinGramsText, referenceQuantity: referenceQuantity, actualQuantity: quantity)
+    }
+
+    /// True when the amount editor can start from the reference amount as is.
+    public var isReferenceEditable: Bool { PortionInput.isEditableQuantityValue(referenceQuantity.value) }
+
+    private enum CodingKeys: String, CodingKey { case proteinGramsText, referenceQuantity, origin, provider }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(
+            proteinGramsText: container.decode(String.self, forKey: .proteinGramsText),
+            referenceQuantity: container.decode(FoodQuantity.self, forKey: .referenceQuantity),
+            origin: container.decode(Origin.self, forKey: .origin),
+            provider: container.decodeIfPresent(ProviderReference.self, forKey: .provider)
+        )
+    }
+}
+
+/// An immutable food entry. Change it only through the `with…` methods, which
+/// keep the identity, day and source and re-validate the result.
+///
+/// With a `calculationBasis` (schema 3 search records) `quantity` is the
+/// amount actually eaten and `protein` is exactly what the basis yields for
+/// it; the invariants are checked on construction and on decode, and a
+/// mismatch is a corrupt record, never silently repaired.
 public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
     public enum Source: String, Codable, Sendable {
         case manual
@@ -299,6 +421,9 @@ public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
     public let source: Source
     /// Original identity in the old store, e.g. a Realm ObjectId string.
     public let legacySourceID: String?
+    /// nil for every record written before schema 3 and for manual, favorite
+    /// and legacy records; those keep their stored quantity and protein as is.
+    public let calculationBasis: CalculationBasis?
 
     public init(
         id: String,
@@ -307,12 +432,29 @@ public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
         quantity: FoodQuantity?,
         protein: ProteinAmount,
         source: Source,
-        legacySourceID: String? = nil
+        legacySourceID: String? = nil,
+        calculationBasis: CalculationBasis? = nil
     ) throws {
         guard !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw RecordDomainError.emptyID
         }
         guard protein > .zero else { throw RecordDomainError.zeroProtein }
+        if let basis = calculationBasis {
+            guard source == .search else { throw RecordDomainError.invalidBasis("source \(source.rawValue) cannot carry a basis") }
+            guard let quantity else { throw RecordDomainError.invalidBasis("basis without quantity") }
+            guard quantity.unit == basis.referenceQuantity.unit else {
+                throw RecordDomainError.invalidBasis("quantity unit \(quantity.unit.rawValue) differs from reference \(basis.referenceQuantity.unit.rawValue)")
+            }
+            guard PortionInput.isEditableQuantityValue(quantity.value) else {
+                throw RecordDomainError.invalidBasis("quantity \(quantity.value) outside the amount input range")
+            }
+            let computed: PortionCalculation.Result
+            do { computed = try basis.protein(for: quantity) }
+            catch { throw RecordDomainError.invalidBasis("protein cannot be computed: \(error)") }
+            guard computed.centigrams == protein.centigrams else {
+                throw RecordDomainError.invalidBasis("protein \(protein.centigrams) differs from computed \(computed.centigrams)")
+            }
+        }
         let normalizedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
         self.id = id
         self.day = day
@@ -321,27 +463,85 @@ public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
         self.protein = protein
         self.source = source
         self.legacySourceID = legacySourceID
+        self.calculationBasis = calculationBasis
     }
 
-    /// Returns a validated copy with only the given fields changed.
+    /// A search record computed from `basis` for `quantity`: the protein is
+    /// derived here, so it can never disagree with the basis.
+    public init(id: String, day: CalendarDay, name: String?, quantity: FoodQuantity, basis: CalculationBasis) throws {
+        let computed: PortionCalculation.Result
+        do { computed = try basis.protein(for: quantity) }
+        catch let error as PortionCalculationError { throw RecordDomainError.portion(error) }
+        try self.init(id: id, day: day, name: name, quantity: quantity, protein: ProteinAmount(centigrams: computed.centigrams),
+                      source: .search, legacySourceID: nil, calculationBasis: basis)
+    }
+
+    /// Returns a validated copy with only the given fields changed. A protein
+    /// change on a record with a basis replaces the basis by a user-defined
+    /// one (the current quantity and the entered protein), because a provider
+    /// snapshot cannot stay attached to a value it did not produce; the same
+    /// protein keeps the basis untouched.
     public func withChanges(name: String?? = nil, protein: ProteinAmount? = nil) throws -> FoodRecord {
-        try FoodRecord(
+        if let protein, protein != self.protein, calculationBasis != nil {
+            return try withDirectProtein(protein, name: name)
+        }
+        return try FoodRecord(
             id: id,
             day: day,
             name: name ?? self.name,
             quantity: quantity,
             protein: protein ?? self.protein,
             source: source,
-            legacySourceID: legacySourceID
+            legacySourceID: legacySourceID,
+            calculationBasis: calculationBasis
         )
     }
 
-    private enum CodingKeys: String, CodingKey {
-        case id, day, name, quantity, protein, source, legacySourceID
+    /// Changes the amount eaten and recomputes the protein from the stored
+    /// basis. Only records with a basis can do this; older records keep
+    /// their saved reference amount.
+    public func withQuantity(_ quantity: FoodQuantity, name: String?? = nil) throws -> FoodRecord {
+        guard let basis = calculationBasis else { throw RecordDomainError.quantityNotEditable }
+        guard quantity.unit == basis.referenceQuantity.unit else { throw RecordDomainError.portion(.unitMismatch) }
+        guard PortionInput.isEditableQuantityValue(quantity.value) else { throw RecordDomainError.invalidQuantity }
+        let computed: PortionCalculation.Result
+        do { computed = try basis.protein(for: quantity) }
+        catch let error as PortionCalculationError { throw RecordDomainError.portion(error) }
+        return try FoodRecord(id: id, day: day, name: name ?? self.name, quantity: quantity,
+                              protein: ProteinAmount(centigrams: computed.centigrams), source: source,
+                              legacySourceID: legacySourceID, calculationBasis: basis)
     }
+
+    /// The explicit "enter the protein yourself" edit for a record with a
+    /// basis: the current quantity is kept and becomes the reference of a new
+    /// user-defined basis whose protein is the entered value. Provider
+    /// identifiers are dropped. Without a basis this is a plain protein edit.
+    public func withDirectProtein(_ protein: ProteinAmount, name: String?? = nil) throws -> FoodRecord {
+        guard calculationBasis != nil, let quantity else {
+            return try FoodRecord(id: id, day: day, name: name ?? self.name, quantity: quantity, protein: protein,
+                                  source: source, legacySourceID: legacySourceID, calculationBasis: nil)
+        }
+        let basis = try CalculationBasis.userDefined(proteinGramsText: ProteinInput.format(centigrams: protein.centigrams),
+                                                     referenceQuantity: quantity)
+        return try FoodRecord(id: id, day: day, name: name ?? self.name, quantity: quantity, protein: protein,
+                              source: source, legacySourceID: legacySourceID, calculationBasis: basis)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, day, name, quantity, protein, source, legacySourceID, calculationBasis
+    }
+
+    /// Set by a schema-2 reader so a document that claims schema 2 but carries
+    /// a basis is reported as corrupt instead of silently accepted.
+    public static let decodingSchemaVersionKey = CodingUserInfoKey(rawValue: "HelloProteinCore.decodingSchemaVersion")!
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let version = decoder.userInfo[Self.decodingSchemaVersionKey] as? Int, version < 3,
+           container.contains(.calculationBasis) {
+            throw DecodingError.dataCorrupted(.init(codingPath: container.codingPath,
+                                                    debugDescription: "calculationBasis is not part of schema \(version)"))
+        }
         try self.init(
             id: container.decode(String.self, forKey: .id),
             day: container.decode(CalendarDay.self, forKey: .day),
@@ -349,8 +549,21 @@ public struct FoodRecord: Codable, Equatable, Identifiable, Sendable {
             quantity: container.decodeIfPresent(FoodQuantity.self, forKey: .quantity),
             protein: container.decode(ProteinAmount.self, forKey: .protein),
             source: container.decode(Source.self, forKey: .source),
-            legacySourceID: container.decodeIfPresent(String.self, forKey: .legacySourceID)
+            legacySourceID: container.decodeIfPresent(String.self, forKey: .legacySourceID),
+            calculationBasis: container.decodeIfPresent(CalculationBasis.self, forKey: .calculationBasis)
         )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(day, forKey: .day)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(quantity, forKey: .quantity)
+        try container.encode(protein, forKey: .protein)
+        try container.encode(source, forKey: .source)
+        try container.encodeIfPresent(legacySourceID, forKey: .legacySourceID)
+        try container.encodeIfPresent(calculationBasis, forKey: .calculationBasis)
     }
 }
 
@@ -633,6 +846,11 @@ public enum RecordDomainError: Error, Equatable {
     case legacyAggregateWithoutAdjustment
     case duplicateGoalID(String)
     case duplicateGoalEffectiveDate(CalendarDay)
+    /// A calculation basis, or a record carrying one, breaks its invariants.
+    case invalidBasis(String)
+    /// The amount eaten cannot be changed on a record without a basis.
+    case quantityNotEditable
+    case portion(PortionCalculationError)
 }
 
 public protocol RecordRepository {

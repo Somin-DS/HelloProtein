@@ -508,7 +508,7 @@ final class RecordHomeViewModel: ObservableObject {
     /// re-check; the rest are programming errors.
     private static func actionError(for error: SearchBatchError) -> ActionError {
         switch error {
-        case .invalidAmount: return .selectionChanged
+        case .invalidAmount, .basisMismatch: return .selectionChanged
         case .arithmeticOverflow: return .input(.overflow)
         case .emptySelection, .duplicateSelection, .duplicateRecordID: return .integrity(String(describing: error))
         }

@@ -1,6 +1,6 @@
 import Foundation
 
-/// App-private, persistent locations for the schema 2 store and migration
+/// App-private, persistent locations for the app-state store and migration
 /// evidence. Never the caches or temporary directory.
 struct RenewalPaths {
     let rootDirectory: URL
