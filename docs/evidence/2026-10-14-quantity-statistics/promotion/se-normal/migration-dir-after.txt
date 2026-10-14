@@ -1,0 +1,8 @@
+total 48
+drwxr-xr-x  7 somin  staff   224 Oct 14 17:49 .
+drwxr-xr-x  4 somin  staff   128 Oct 14 17:49 ..
+drwxr-xr-x  3 somin  staff    96 Oct  5 19:10 legacy-backup
+-rw-r--r--  1 somin  staff  2337 Oct  5 19:10 legacy-capture.json
+-rw-r--r--  1 somin  staff   564 Oct  5 19:10 migration-completed.json
+-rw-r--r--  1 somin  staff   320 Oct 14 17:49 schema-promotion.json
+-rw-r--r--  1 somin  staff  9599 Oct 14 17:49 schema2-app-state.json

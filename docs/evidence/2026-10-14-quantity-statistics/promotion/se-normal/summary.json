@@ -1,0 +1,67 @@
+{
+  "before": {
+    "schema": 2,
+    "sha256": "bf5a4b5ddb23c5aea04cdcc4498c441f0558dc3642a69d78b3709f5aa43c4453",
+    "bytes": 9599,
+    "logs": 9,
+    "records": 46,
+    "favorites": 4,
+    "searchHistory": 7,
+    "goals": 2,
+    "lastOperationID": "44D31E35-D85F-4DB0-A3EF-560671243CB4",
+    "migration": {
+      "completedAt": "2026-10-05T10:10:29.632Z",
+      "migrationVersion": 1,
+      "origin": "legacyImport",
+      "sourceFingerprint": "abf0559b26d7cd6a9646e8351fbca506db55a82ac52227e984d4f07e5d3e04b6",
+      "verification": {
+        "favoriteCount": 2,
+        "legacyCurrentTotalCentigrams": 5500,
+        "legacyDayCount": 4,
+        "legacyFoodCount": 2,
+        "legacyHistoryCount": 3,
+        "legacyHistoryTotalCentigrams": 8500,
+        "searchTermCount": 2
+      }
+    }
+  },
+  "after": {
+    "schema": 3,
+    "sha256": "6902e214abc9d3df1b7515646e0d1c8915e810c9e8e5498e9278eae176272576",
+    "bytes": 9599,
+    "logs": 9,
+    "records": 46,
+    "favorites": 4,
+    "searchHistory": 7,
+    "goals": 2,
+    "lastOperationID": "44D31E35-D85F-4DB0-A3EF-560671243CB4",
+    "migration": {
+      "completedAt": "2026-10-05T10:10:29.632Z",
+      "migrationVersion": 1,
+      "origin": "legacyImport",
+      "sourceFingerprint": "abf0559b26d7cd6a9646e8351fbca506db55a82ac52227e984d4f07e5d3e04b6",
+      "verification": {
+        "favoriteCount": 2,
+        "legacyCurrentTotalCentigrams": 5500,
+        "legacyDayCount": 4,
+        "legacyFoodCount": 2,
+        "legacyHistoryCount": 3,
+        "legacyHistoryTotalCentigrams": 8500,
+        "searchTermCount": 2
+      }
+    }
+  },
+  "contentIdenticalExceptSchemaVersion": true,
+  "basisKeysInAfter": 0,
+  "backupIdenticalToBefore": true,
+  "backupSHA256": "bf5a4b5ddb23c5aea04cdcc4498c441f0558dc3642a69d78b3709f5aa43c4453",
+  "promotion": {
+    "backupByteCount": 9599,
+    "backupSHA256": "bf5a4b5ddb23c5aea04cdcc4498c441f0558dc3642a69d78b3709f5aa43c4453",
+    "evidenceFormatVersion": 1,
+    "fromSchemaVersion": 2,
+    "operationID": "schema-promotion-E2DA03EC-2759-469E-964B-4E505BE4BDBF",
+    "promotedAt": "2026-10-14T08:49:42.046Z",
+    "toSchemaVersion": 3
+  }
+}

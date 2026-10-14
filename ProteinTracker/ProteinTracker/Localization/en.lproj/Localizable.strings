@@ -150,6 +150,8 @@
 "renewal_pending_sheet" = "This save couldn't be confirmed. Check the saved result to see whether it was stored.";
 "recovery_kind_evidenceCorrupt" = "The migration record file is damaged. Nothing was re-imported, created or overwritten.";
 "recovery_kind_evidenceUnreadable" = "The migration record file can't be accessed. Unlock the device and try again.";
+"recovery_kind_schemaBackupFailed" = "The original copy needed before updating the log format couldn't be created, so the update didn't start.";
+"recovery_kind_schemaBackupMismatch" = "The stored original copy doesn't match the current log file. The app stopped instead of overwriting or converting it.";
 "recovery_kind_evidenceUnsupported" = "The migration record file uses a newer format than this app version.";
 
 "renewal_daily_protein" = "Daily protein";

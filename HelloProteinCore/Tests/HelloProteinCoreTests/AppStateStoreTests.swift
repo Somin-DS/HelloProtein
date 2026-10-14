@@ -223,19 +223,52 @@ final class AppStateStoreTests: XCTestCase {
         }
     }
 
-    func testDecodingSchema2CannotBypassInvariants() throws {
-        let day = self.day
+    func testDecodingCurrentAndSchema2DocumentsCannotBypassInvariants() throws {
         let goal = #"{"id":"g","effectiveFrom":"2026-09-01","amount":100}"#
-        let json = """
-        {"schemaVersion":2,"logs":[],"favorites":[],"searchHistory":[],
-         "settings":{"searchLanguage":{"raw":null,"resolved":"english","isFallback":true},"legacyTargetRaw":null,"goalNeedsReview":false},
-         "goals":[\(goal),\(goal.replacingOccurrences(of: #""id":"g""#, with: #""id":"h""#))],
-         "migration":{"origin":"freshInstall","migrationVersion":1,"completedAt":"2026-09-28T00:00:00Z","sourceFingerprint":null,"verification":null}}
-        """
-        XCTAssertThrowsError(try JSONDecoder().decode(AppState.self, from: Data(json.utf8))) {
-            XCTAssertEqual($0 as? AppStateError, .goalHistory(.duplicateGoalEffectiveDate(try! CalendarDay(iso8601: "2026-09-01"))))
+        func json(version: Int) -> Data {
+            Data("""
+            {"schemaVersion":\(version),"logs":[],"favorites":[],"searchHistory":[],
+             "settings":{"searchLanguage":{"raw":null,"resolved":"english","isFallback":true},"legacyTargetRaw":null,"goalNeedsReview":false},
+             "goals":[\(goal),\(goal.replacingOccurrences(of: #""id":"g""#, with: #""id":"h""#))],
+             "migration":{"origin":"freshInstall","migrationVersion":1,"completedAt":"2026-09-28T00:00:00Z","sourceFingerprint":null,"verification":null}}
+            """.utf8)
         }
-        _ = day
+        let expected = AppStateError.goalHistory(.duplicateGoalEffectiveDate(try CalendarDay(iso8601: "2026-09-01")))
+        XCTAssertThrowsError(try JSONDecoder().decode(AppState.self, from: json(version: 3))) {
+            XCTAssertEqual($0 as? AppStateError, expected)
+        }
+        XCTAssertThrowsError(try AppState.decodeSchema2(json(version: 2))) {
+            XCTAssertEqual($0 as? AppStateError, expected, "the schema 2 reader checks the whole document too")
+        }
+        if case .corrupt = FileAppStateStore.inspect(data: json(version: 2)) {} else { XCTFail("an invalid schema 2 file is corrupt, not promotable") }
+    }
+
+    func testValidSchema2FileIsPromotableNotReadyAndNotLoadable() throws {
+        let original = try state()
+        var json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as! [String: Any]
+        XCTAssertEqual(json["schemaVersion"] as? Int, 3)
+        json["schemaVersion"] = 2
+        json["lastOperationID"] = "op-user-7"
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONSerialization.data(withJSONObject: json).write(to: fileURL)
+
+        guard case .legacySchema2(let promotable) = FileAppStateStore.inspect(fileURL: fileURL) else {
+            return XCTFail("schema 2 must be reported as promotable")
+        }
+        XCTAssertEqual(promotable.schemaVersion, 3, "read into the current schema in memory")
+        XCTAssertEqual(promotable.logs, original.logs)
+        XCTAssertEqual(promotable.favorites, original.favorites)
+        XCTAssertEqual(promotable.searchHistory, original.searchHistory)
+        XCTAssertEqual(promotable.settings, original.settings)
+        XCTAssertEqual(promotable.goals, original.goals)
+        XCTAssertEqual(promotable.migration, original.migration)
+        XCTAssertEqual(promotable.lastOperationID, "op-user-7", "the user's last operation ID survives the read")
+        XCTAssertTrue(promotable.logs.flatMap(\.records).allSatisfy { $0.calculationBasis == nil })
+
+        // Neither load nor modify opens a schema 2 file; only the launch path promotes it.
+        XCTAssertThrowsError(try FileAppStateStore(fileURL: fileURL).load()) { XCTAssertEqual($0 as? StoreError, .unsupportedSchema(2)) }
+        XCTAssertThrowsError(try FileAppStateStore(fileURL: fileURL).modify { _ in })
+        XCTAssertTrue(String(decoding: try Data(contentsOf: fileURL), as: UTF8.self).contains(#""schemaVersion":2"#), "file untouched")
     }
 
 
