@@ -271,7 +271,7 @@
 "renewal_search_failed" = "검색 결과를 불러오지 못했어요. 다시 시도해 주세요.";
 "renewal_search_local_failed" = "음식 데이터를 불러오지 못했어요.";
 "renewal_search_unavailable" = "지금은 검색을 사용할 수 없어요. 직접 입력해 주세요.";
-"renewal_search_unavailable_korean" = "이 버전에서는 한국어 음식 검색이 준비되지 않았어요. 음식 검색 언어를 영어로 바꾸면 내장 목록을 검색할 수 있어요.";
+"renewal_search_unavailable_korean" = "한국어 검색 연결이 설정되지 않았어요. 영어로 검색하거나 직접 입력해 주세요.";
 "renewal_search_retry" = "다시 시도";
 "renewal_search_more" = "더 보기";
 "renewal_search_more_failed" = "결과를 더 불러오지 못했어요. 위 결과는 유지돼요.";
@@ -302,3 +302,5 @@
 "renewal_unit_piece" = "개";
 
 "renewal_search_source_unverified" = "기존 카탈로그 · 출처 미확인";
+
+"renewal_search_source_mfds" = "식품의약품안전처 · 식품영양성분DB";

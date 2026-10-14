@@ -292,6 +292,7 @@ struct AddSheet: View {
     /// The language is a separate write. Results and selection are dropped
     /// only once the new language is confirmed in the file.
     private func changeLanguage(_ language: SearchLanguage) {
+        search.cancelPagesKeepingResults()
         model.setSearchLanguage(language) { result in
             switch result {
             case .success:
@@ -377,6 +378,7 @@ struct AddSheet: View {
     /// amount) with the session's record IDs; no provider is consulted again.
     private func addSearchSelected() {
         guard canAddSearch else { return }
+        search.cancelPagesKeepingResults()
         let batch = search.selections
         model.addSearchRecords(day: target.day, selections: batch) { result in
             switch result {

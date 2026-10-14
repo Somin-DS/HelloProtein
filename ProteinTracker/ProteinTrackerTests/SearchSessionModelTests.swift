@@ -215,11 +215,27 @@ final class SearchSessionModelTests: XCTestCase {
         en.requests[2].deliver(.success(page([item("2"), item("1", name: "Renamed"), item("3")], next: nil)))
         drain()
         XCTAssertEqual(sync { session.results.map(\.itemID) }, ["1", "2", "3"])
-        XCTAssertEqual(sync { session.results[0].name }, "Food 1", "the shown row is not swapped silently")
+        XCTAssertEqual(sync { session.results[0].name }, "Renamed", "the updated row requires a fresh selection")
         XCTAssertEqual(sync { session.selected }, ["scripted|v1|2"])
         XCTAssertEqual(sync { session.droppedSelectionIDs }, ["scripted|v1|1"])
         XCTAssertNil(sync { session.nextPage })
         XCTAssertNil(sync { session.pageError })
+    }
+
+    func testSaveFreezesSelectionAgainstLatePageResponses() {
+        let session = makeSession()
+        execute(session, "egg")
+        en.requests[0].deliver(.success(page([item("1")], next: SearchPageRequest(startIndex: 21, endIndex: 40))))
+        drain()
+        sync { session.toggle(session.results[0]); session.loadMore() }
+        let before = sync { session.selections }
+        sync { session.cancelPagesKeepingResults() }
+        XCTAssertTrue(en.requests[1].cancelled)
+        en.requests[1].deliver(.success(page([item("1", name: "Changed")], next: nil)))
+        drain()
+        XCTAssertEqual(sync { session.selections }, before)
+        XCTAssertFalse(sync { session.isLoadingMore })
+        XCTAssertNotNil(sync { session.nextPage }, "a failed save can retry this page")
     }
 
     // MARK: Language and leaving

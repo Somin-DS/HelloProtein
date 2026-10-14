@@ -1,0 +1,132 @@
+{
+  "header": {
+    "resultCode": "00"
+  },
+  "body": {
+    "totalCount": 1436,
+    "pageNo": 1,
+    "numOfRows": 20,
+    "items": [
+      {
+        "FOOD_CD": "D101-017030000-0001",
+        "FOOD_NM_KR": "볶음밥_계란",
+        "AMT_NUM3": "6.62",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D202-077000000-0001",
+        "FOOD_NM_KR": "계란빵_쌀계란빵",
+        "AMT_NUM3": "2.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D202-077000000-0002",
+        "FOOD_NM_KR": "계란빵_트윈에그 브레드",
+        "AMT_NUM3": "11.21",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D202-077000000-0003",
+        "FOOD_NM_KR": "계란빵_콘치즈 계란빵",
+        "AMT_NUM3": "10.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D202-115000000-0030",
+        "FOOD_NM_KR": "토스트_뚜쥬맘계란토스트",
+        "AMT_NUM3": "9.49",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D301-001000000-0001",
+        "FOOD_NM_KR": "계란 덮밥",
+        "AMT_NUM3": "4.31",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D401-001000000-0001",
+        "FOOD_NM_KR": "계란 덮밥",
+        "AMT_NUM3": "5.00",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D401-007030000-0001",
+        "FOOD_NM_KR": "김밥_계란",
+        "AMT_NUM3": "4.30",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D401-017030000-0001",
+        "FOOD_NM_KR": "볶음밥_계란",
+        "AMT_NUM3": "5.80",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D402-077000000-0001",
+        "FOOD_NM_KR": "계란빵",
+        "AMT_NUM3": "6.00",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D501-001000000-0001",
+        "FOOD_NM_KR": "계란 덮밥",
+        "AMT_NUM3": "4.70",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D501-007030000-0001",
+        "FOOD_NM_KR": "김밥_계란",
+        "AMT_NUM3": "4.30",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D501-017030000-0001",
+        "FOOD_NM_KR": "볶음밥_계란",
+        "AMT_NUM3": "5.80",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D502-077000000-0001",
+        "FOOD_NM_KR": "계란빵",
+        "AMT_NUM3": "6.00",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D601-001000000-0001",
+        "FOOD_NM_KR": "계란 덮밥",
+        "AMT_NUM3": "4.70",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D601-017030000-0001",
+        "FOOD_NM_KR": "볶음밥_계란",
+        "AMT_NUM3": "5.70",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D701-017030000-0001",
+        "FOOD_NM_KR": "볶음밥_계란",
+        "AMT_NUM3": "5.80",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D702-077000000-0001",
+        "FOOD_NM_KR": "계란빵",
+        "AMT_NUM3": "5.90",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "P101-103000100-0212",
+        "FOOD_NM_KR": "뽀로로친구들 퍼즐비스킷 계란맛",
+        "AMT_NUM3": "8.57",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-103000100-0539",
+        "FOOD_NM_KR": "계란머랭쿠키",
+        "AMT_NUM3": "5.17",
+        "SERVING_SIZE": "100g"
+      }
+    ]
+  }
+}

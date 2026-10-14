@@ -1,4 +1,6 @@
 // Safe defaults for local builds and CI.
 // Put a real API key in an ignored Secrets.xcconfig next to this file.
 API_KEY =
+// Raw (decoded) data.go.kr key for service 15127578. Not the legacy I2790 key.
+MFDS_API_KEY =
 #include? "Secrets.xcconfig"

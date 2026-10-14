@@ -1,0 +1,132 @@
+{
+  "header": {
+    "resultCode": "00"
+  },
+  "body": {
+    "totalCount": 4160,
+    "pageNo": 1,
+    "numOfRows": 20,
+    "items": [
+      {
+        "FOOD_CD": "D102-096060000-0001",
+        "FOOD_NM_KR": "샌드위치_닭가슴살",
+        "AMT_NUM3": "12.18",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D110-462155200-0001",
+        "FOOD_NM_KR": "닭볶음(닭갈비)_닭가슴살_피망",
+        "AMT_NUM3": "16.39",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D114-640080000-0001",
+        "FOOD_NM_KR": "샐러드_닭가슴살",
+        "AMT_NUM3": "7.17",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D202-096060000-0001",
+        "FOOD_NM_KR": "샌드위치_닭가슴살 프레시 샌드위치",
+        "AMT_NUM3": "8.86",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "D414-669110000-0001",
+        "FOOD_NM_KR": "닭가슴살 샐러드_마요네즈",
+        "AMT_NUM3": "4.00",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D414-669460000-0001",
+        "FOOD_NM_KR": "닭가슴살 샐러드_드레싱",
+        "AMT_NUM3": "4.10",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D714-669460000-0001",
+        "FOOD_NM_KR": "닭가슴살 샐러드_드레싱",
+        "AMT_NUM3": "4.10",
+        "SERVING_SIZE": "100mL"
+      },
+      {
+        "FOOD_CD": "D802-096000000-0000",
+        "FOOD_NM_KR": "샌드위치_닭가슴살 프레시 샌드위치",
+        "AMT_NUM3": "21.00",
+        "SERVING_SIZE": "237g"
+      },
+      {
+        "FOOD_CD": "P101-104000100-0042",
+        "FOOD_NM_KR": "닭가슴살스낵매운치즈맛",
+        "AMT_NUM3": "26.40",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-106000100-2148",
+        "FOOD_NM_KR": "닭가슴살단백질바석류",
+        "AMT_NUM3": "18.96",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-405000400-0626",
+        "FOOD_NM_KR": "맛있닭닭가슴살한끼소세지빵",
+        "AMT_NUM3": "10.83",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0062",
+        "FOOD_NM_KR": "닭가슴살피자세판",
+        "AMT_NUM3": "13.50",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0121",
+        "FOOD_NM_KR": "맛있닭닭가슴살한끼피자",
+        "AMT_NUM3": "25.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0122",
+        "FOOD_NM_KR": "맛있닭닭가슴살한끼피자야채플러스",
+        "AMT_NUM3": "14.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0333",
+        "FOOD_NM_KR": "통밀로닭가슴살로제&치즈",
+        "AMT_NUM3": "13.99",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0334",
+        "FOOD_NM_KR": "통밀로닭가슴살할라피뇨듬뿍토마토",
+        "AMT_NUM3": "15.24",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0335",
+        "FOOD_NM_KR": "통밀로닭가슴살화이트크림모짜렐라치즈",
+        "AMT_NUM3": "11.59",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0359",
+        "FOOD_NM_KR": "포켓쉐프닭가슴살마라피자",
+        "AMT_NUM3": "16.28",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-415000400-0360",
+        "FOOD_NM_KR": "포켓쉐프닭가슴살크림피자",
+        "AMT_NUM3": "17.20",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0077",
+        "FOOD_NM_KR": "크리스피 닭가슴살 모짜 핫도그",
+        "AMT_NUM3": "9.28",
+        "SERVING_SIZE": "100g"
+      }
+    ]
+  }
+}

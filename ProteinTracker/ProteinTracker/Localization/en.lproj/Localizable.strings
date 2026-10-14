@@ -273,7 +273,7 @@
 "renewal_search_failed" = "Couldn’t load results. Try again.";
 "renewal_search_local_failed" = "Food data couldn’t be loaded.";
 "renewal_search_unavailable" = "Search is unavailable right now. You can enter food manually.";
-"renewal_search_unavailable_korean" = "Korean food search isn’t set up in this version. Switch the food search language to English to search the bundled catalog.";
+"renewal_search_unavailable_korean" = "Korean search is not configured. You can use English search or enter food manually.";
 "renewal_search_retry" = "Try again";
 "renewal_search_more" = "Show more";
 "renewal_search_more_failed" = "Couldn’t load more results. The results above are kept.";
@@ -304,3 +304,5 @@
 "renewal_unit_piece" = "piece";
 
 "renewal_search_source_unverified" = "Legacy catalog · source not verified";
+
+"renewal_search_source_mfds" = "Ministry of Food and Drug Safety · Food Nutrition Database";

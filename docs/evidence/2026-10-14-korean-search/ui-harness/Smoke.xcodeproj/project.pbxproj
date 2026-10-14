@@ -1,0 +1,19 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1; classes = {}; objectVersion = 56;
+ objects = {
+  A00000000000000000000001 = { isa = PBXProject; attributes = { LastUpgradeCheck = 1600; }; buildConfigurationList = A00000000000000000000010; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; mainGroup = A00000000000000000000002; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000003,); };
+  A00000000000000000000002 = { isa = PBXGroup; children = (A00000000000000000000004,A00000000000000000000005,); sourceTree = "<group>"; };
+  A00000000000000000000003 = { isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000011; buildPhases = (A00000000000000000000007,A00000000000000000000008,); buildRules = (); dependencies = (); name = Smoke; productName = Smoke; productReference = A00000000000000000000005; productType = "com.apple.product-type.bundle.ui-testing"; };
+  A00000000000000000000004 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Smoke.swift; sourceTree = "<group>"; };
+  A00000000000000000000005 = { isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = Smoke.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+  A00000000000000000000006 = { isa = PBXBuildFile; fileRef = A00000000000000000000004; };
+  A00000000000000000000007 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000006,); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000008 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000010 = { isa = XCConfigurationList; buildConfigurations = (A00000000000000000000012,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
+  A00000000000000000000011 = { isa = XCConfigurationList; buildConfigurations = (A00000000000000000000013,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
+  A00000000000000000000012 = { isa = XCBuildConfiguration; buildSettings = { SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 15.0; SWIFT_VERSION = 5.0; }; name = Debug; };
+  A00000000000000000000013 = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = com.devsom.Phase1Smoke; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
+ };
+ rootObject = A00000000000000000000001;
+}
