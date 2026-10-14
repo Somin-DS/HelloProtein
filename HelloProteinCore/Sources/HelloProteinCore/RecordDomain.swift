@@ -93,15 +93,17 @@ public struct CalendarDay: Codable, Hashable, Comparable, Sendable {
         return try? CalendarDay(year: year, month: month, day: day)
     }
 
-    /// Pure calendar arithmetic; independent of the device time zone.
+    /// Pure calendar arithmetic; independent of the device time zone. nil
+    /// when the result leaves the supported range (years 1–9999 CE): a day
+    /// before 0001-01-01 is never reported as a wrapped-around BCE date.
     public func adding(days: Int) -> CalendarDay? {
         let calendar = Self.utcGregorian
         guard let base = calendar.date(from: DateComponents(year: year, month: month, day: day)),
               let shifted = calendar.date(byAdding: .day, value: days, to: base) else {
             return nil
         }
-        let components = calendar.dateComponents([.year, .month, .day], from: shifted)
-        guard let year = components.year, let month = components.month, let day = components.day else {
+        let components = calendar.dateComponents([.era, .year, .month, .day], from: shifted)
+        guard components.era == 1, let year = components.year, let month = components.month, let day = components.day else {
             return nil
         }
         return try? CalendarDay(year: year, month: month, day: day)
