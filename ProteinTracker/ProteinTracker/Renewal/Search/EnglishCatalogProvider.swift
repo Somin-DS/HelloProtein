@@ -123,16 +123,15 @@ final class EnglishCatalogProvider: FoodSearchProvider {
     }
 }
 
-/// Picks the provider for a confirmed search language. Korean has no verified
-/// service at the moment (the legacy I2790 service answers "service not
-/// found"), so it is reported as not configured instead of calling anything.
+/// Picks the provider for the confirmed language. The MFDS key is separate
+/// from the discontinued I2790 key; missing configuration never sends a request.
 enum SearchProviderFactory {
     static let koreanProviderID = "mfds-korean"
 
     static func make(for language: SearchLanguage, bundle: Bundle = .main) -> FoodSearchProvider {
         switch language {
         case .english: return EnglishCatalogProvider(bundle: bundle)
-        case .korean: return UnconfiguredSearchProvider(providerID: koreanProviderID)
+        case .korean: return KoreanFoodSearchProvider(serviceKey: bundle.object(forInfoDictionaryKey: "MFDS_API_KEY") as? String)
         }
     }
 }

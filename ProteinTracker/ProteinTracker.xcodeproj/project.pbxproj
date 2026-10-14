@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        B71000000000000000000001 = {isa = PBXBuildFile; fileRef = B71000000000000000000004; };
+        B71000000000000000000002 = {isa = PBXBuildFile; fileRef = B71000000000000000000004; };
+        B71000000000000000000003 = {isa = PBXBuildFile; fileRef = B71000000000000000000005; };
 		A51000000000000000000006 /* RenewalStrings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* RenewalStrings.swift */; };
 		A51000000000000000000005 /* RecordHomePrototypeView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* RecordHomePrototypeView.swift */; };
 		A51000000000000000000004 /* LegacyTotalDisclosure.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000005 /* LegacyTotalDisclosure.swift */; };
@@ -137,6 +140,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        B71000000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = KoreanFoodSearchProvider.swift; path = Search/KoreanFoodSearchProvider.swift; sourceTree = "<group>"; };
+        B71000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KoreanFoodSearchProviderTests.swift; sourceTree = "<group>"; };
         A50000000000000000000006 /* GoalProgressPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalProgressPresentation.swift; sourceTree = "<group>"; };
 		A50000000000000000000005 /* LegacyTotalDisclosure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/LegacyTotalDisclosure.swift"; sourceTree = "<group>"; };
 		A50000000000000000000004 /* FoodRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/FoodRow.swift"; sourceTree = "<group>"; };
@@ -289,6 +294,7 @@
 				A60000000000000000000008 /* AddSheetPolicyTests.swift */,
 				A6000000000000000000000E /* SearchSessionModelTests.swift */,
 				A6000000000000000000000F /* EnglishCatalogProviderTests.swift */,
+                B71000000000000000000005,
 				A60000000000000000000004 /* RecoveryViewControllerTests.swift */,
 				A40000000000000000000004 /* MigrationRealmEndToEndTests.swift */,
 			);
@@ -308,6 +314,7 @@
 				A60000000000000000000009 /* FoodSearchProvider.swift */,
 				A6000000000000000000000A /* CatalogJSON.swift */,
 				A6000000000000000000000B /* EnglishCatalogProvider.swift */,
+                B71000000000000000000004,
 				A6000000000000000000000C /* SearchSessionModel.swift */,
 				A6000000000000000000000D /* SearchTab.swift */,
 				A20000000000000000000009 /* RenewalPrototypeFactory.swift */,
@@ -619,10 +626,12 @@
 				A60000000000000000000029 /* FoodSearchProvider.swift in Test Sources */,
 				A6000000000000000000002A /* CatalogJSON.swift in Test Sources */,
 				A6000000000000000000002B /* EnglishCatalogProvider.swift in Test Sources */,
+                B71000000000000000000002,
 				A6000000000000000000002C /* SearchSessionModel.swift in Test Sources */,
 				A6000000000000000000002D /* SearchTab.swift in Test Sources */,
 				A6000000000000000000002E /* SearchSessionModelTests.swift in Sources */,
 				A6000000000000000000002F /* EnglishCatalogProviderTests.swift in Sources */,
+                B71000000000000000000003,
 				A51000000000000000000007 /* RecoveryViewController.swift in Test Sources */,
 				A51000000000000000000008 /* RenewalLaunchGate.swift in Test Sources */,
                 A50000000000000000000206 /* GoalProgressPresentation.swift in Test Sources */,
@@ -673,6 +682,7 @@
 				A60000000000000000000019 /* FoodSearchProvider.swift in Sources */,
 				A6000000000000000000001A /* CatalogJSON.swift in Sources */,
 				A6000000000000000000001B /* EnglishCatalogProvider.swift in Sources */,
+                B71000000000000000000001,
 				A6000000000000000000001C /* SearchSessionModel.swift in Sources */,
 				A6000000000000000000001D /* SearchTab.swift in Sources */,
 				A20000000000000000000010 /* RenewalPrototypeFactory.swift in Sources */,

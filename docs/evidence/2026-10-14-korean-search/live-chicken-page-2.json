@@ -1,0 +1,132 @@
+{
+  "header": {
+    "resultCode": "00"
+  },
+  "body": {
+    "totalCount": 4160,
+    "pageNo": 2,
+    "numOfRows": 20,
+    "items": [
+      {
+        "FOOD_CD": "P101-416000400-0095",
+        "FOOD_NM_KR": "DELISH 크리스피 닭가슴살 핫도그",
+        "AMT_NUM3": "10.59",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0158",
+        "FOOD_NM_KR": "크리스피 고구마치즈 닭가슴살 핫도그",
+        "AMT_NUM3": "9.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0361",
+        "FOOD_NM_KR": "크리스피 닭가슴살 핫도그",
+        "AMT_NUM3": "10.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0375",
+        "FOOD_NM_KR": "프리미엄 닭가슴살 핫도그",
+        "AMT_NUM3": "10.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0425",
+        "FOOD_NM_KR": "가뿐한끼 촉촉탱글 닭가슴살 핫도그",
+        "AMT_NUM3": "12.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0434",
+        "FOOD_NM_KR": "닭가슴살 곡물 핫도그",
+        "AMT_NUM3": "10.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-416000400-0596",
+        "FOOD_NM_KR": "헬키 푸키 닭가슴살오곡핫도그",
+        "AMT_NUM3": "10.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-421000400-0014",
+        "FOOD_NM_KR": "닭가슴살또띠아",
+        "AMT_NUM3": "11.60",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-431000400-0089",
+        "FOOD_NM_KR": "닭가슴살토스트",
+        "AMT_NUM3": "11.35",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-431000400-0098",
+        "FOOD_NM_KR": "세종명가 닭가슴살 크랜베리샌드위치",
+        "AMT_NUM3": "10.40",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-431000400-0260",
+        "FOOD_NM_KR": "매콤닭가슴살 치즈 피타 샌드",
+        "AMT_NUM3": "14.17",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-0052",
+        "FOOD_NM_KR": "닭가슴살 소떡",
+        "AMT_NUM3": "11.67",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-0053",
+        "FOOD_NM_KR": "닭가슴살현미떡볶이매콤까르보",
+        "AMT_NUM3": "7.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-0054",
+        "FOOD_NM_KR": "닭가슴살현미떡볶이오리지널",
+        "AMT_NUM3": "9.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-1579",
+        "FOOD_NM_KR": "현미 닭가슴살 가래떡",
+        "AMT_NUM3": "15.46",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-1580",
+        "FOOD_NM_KR": "현미 닭가슴살 설기떡",
+        "AMT_NUM3": "11.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-2041",
+        "FOOD_NM_KR": "현미 닭가슴살 떡국떡",
+        "AMT_NUM3": "15.60",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P101-501000500-2042",
+        "FOOD_NM_KR": "현미 닭가슴살 영양찰떡",
+        "AMT_NUM3": "11.77",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P106-005000300-0035",
+        "FOOD_NM_KR": "연두부닭가슴살",
+        "AMT_NUM3": "5.00",
+        "SERVING_SIZE": "100g"
+      },
+      {
+        "FOOD_CD": "P108-001000200-0193",
+        "FOOD_NM_KR": "델리팡 고단백 닭가슴살면",
+        "AMT_NUM3": "24.00",
+        "SERVING_SIZE": "100g"
+      }
+    ]
+  }
+}

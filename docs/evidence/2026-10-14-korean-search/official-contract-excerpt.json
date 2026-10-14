@@ -1,0 +1,106 @@
+{
+  "source": "https://www.data.go.kr/data/15127578/openapi.do",
+  "retrieved": "2026-10-14",
+  "host": "apis.data.go.kr/1471000/FoodNtrCpntDbInfo03",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "path": "/getFoodNtrCpntDbInq03",
+  "parameters": [
+    {
+      "name": "serviceKey",
+      "description": "공공데이터포털에서 발급 받은 인증키",
+      "type": "string",
+      "required": true,
+      "in": "query"
+    },
+    {
+      "name": "pageNo",
+      "description": "페이지 번호",
+      "type": "integer",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "numOfRows",
+      "description": "한 페이지 결과수",
+      "type": "integer",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "type",
+      "description": "응답데이터 형식(xml/json) default : xml",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "FOOD_NM_KR",
+      "description": "식품명",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "RESEARCH_YMD",
+      "description": "데이터생성일자",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "MAKER_NM",
+      "description": "업체명",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "FOOD_CAT1_NM",
+      "description": "식품대분류명",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "ITEM_REPORT_NO",
+      "description": "품목제조보고번호",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "UPDATE_DATE",
+      "description": "데이터수정일자",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "DB_CLASS_NM",
+      "description": "품목대표/상용제품",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    },
+    {
+      "name": "FOOD_OR_NM",
+      "description": "식품기원명",
+      "type": "string",
+      "required": false,
+      "in": "query"
+    }
+  ],
+  "fields": {
+    "FOOD_CD": "식품코드",
+    "FOOD_NM_KR": "식품명",
+    "SERVING_SIZE": "영양성분함량기준량",
+    "AMT_NUM3": "단백질(g)"
+  },
+  "envelope": [
+    "header",
+    "body"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "header": {
+    "resultCode": "00"
+  },
+  "body": {
+    "totalCount": 0,
+    "pageNo": 1,
+    "numOfRows": 20,
+    "items": []
+  }
+}

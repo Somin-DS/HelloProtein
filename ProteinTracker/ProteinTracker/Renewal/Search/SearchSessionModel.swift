@@ -173,16 +173,20 @@ final class SearchSessionModel: ObservableObject {
 
     /// Rows already shown are not repeated. A row whose content differs from
     /// the one shown under the same ID is not swapped in silently: the shown
-    /// row stays, and if it was selected it is deselected and reported.
+    /// row is updated only after its selection is cleared and reported.
     private func append(_ page: SearchResultPage) {
         var seen = Set(results.map(\.id))
         var dropped: [String] = []
         for item in page.items {
             if seen.contains(item.id) {
-                if let shown = results.first(where: { $0.id == item.id }), shown != item, selected.contains(item.id) {
-                    selected.removeAll { $0 == item.id }
-                    snapshots[item.id] = nil
-                    dropped.append(item.id)
+                if let index = results.firstIndex(where: { $0.id == item.id }), results[index] != item {
+                    if selected.contains(item.id) {
+                        selected.removeAll { $0 == item.id }
+                        snapshots[item.id] = nil
+                        dropped.append(item.id)
+                    }
+                    // Show the new value only after discarding its old selection.
+                    results[index] = item
                 }
                 continue
             }
@@ -212,6 +216,18 @@ final class SearchSessionModel: ObservableObject {
     func clearSelection() {
         selected = []
         snapshots = [:]
+    }
+
+    /// Freeze the displayed snapshot while a language or record write runs.
+    /// Late page callbacks cannot mutate selections during a pending save.
+    func cancelPagesKeepingResults() {
+        guard status == .results else { return }
+        generation += 1
+        requestHandle?.cancel()
+        requestHandle = nil
+        pageHandle?.cancel()
+        pageHandle = nil
+        isLoadingMore = false
     }
 
     // MARK: Language and leaving
