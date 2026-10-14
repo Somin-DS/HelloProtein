@@ -126,6 +126,8 @@
 		A60000000000000000000027 /* AddSheetPolicy.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000007 /* AddSheetPolicy.swift */; };
 		A60000000000000000000031 /* PortionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000030 /* PortionEditorView.swift */; };
 		A60000000000000000000032 /* PortionEditorView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000030 /* PortionEditorView.swift */; };
+		A60000000000000000000034 /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000033 /* StatisticsView.swift */; };
+		A60000000000000000000035 /* StatisticsView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000033 /* StatisticsView.swift */; };
 		A60000000000000000000028 /* AddSheetPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000008 /* AddSheetPolicyTests.swift */; };
 		A60000000000000000000019 /* FoodSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000009 /* FoodSearchProvider.swift */; };
 		A60000000000000000000029 /* FoodSearchProvider.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000009 /* FoodSearchProvider.swift */; };
@@ -228,6 +230,7 @@
 		A60000000000000000000006 /* AddSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheet.swift; sourceTree = "<group>"; };
 		A60000000000000000000007 /* AddSheetPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheetPolicy.swift; sourceTree = "<group>"; };
 		A60000000000000000000030 /* PortionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortionEditorView.swift; sourceTree = "<group>"; };
+		A60000000000000000000033 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
 		A60000000000000000000008 /* AddSheetPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSheetPolicyTests.swift; sourceTree = "<group>"; };
 		A60000000000000000000009 /* FoodSearchProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FoodSearchProvider.swift; path = Search/FoodSearchProvider.swift; sourceTree = "<group>"; };
 		A6000000000000000000000A /* CatalogJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CatalogJSON.swift; path = Search/CatalogJSON.swift; sourceTree = "<group>"; };
@@ -315,6 +318,7 @@
 				A60000000000000000000006 /* AddSheet.swift */,
 				A60000000000000000000007 /* AddSheetPolicy.swift */,
 				A60000000000000000000030 /* PortionEditorView.swift */,
+				A60000000000000000000033 /* StatisticsView.swift */,
 				A60000000000000000000009 /* FoodSearchProvider.swift */,
 				A6000000000000000000000A /* CatalogJSON.swift */,
 				A6000000000000000000000B /* EnglishCatalogProvider.swift */,
@@ -627,6 +631,7 @@
 				A60000000000000000000026 /* AddSheet.swift in Test Sources */,
 				A60000000000000000000027 /* AddSheetPolicy.swift in Test Sources */,
 				A60000000000000000000032 /* PortionEditorView.swift in Test Sources */,
+				A60000000000000000000035 /* StatisticsView.swift in Test Sources */,
 				A60000000000000000000028 /* AddSheetPolicyTests.swift in Sources */,
 				A60000000000000000000029 /* FoodSearchProvider.swift in Test Sources */,
 				A6000000000000000000002A /* CatalogJSON.swift in Test Sources */,
@@ -685,6 +690,7 @@
 				A60000000000000000000016 /* AddSheet.swift in Sources */,
 				A60000000000000000000017 /* AddSheetPolicy.swift in Sources */,
 				A60000000000000000000031 /* PortionEditorView.swift in Sources */,
+				A60000000000000000000034 /* StatisticsView.swift in Sources */,
 				A60000000000000000000019 /* FoodSearchProvider.swift in Sources */,
 				A6000000000000000000001A /* CatalogJSON.swift in Sources */,
 				A6000000000000000000001B /* EnglishCatalogProvider.swift in Sources */,

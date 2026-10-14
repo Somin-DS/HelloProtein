@@ -1168,26 +1168,53 @@ final class Smoke: XCTestCase {
     /// Home rows live in a LazyVStack: rows below the fold do not exist until
     /// scrolled into view, so scroll to the end before counting, then back.
     func homeRowCount(_ name: String) -> Int {
-        // Rows are a LazyVStack: keep swiping until the screen stops moving
-        // (a fixed swipe count no longer reaches the bottom of a long day).
-        var count = rowCount(name)
+        // Rows are a LazyVStack (off-screen rows are absent from the tree) and
+        // identical rows read alike, so every visible row is keyed by its
+        // `renewal.record.<id>` identifier while the list is scrolled until the
+        // screen stops changing; the count is the number of distinct records.
+        // Count only once the add sheet is fully gone: during its dismissal
+        // the sheet's own result rows and a half-hidden home list both skew
+        // the count (seen as +1 and -1 on the SE).
+        _ = waitUntil(timeout: 5) { !self.app.buttons["renewal.add.cancel"].exists && self.app.buttons["renewal.add"].isHittable }
+        var ids = Set<String>()
+        func collect() {
+            guard let snapshot = try? app.snapshot() else { return }
+            func walk(_ element: XCUIElementSnapshot) {
+                if element.elementType == .button, element.identifier.hasPrefix("renewal.record."), element.label.contains(name) {
+                    ids.insert(element.identifier)
+                }
+                for child in element.children { walk(child) }
+            }
+            walk(snapshot)
+        }
+        collect()
         var last = ""
         var unchanged = 0
-        for _ in 0..<60 {
+        for _ in 0..<80 {
             app.swipeUp()
-            count = max(count, rowCount(name))
+            collect()
+            let signature = screenSignature()
+            if signature == last { unchanged += 1; if unchanged >= 3 { break } } else { unchanged = 0 }
+            last = signature
+        }
+        last = ""
+        unchanged = 0
+        for _ in 0..<80 {
+            app.swipeDown()
+            collect()
             let signature = screenSignature()
             if signature == last { unchanged += 1; if unchanged >= 2 { break } } else { unchanged = 0 }
             last = signature
         }
-        last = ""
-        for _ in 0..<60 {
-            app.swipeDown()
-            let signature = screenSignature()
-            if signature == last { break }
-            last = signature
-        }
-        return count
+        return ids.count
+    }
+
+    /// Scrolls the screen up by a short, momentum-free drag (a full swipe on
+    /// the SE moves past a lazy row and drops it from the tree).
+    func nudgeUp(points: CGFloat = 160) {
+        let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75))
+        let to = from.withOffset(CGVector(dx: 0, dy: -points))
+        from.press(forDuration: 0.1, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
     /// One consistent snapshot of the visible static texts and their rows;
@@ -1982,7 +2009,13 @@ final class Smoke: XCTestCase {
         searchTab()
         ensureLanguage("english")
         runSearch("butter, salted")
-        XCTAssertTrue(waitUntil(timeout: 20) { self.showResult(0, timeout: 1).isEnabled }, "the delayed history write finishes first: " + app.debugDescription)
+        // The history write is delayed 8 s, so the lookup starts late: wait
+        // for the single result row (scrolling it in on the SE) without
+        // asserting inside the loop.
+        XCTAssertTrue(waitUntil(timeout: 30) {
+            if !self.resultRow(0).exists { self.app.swipeUp() }
+            return self.resultRow(0).exists && self.resultRow(0).isEnabled
+        }, "the delayed history write finishes first: " + app.debugDescription)
         showResult(0, timeout: 2).tap()
         XCTAssertTrue(editAmountButton(0).waitForExistence(timeout: 3), app.debugDescription)
         editAmountButton(0).tap()
@@ -2050,7 +2083,10 @@ final class Smoke: XCTestCase {
 
     func statisticsEntry() -> XCUIElement { app.buttons["renewal.statistics.entry"] }
     func statisticsRange() -> XCUIElement { app.staticTexts["renewal.statistics.range"] }
-    func statisticsRow(_ iso: String) -> XCUIElement { app.buttons["renewal.statistics.day.\(iso)"] }
+    /// A plain-style SwiftUI Button row surfaces as an "Other" carrying the identifier.
+    func statisticsRow(_ iso: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", "renewal.statistics.day.\(iso)")).firstMatch
+    }
     func statisticsSummaryValue(_ id: String) -> String {
         app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", id)).firstMatch.label
     }
@@ -2062,7 +2098,8 @@ final class Smoke: XCTestCase {
     func dailyTotalNumber() -> String {
         // "18.27 g" / "18.27 g" with AX concatenation: keep the leading number.
         let label = app.staticTexts["renewal.dailyTotal"].label
-        return label.split(whereSeparator: { !"0123456789.,-".contains($0) }).first.map(String.init) ?? label
+        // The AX label joins parts with ", ", so the comma is a separator, not a decimal mark (en catalog).
+        return label.split(whereSeparator: { !"0123456789.-".contains($0) }).first.map(String.init) ?? label
     }
     func openStatistics() {
         XCTAssertTrue(statisticsEntry().waitForExistence(timeout: 10), app.debugDescription)
@@ -2180,9 +2217,13 @@ final class Smoke: XCTestCase {
         XCTAssertTrue(result.label.contains("샌드위치_닭가슴살"), result.label)
         XCTAssertTrue((result.value as? String ?? "").contains("12.18"), result.debugDescription)
         result.tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { self.searchSummary().exists && self.searchSummary().label.contains("12.18") }, app.debugDescription)
         let edit = app.buttons["renewal.search.editAmount.\(itemID)"]
-        XCTAssertTrue(edit.waitForExistence(timeout: 5), "a live row with a 100 g reference gets a basis: " + app.debugDescription)
-        reveal(edit)
+        // The selected row sits low on the SE screen, under the summary bar:
+        // nudge it up in short steps so its edit button becomes hittable.
+        for _ in 0..<6 where !(edit.exists && edit.isHittable) { nudgeUp() }
+        XCTAssertFalse(app.staticTexts["renewal.search.amountUnavailable.\(itemID)"].exists, "the live row has a basis")
+        XCTAssertTrue(edit.exists && edit.isHittable, "a live row with a 100 g reference gets a basis: " + app.debugDescription)
         capture("s1-live-selected")
         edit.tap()
         XCTAssertTrue(amountField().waitForExistence(timeout: 5))

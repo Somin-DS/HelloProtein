@@ -103,6 +103,10 @@ final class RecordHomeViewModel: ObservableObject {
     @Published private(set) var searchHistory: [SearchTerm] = []
     /// The confirmed food-search language setting (raw value kept as stored).
     @Published private(set) var searchLanguage: SearchLanguageSetting = .interpret(raw: nil)
+    /// Bumped on every `refresh()` (a confirmed state change or a day
+    /// selection), so observers can tell that `state`-derived values such as
+    /// statistics may differ without comparing whole states.
+    @Published private(set) var stateRevision = 0
 
     struct GoalReview: Equatable {
         let needsReview: Bool
@@ -620,7 +624,14 @@ final class RecordHomeViewModel: ObservableObject {
         }
     }
 
+    /// Statistics over the confirmed state: pure, no load, no write. A
+    /// pending save keeps showing the last confirmed numbers until reconfirm.
+    func statistics(for period: StatisticsPeriod) -> StatisticsSummary {
+        StatisticsSummary.compute(state: state, period: period)
+    }
+
     private func refresh() {
+        stateRevision &+= 1
         log = state.log(for: selectedDay) ?? ((try? DailyLog(day: selectedDay)) ?? log)
         totalCentigrams = try? log.totalProteinCentigrams()
         goalState = Self.goalState(for: selectedDay, in: state)
