@@ -1,6 +1,6 @@
 # 검색 음식 섭취량과 통계 구현 계획
 
-작성일: 2026-10-14. 상태: **Q1·Q2·S1 구현 완료(각 PR 검토 대기)**. 진행 기록은 문서 끝의 [진행 상태](#진행-상태)를 본다. 대상: 다음 구현을 맡는 개발 에이전트. 기준: PR #10 병합 main `3c37bcd5d3c097b62ade242aed3a3b9e46da0fbc`. 본사 기획·디자인·개발·QA·마케팅·그로스·프롬프트 엔지니어의 [공동 검토](reviews/2026-10-14-quantity-statistics-team-review.md)를 반영한다.
+작성일: 2026-10-14. 상태: **Q1·Q2·S1 구현·리뷰·main 머지 완료(2026-10-27); 실데이터 이관·출시 검증 별도**. 진행 기록은 문서 끝의 [진행 상태](#진행-상태)를 본다. 대상: 다음 구현을 맡는 개발 에이전트. 기준: PR #10 병합 main `3c37bcd5d3c097b62ade242aed3a3b9e46da0fbc`. 본사 기획·디자인·개발·QA·마케팅·그로스·프롬프트 엔지니어의 [공동 검토](reviews/2026-10-14-quantity-statistics-team-review.md)를 반영한다.
 
 이번 업데이트는 검색한 음식의 **실제 먹은 양 입력·재편집**과 **최근 7일·30일 기록 통계**를 함께 완성한다. 예를 들어 100g당 단백질 12.18g인 식품을 150g 먹었다고 입력하면 18.27g을 기록하고, 해당 날짜의 합계와 통계에 반영한다. 기존 사용자 기록과 목표 이력을 보존하는 것이 완료 조건이다.
 
@@ -260,18 +260,22 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 
 ## 완료 조건
 
-- [ ] schema 3 승격이 기존 데이터를 보존하고 실패·재실행 때 중복 이관·자동 초기화를 하지 않는다.
-- [ ] 검색 수량 변경과 저장 후 재편집에서 원래 기준과 원시 소수 정밀도를 보존하고 최종 한 번만 반올림한다.
-- [ ] basis 없는 기존 기록의 의미·값·수동 편집은 유지된다.
-- [ ] 다중 추가와 재시도가 원자적이며 수량·기준·record ID·대상 날짜를 유지한다.
-- [ ] 최근 7/30일 통계가 기록 없음·0·음수·과거합계·날짜별 목표를 정의대로 보여준다.
-- [ ] 통계 조회에 쓰기가 없고 저장 확정 후 홈과 통계가 같은 상태를 표시한다.
-- [ ] 일반 iPhone·한영·접근성과 두 기능 통합 UI 증거가 있다. 미검증 항목은 명시한다.
-- [ ] Q1만 혹은 Q2까지만 완료한 상태를 이번 업데이트 전체 완료로 보고하지 않는다.
+아래 체크는 개발·합성 데이터 검증 범위다. 실제 구버전 사용자 파일과 배포 검증은 [출시 준비 계획](release-readiness-plan.md)의 별도 조건으로 남는다.
 
-다음 구현자는 이 계획과 공동 검토 기록, AGENTS.md, 최신 main을 확인한 뒤 Q1부터 진행한다. 무관한 `.DS_Store`·`agents/`·사용자의 AGENTS.md 변경을 삭제하거나 일괄 stage하지 않는다. API 공급자·유료계약·배포·기본 활성화 등 범위 밖 선택이 새로 필요할 때만 근거와 구체안을 제시한다.
+- [x] schema 3 승격이 기존 데이터를 보존하고 실패·재실행 때 중복 이관·자동 초기화를 하지 않는다.
+- [x] 검색 수량 변경과 저장 후 재편집에서 원래 기준과 원시 소수 정밀도를 보존하고 최종 한 번만 반올림한다.
+- [x] basis 없는 기존 기록의 의미·값·수동 편집은 유지된다.
+- [x] 다중 추가와 재시도가 원자적이며 수량·기준·record ID·대상 날짜를 유지한다.
+- [x] 최근 7/30일 통계가 기록 없음·0·음수·과거합계·날짜별 목표를 정의대로 보여준다.
+- [x] 통계 조회에 쓰기가 없고 저장 확정 후 홈과 통계가 같은 상태를 표시한다.
+- [x] 일반 iPhone·한영·접근성과 두 기능 통합 UI 증거가 있다. 미검증 항목은 명시한다.
+- [x] Q1만 혹은 Q2까지만 완료한 상태를 이번 업데이트 전체 완료로 보고하지 않는다.
+
+Q1부터 재구현하지 않는다. 후속 담당자는 이 계획과 공동 검토 기록, AGENTS.md, 최신 main 및 출시 준비 계획을 확인한다. 무관한 `.DS_Store`·`agents/`·사용자의 AGENTS.md 변경을 삭제하거나 일괄 stage하지 않는다. API 공급자·유료계약·배포·기본 활성화 등 범위 밖 선택이 새로 필요할 때만 근거와 구체안을 제시한다.
 
 ## 진행 상태
+
+2026-10-27: #11 (`676f1b6`), #12 (`a4941c5`), #13 (`6d3b392`) main 머지 완료. 아래 표는 각 단계 최초 구현 시점의 검증 내역이다. 최종 main 통합 검증은 증거 문서의 PR 11/12/13 절을 참조한다.
 
 | 단계 | 상태 | 근거 |
 | --- | --- | --- |
@@ -279,5 +283,5 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 | Q2 섭취량 화면 | 구현·검증 완료, 브랜치 `feat/renewal-quantity-q2`(Q1 위에 쌓음) | [Q2 증거](evidence/2026-10-14-quantity-statistics/README.md#q2-섭취량-화면과-세션-브랜치-featrenewal-quantity-q2-q1-위에-쌓음): 앱 테스트 131 통과·0 실패, Release 빌드, SE/17 UI 하네스(검색 행 섭취량 변경·적용·버리기·해제/재선택·일괄 추가·기록 수량 편집·직접 단백질 전환, 한국어 AX-XL, busy·pending 잠금) |
 | S1 통계와 통합 검증 | 구현·검증 완료, 브랜치 `feat/renewal-quantity-s1`(Q2 위에 쌓음) | [S1 증거](evidence/2026-10-14-quantity-statistics/README.md#s1-통계와-통합-검증-브랜치-featrenewal-quantity-s1-q2-위에-쌓음): Core 100·MigrationCore 82·앱 134 테스트 통과, Release 빌드, SE/17 UI 하네스(7/30 전환·이전/다음/최근·날짜 선택→홈, 한국어 AX-XL, 실제 MFDS 통합 시나리오 150 g=18.27 g → 재실행 → 200 g=24.36 g → 삭제) |
 
-Q1에서 확정한 계약: `FoodRecord.calculationBasis`(proteinGramsText·referenceQuantity·origin·provider), `PortionCalculation`(정수 자릿수 연산, 최종 1회 half-up), `PortionInput.parseQuantity`(9/3자리, 허용 구분자 1개는 소수점), `AppState.currentSchemaVersion = 3`과 schema 2 전용 reader `decodeSchema2`, `StoreInspection.legacySchema2`, `MigrationCoordinator.promoteSchema2`와 증거 파일 `schema2-app-state.json`·`schema-promotion.json`, 복구 종류 `schemaBackupFailed`·`schemaBackupMismatch`. Q2에서 확정한 것: 검색 행의 basis 부여 조건(기준량 9/3자리·정확 계산이 검증값 재현), `SearchSessionModel.amountDrafts`·`AmountEditTarget`·`applyAmount`, `RecordHomeViewModel.updateRecordAmount`·`updateRecordDirectProtein`, `PortionEditorPolicy`. S1에서 확정한 것: `StatisticsPeriod`(끝 = min(선택일, 오늘), 길이 전환은 끝 유지, 이전/다음은 길이만큼·오늘까지), `StatisticsSummary.compute`(기록일만 분모, signed 합계, overflow는 failure), `DayGoal`(홈 `goalState`와 같은 우선순위), `RecordHomeViewModel.stateRevision`·`statistics(for:)`, `StatisticsView`(단일 push, 읽기 전용). 세 단계(Q1+Q2+S1)의 구현과 검증이 끝났고, 각 PR의 검토·머지와 실기기 설치는 수행하지 않았다.
+Q1에서 확정한 계약: `FoodRecord.calculationBasis`(proteinGramsText·referenceQuantity·origin·provider), `PortionCalculation`(정수 자릿수 연산, 최종 1회 half-up), `PortionInput.parseQuantity`(9/3자리, 허용 구분자 1개는 소수점), `AppState.currentSchemaVersion = 3`과 schema 2 전용 reader `decodeSchema2`, `StoreInspection.legacySchema2`, `MigrationCoordinator.promoteSchema2`와 증거 파일 `schema2-app-state.json`·`schema-promotion.json`, 복구 종류 `schemaBackupFailed`·`schemaBackupMismatch`. Q2에서 확정한 것: 검색 행의 basis 부여 조건(기준량 9/3자리·정확 계산이 검증값 재현), `SearchSessionModel.amountDrafts`·`AmountEditTarget`·`applyAmount`, `RecordHomeViewModel.updateRecordAmount`·`updateRecordDirectProtein`, `PortionEditorPolicy`. S1에서 확정한 것: `StatisticsPeriod`(끝 = min(선택일, 오늘), 길이 전환은 끝 유지, 이전/다음은 길이만큼·오늘까지), `StatisticsSummary.compute`(기록일만 분모, signed 합계, overflow는 failure), `DayGoal`(홈 `goalState`와 같은 우선순위), `RecordHomeViewModel.stateRevision`·`statistics(for:)`, `StatisticsView`(단일 push, 읽기 전용). 세 단계(Q1+Q2+S1)의 구현·개발 검증·리뷰·main 머지가 완료됐다. 실기기 설치·실사용 데이터 검증·기본 활성화·배포는 수행하지 않았다.
 
