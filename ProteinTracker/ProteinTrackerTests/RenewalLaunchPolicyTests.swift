@@ -27,6 +27,32 @@ final class RenewalLaunchPolicyTests: XCTestCase {
         XCTAssertFalse(RenewalLaunchPolicy.isSeedRequested(arguments: []))
     }
 
+    func testPromotionEvidenceAloneBlocksLegacyWithoutOptIn() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("promotion-paths-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let paths = RenewalPaths(rootDirectory: root)
+        let evidence = FileMigrationEvidenceStore(directory: paths.evidenceDirectory)
+        // Keep launch paths aligned with the coordinator's actual evidence paths.
+        XCTAssertEqual(paths.schema2BackupURL, evidence.schema2BackupURL)
+        XCTAssertEqual(paths.schemaPromotionURL, evidence.schemaPromotionURL)
+        try FileManager.default.createDirectory(at: paths.evidenceDirectory, withIntermediateDirectories: true)
+        for file in [evidence.schema2BackupURL, evidence.schemaPromotionURL] {
+            // Even damaged evidence must reach the coordinator for validation,
+            // never the old UIKit path. No store or completion marker exists.
+            try Data("corrupt evidence".utf8).write(to: file)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: paths.storeFileURL.path))
+            XCTAssertFalse(FileManager.default.fileExists(atPath: paths.completionMarkerURL.path))
+            for args in [[], ["-HelloProteinRenewalFlow", "NO"]] as [[String]] {
+                XCTAssertEqual(RenewalLaunchPolicy.route(arguments: args, environment: [:],
+                    newStoreEvidenceExists: paths.newStoreEvidenceExists(), isOSSupported: true), .renewal, file.lastPathComponent)
+                XCTAssertEqual(RenewalLaunchPolicy.route(arguments: args, environment: [:],
+                    newStoreEvidenceExists: paths.newStoreEvidenceExists(), isOSSupported: false), .renewalUnsupportedOS, file.lastPathComponent)
+            }
+            try FileManager.default.removeItem(at: file)
+            XCTAssertFalse(paths.newStoreEvidenceExists())
+        }
+    }
+
     func testPathsPointToPersistentAppSupportAndDetectEvidence() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("paths-\(UUID().uuidString)")
         let paths = RenewalPaths(rootDirectory: root)
