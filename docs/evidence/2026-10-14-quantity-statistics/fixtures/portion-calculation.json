@@ -1,0 +1,61 @@
+{
+  "description": "Platform-independent fixtures for the proportional protein calculation: protein per reference amount × amount eaten ÷ reference amount, rounded once, half-up at the third fraction digit, to centigrams. Shared by the iOS Core tests (PortionCalculationTests) and any future Android port.",
+  "cases": [
+    { "name": "plan sample", "proteinGramsText": "12.18", "reference": { "value": "100", "unit": "gram" }, "actual": { "value": "150", "unit": "gram" }, "expectedCentigrams": 1827, "rounded": false },
+    { "name": "no pre-rounding of 1.005", "proteinGramsText": "1.005", "reference": { "value": "100", "unit": "gram" }, "actual": { "value": "200", "unit": "gram" }, "expectedCentigrams": 201, "rounded": false },
+    { "name": "thirds 1 g", "proteinGramsText": "10", "reference": { "value": "3", "unit": "gram" }, "actual": { "value": "1", "unit": "gram" }, "expectedCentigrams": 333, "rounded": true },
+    { "name": "thirds 2 g", "proteinGramsText": "10", "reference": { "value": "3", "unit": "gram" }, "actual": { "value": "2", "unit": "gram" }, "expectedCentigrams": 667, "rounded": true },
+    { "name": "thirds 3 g", "proteinGramsText": "10", "reference": { "value": "3", "unit": "gram" }, "actual": { "value": "3", "unit": "gram" }, "expectedCentigrams": 1000, "rounded": false },
+    { "name": "millilitres kept", "proteinGramsText": "4", "reference": { "value": "100", "unit": "milliliter" }, "actual": { "value": "250", "unit": "milliliter" }, "expectedCentigrams": 1000, "rounded": false },
+    { "name": "reference amount unchanged equals row value", "proteinGramsText": "12.18", "reference": { "value": "100", "unit": "gram" }, "actual": { "value": "100", "unit": "gram" }, "expectedCentigrams": 1218, "rounded": false },
+    { "name": "half up exactly at .xx5", "proteinGramsText": "0.005", "reference": { "value": "1", "unit": "gram" }, "actual": { "value": "1", "unit": "gram" }, "expectedCentigrams": 1, "rounded": true },
+    { "name": "below half stays down", "proteinGramsText": "1.0049999", "reference": { "value": "1", "unit": "gram" }, "actual": { "value": "1", "unit": "gram" }, "expectedCentigrams": 100, "rounded": true },
+    { "name": "fractional reference", "proteinGramsText": "2.5", "reference": { "value": "0.5", "unit": "gram" }, "actual": { "value": "0.125", "unit": "gram" }, "expectedCentigrams": 63, "rounded": true },
+    { "name": "serving unit", "proteinGramsText": "7.3", "reference": { "value": "1", "unit": "serving" }, "actual": { "value": "2.5", "unit": "serving" }, "expectedCentigrams": 1825, "rounded": false },
+    { "name": "largest editable amount", "proteinGramsText": "1", "reference": { "value": "1", "unit": "gram" }, "actual": { "value": "999999999.999", "unit": "gram" }, "expectedCentigrams": 100000000000, "rounded": true },
+    { "name": "nine fraction digits basis", "proteinGramsText": "0.123456789", "reference": { "value": "0.000000001", "unit": "gram" }, "actual": { "value": "0.001", "unit": "gram" }, "expectedCentigrams": 12345679, "rounded": true }
+  ],
+  "errors": [
+    { "name": "rounds to zero", "proteinGramsText": "0.004", "reference": { "value": "100", "unit": "gram" }, "actual": { "value": "100", "unit": "gram" }, "error": "roundsToZero" },
+    { "name": "rounds to zero after scaling", "proteinGramsText": "1", "reference": { "value": "1000", "unit": "gram" }, "actual": { "value": "0.004", "unit": "gram" }, "error": "roundsToZero" },
+    { "name": "unit mismatch", "proteinGramsText": "4", "reference": { "value": "100", "unit": "milliliter" }, "actual": { "value": "250", "unit": "gram" }, "error": "unitMismatch" },
+    { "name": "overflow", "proteinGramsText": "999999999999999999", "reference": { "value": "0.000000001", "unit": "gram" }, "actual": { "value": "999999999.999", "unit": "gram" }, "error": "overflow" }
+  ],
+  "quantityInput": {
+    "maxIntegerDigits": 9,
+    "maxFractionDigits": 3,
+    "accepted": [
+      { "text": "150", "separator": ".", "canonical": "150" },
+      { "text": "150.5", "separator": ".", "canonical": "150.5" },
+      { "text": "150,5", "separator": ",", "canonical": "150.5" },
+      { "text": "1.234", "separator": ",", "canonical": "1.234" },
+      { "text": "0.5", "separator": ".", "canonical": "0.5" },
+      { "text": ".5", "separator": ".", "canonical": "0.5" },
+      { "text": "5.", "separator": ".", "canonical": "5" },
+      { "text": "007.250", "separator": ".", "canonical": "7.25" },
+      { "text": " 150 ", "separator": ".", "canonical": "150" },
+      { "text": "999999999.999", "separator": ".", "canonical": "999999999.999" }
+    ],
+    "rejected": [
+      { "text": "", "separator": ".", "error": "empty" },
+      { "text": "0", "separator": ".", "error": "zero" },
+      { "text": "0.000", "separator": ".", "error": "zero" },
+      { "text": "-1", "separator": ".", "error": "negative" },
+      { "text": "+1", "separator": ".", "error": "notANumber" },
+      { "text": "1e3", "separator": ".", "error": "notANumber" },
+      { "text": "NaN", "separator": ".", "error": "notANumber" },
+      { "text": "inf", "separator": ".", "error": "notANumber" },
+      { "text": "１５０", "separator": ".", "error": "notANumber" },
+      { "text": "1 000", "separator": ".", "error": "groupingNotAllowed" },
+      { "text": "1'000", "separator": ".", "error": "groupingNotAllowed" },
+      { "text": "1,000", "separator": ".", "error": "groupingNotAllowed" },
+      { "text": "1.000,5", "separator": ",", "error": "mixedSeparators" },
+      { "text": "1,000.5", "separator": ",", "error": "mixedSeparators" },
+      { "text": "1.2.3", "separator": ".", "error": "mixedSeparators" },
+      { "text": "1,2,3", "separator": ",", "error": "mixedSeparators" },
+      { "text": "1234567890", "separator": ".", "error": "tooManyIntegerDigits" },
+      { "text": "1.2345", "separator": ".", "error": "tooManyFractionDigits" },
+      { "text": ".", "separator": ".", "error": "notANumber" }
+    ]
+  }
+}

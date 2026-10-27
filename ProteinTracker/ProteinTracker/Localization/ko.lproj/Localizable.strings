@@ -148,6 +148,8 @@
 "renewal_pending_sheet" = "이 저장의 결과를 확인하지 못했습니다. 저장 결과를 확인해 실제로 저장됐는지 살펴보세요.";
 "recovery_kind_evidenceCorrupt" = "이관 기록 파일이 손상됐습니다. 다시 가져오거나 새로 만들거나 덮어쓰지 않았습니다.";
 "recovery_kind_evidenceUnreadable" = "이관 기록 파일에 접근할 수 없습니다. 기기 잠금을 해제하고 다시 시도해 주세요.";
+"recovery_kind_schemaBackupFailed" = "기록 형식을 올리기 전 원본 사본을 만들지 못해 변환을 시작하지 않았어요.";
+"recovery_kind_schemaBackupMismatch" = "보관된 원본 사본이 현재 기록 파일과 달라요. 덮어쓰거나 변환하지 않고 멈췄어요.";
 "recovery_kind_evidenceUnsupported" = "이관 기록 파일이 이 앱 버전보다 새로운 형식입니다.";
 
 "renewal_daily_protein" = "하루 단백질";

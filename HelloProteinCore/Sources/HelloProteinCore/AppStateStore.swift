@@ -6,6 +6,10 @@ public enum StoreInspection: Equatable {
     case ready(AppState)
     /// A schema 1 prototype file that only stored logs.
     case legacySchema1(logs: [DailyLog])
+    /// A complete, valid schema 2 document read under schema 2 rules. It is
+    /// not opened as is: the launch path promotes it to the current schema
+    /// after backing up the original bytes.
+    case legacySchema2(AppState)
     case unsupportedSchema(Int)
     /// The file exists but cannot be decoded or fails invariants.
     case corrupt(String)
@@ -130,7 +134,7 @@ public extension AppStateStore {
     }
 }
 
-/// The single write owner for the schema 2 document.
+/// The single write owner for the current-schema document.
 ///
 /// Commit order: validate in memory → write a temporary file next to the target
 /// → decode the temporary file and compare → atomically rename over the target
@@ -221,7 +225,7 @@ public final class FileAppStateStore: AppStateStore {
         return inspect(data: data)
     }
 
-    static func inspect(data: Data) -> StoreInspection {
+    public static func inspect(data: Data) -> StoreInspection {
         struct VersionOnly: Decodable { let schemaVersion: Int }
         struct Schema1: Decodable { let schemaVersion: Int; let logs: [DailyLog] }
         let decoder = JSONDecoder()
@@ -231,6 +235,9 @@ public final class FileAppStateStore: AppStateStore {
         switch version {
         case AppState.currentSchemaVersion:
             do { return .ready(try decoder.decode(AppState.self, from: data)) }
+            catch { return .corrupt(String(describing: error)) }
+        case AppState.promotableSchemaVersion:
+            do { return .legacySchema2(try AppState.decodeSchema2(data)) }
             catch { return .corrupt(String(describing: error)) }
         case 1:
             do {
@@ -279,6 +286,7 @@ public final class FileAppStateStore: AppStateStore {
             return state
         case .missing: throw StoreError.missing
         case .legacySchema1: throw StoreError.unsupportedSchema(1)
+        case .legacySchema2: throw StoreError.unsupportedSchema(AppState.promotableSchemaVersion)
         case .unsupportedSchema(let version): throw StoreError.unsupportedSchema(version)
         case .corrupt(let reason): throw StoreError.corrupt(reason)
         case .unreadable(let reason): throw StoreError.unreadable(reason)

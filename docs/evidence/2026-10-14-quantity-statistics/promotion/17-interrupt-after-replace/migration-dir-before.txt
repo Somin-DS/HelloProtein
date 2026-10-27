@@ -1,0 +1,6 @@
+total 16
+drwxr-xr-x  5 somin  staff   160 Oct  5 19:10 .
+drwxr-xr-x  4 somin  staff   128 Oct  8 10:31 ..
+drwxr-xr-x  3 somin  staff    96 Oct  5 19:10 legacy-backup
+-rw-r--r--  1 somin  staff  2337 Oct  5 19:10 legacy-capture.json
+-rw-r--r--  1 somin  staff   564 Oct  5 19:10 migration-completed.json

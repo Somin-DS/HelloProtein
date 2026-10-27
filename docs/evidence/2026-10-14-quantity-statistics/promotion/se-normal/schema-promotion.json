@@ -1,0 +1,9 @@
+{
+  "backupByteCount" : 9599,
+  "backupSHA256" : "bf5a4b5ddb23c5aea04cdcc4498c441f0558dc3642a69d78b3709f5aa43c4453",
+  "evidenceFormatVersion" : 1,
+  "fromSchemaVersion" : 2,
+  "operationID" : "schema-promotion-E2DA03EC-2759-469E-964B-4E505BE4BDBF",
+  "promotedAt" : "2026-10-14T08:49:42.046Z",
+  "toSchemaVersion" : 3
+}
