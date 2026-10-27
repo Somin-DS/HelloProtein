@@ -2403,4 +2403,79 @@ final class Smoke: XCTestCase {
         XCTAssertTrue(todayRow.label.contains(totalBefore == "0" ? "No entry" : totalBefore), "\(todayRow.label) vs \(totalBefore)")
         capture("s1-bundled-statistics-deleted")
     }
+    func test54SettingsSupportAndCredits() {
+        configure()
+        app.launch()
+        let entry = app.buttons["renewal.settings.entry"]
+        XCTAssertTrue(entry.waitForExistence(timeout: 10))
+        reveal(entry)
+        XCTAssertTrue(entry.isHittable)
+        capture("settings-home")
+        entry.tap()
+        let copy = app.buttons["renewal.settings.copy"]
+        XCTAssertTrue(copy.waitForExistence(timeout: 5))
+        reveal(copy)
+        copy.tap()
+        XCTAssertTrue(copy.label.contains("copied"), copy.label)
+        app.buttons["renewal.settings.email"].tap()
+        let unavailable = app.alerts["Mail is not available"]
+        XCTAssertTrue(unavailable.waitForExistence(timeout: 5), "simulator must offer the no-mail fallback")
+        capture("settings-mail-unavailable")
+        unavailable.buttons["Copy email address"].tap()
+        capture("settings-support")
+        let credits = app.buttons["renewal.settings.credits"]
+        reveal(credits)
+        XCTAssertTrue(app.otherElements["renewal.settings.version"].exists || app.staticTexts["renewal.settings.version"].exists)
+        credits.tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "USDA")).firstMatch.waitForExistence(timeout: 5))
+        capture("settings-credits")
+        let licenses = app.buttons["renewal.settings.licenses"]
+        reveal(licenses)
+        licenses.tap()
+        let text = app.staticTexts["renewal.settings.licenseText"]
+        XCTAssertTrue(text.waitForExistence(timeout: 5))
+        XCTAssertTrue(text.label.contains("Alamofire"))
+        XCTAssertTrue(text.label.contains("Realm") || text.label.contains("realm"))
+        capture("settings-licenses")
+        app.buttons.matching(identifier: "BackButton").firstMatch.tap()
+        app.buttons.matching(identifier: "BackButton").firstMatch.tap()
+        app.buttons["renewal.settings.done"].tap()
+        XCTAssertTrue(entry.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["renewal.add"].isHittable)
+    }
+
+    func test55SettingsKoreanLargeText() {
+        ko = true
+        contentSize = "UICTContentSizeCategoryAccessibilityXL"
+        configure()
+        app.launch()
+        let entry = app.buttons["renewal.settings.entry"]
+        reveal(entry)
+        // XCTest can call an element behind the fixed Add bar hittable.
+        // Scroll the whole settings button above that bar before tapping.
+        for _ in 0..<8 where entry.frame.maxY >= app.buttons["renewal.add"].frame.minY {
+            app.swipeUp()
+        }
+        capture("settings-ko-home")
+        entry.tap()
+        XCTAssertTrue(app.buttons["renewal.settings.done"].waitForExistence(timeout: 5))
+        capture("settings-ko-large")
+        let copy = app.buttons["renewal.settings.copy"]
+        reveal(copy)
+        XCTAssertTrue(copy.isHittable)
+        copy.tap()
+        XCTAssertTrue(copy.label.contains("복사됨"))
+        capture("settings-ko-support")
+        let credits = app.buttons["renewal.settings.credits"]
+        reveal(credits)
+        XCTAssertTrue(credits.isHittable)
+        credits.tap()
+        reveal(app.buttons["renewal.settings.licenses"])
+        XCTAssertTrue(app.buttons["renewal.settings.licenses"].waitForExistence(timeout: 5))
+        capture("settings-ko-credits")
+        app.buttons.matching(identifier: "BackButton").firstMatch.tap()
+        app.buttons["renewal.settings.done"].tap()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 5))
+    }
+
 }

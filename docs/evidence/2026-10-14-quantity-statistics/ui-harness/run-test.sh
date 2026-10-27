@@ -20,7 +20,10 @@ xcrun xcresulttool get test-results summary --path "results/$name.xcresult" 2>/d
 import json,sys
 d=json.load(sys.stdin)
 print({k:d.get(k) for k in ['result','totalTestCount','passedTests','failedTests','skippedTests']})
+if not d.get('totalTestCount') or d.get('failedTests') or d.get('skippedTests'): sys.exit(1)
 for f in d.get('testFailures',[]): print('  -', f.get('testName'), '|', (f.get('failureText') or '')[:500])
 "
 
+summary_code=$?
+if [[ "$code" == 0 && "$summary_code" != 0 ]]; then exit "$summary_code"; fi
 exit "$code"

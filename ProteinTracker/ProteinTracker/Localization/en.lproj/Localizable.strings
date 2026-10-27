@@ -367,3 +367,30 @@
 "renewal_statistics_goal_error" = "Goal history error";
 "renewal_statistics_negative_day" = "Check the past adjustment";
 "renewal_statistics_legacy_day" = "Includes past total";
+
+// Renewal settings and acknowledgements
+"renewal_settings" = "Settings";
+"renewal_settings_preferences" = "Preferences";
+"renewal_settings_goal" = "Daily goal";
+"renewal_settings_goal_hint" = "On the home screen, select Today and use the goal button to set or change your goal. Your previous goals remain with their dates.";
+"renewal_settings_language" = "Food search language";
+"renewal_settings_language_hint" = "Open Add protein → Search to choose English or Korean food search. This does not change the app display language.";
+"renewal_settings_support" = "Support";
+"renewal_settings_email" = "Write an email";
+"renewal_settings_copy" = "Copy email address";
+"renewal_settings_copied" = "Email address copied";
+"renewal_settings_email_note" = "You choose what to send. Your food records are not attached automatically.";
+"renewal_settings_about" = "About";
+"renewal_settings_credits" = "Data sources & open source";
+"renewal_settings_done" = "Done";
+"renewal_settings_mail_unavailable" = "Mail is not available";
+"renewal_settings_mail_unavailable_message" = "Copy the address and contact us using your preferred email app.";
+"renewal_settings_mail_failed" = "Could not send email";
+"renewal_settings_version" = "Version %@ (build %@)";
+"renewal_settings_food_sources" = "Food data";
+"renewal_settings_english_source" = "English food search: USDA FoodData Central, SR Legacy. The bundled catalog uses a 100 g edible-portion reference.";
+"renewal_settings_korean_source" = "Korean food search: Ministry of Food and Drug Safety, integrated food nutrient database (data.go.kr service 15127578). Each result shows its supplied reference amount.";
+"renewal_settings_libraries" = "Open-source software";
+"renewal_settings_licenses" = "Acknowledgements & licenses";
+"renewal_settings_licenses_note" = "Includes libraries used by the current and previous app screens. License texts are provided in their original language.";
+"renewal_settings_licenses_unavailable" = "License information could not be loaded. Please contact support.";

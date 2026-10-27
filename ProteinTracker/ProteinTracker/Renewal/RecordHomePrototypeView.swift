@@ -10,6 +10,7 @@ struct RecordHomeView: View {
     @State private var goalTarget: GoalEditorTarget?
     @State private var showingDatePicker = false
     @State private var showingStatistics = false
+    @State private var showingSettings = false
     /// Session memory for the statistics length; the end day follows the
     /// selected day each time the screen opens.
     @State private var statisticsLength: StatisticsPeriod.Length = .week
@@ -33,7 +34,14 @@ struct RecordHomeView: View {
                     if model.pendingSave != nil { pendingBanner }
                     DaySummary(total: model.totalCentigrams, goalState: model.goalState,
                                decimalSeparator: model.decimalSeparator)
-                    if let goalEntryKey { goalEntryButton(goalEntryKey) }
+                    HStack(alignment: .top, spacing: 12) {
+                        if let goalEntryKey { goalEntryButton(goalEntryKey) }
+                        Spacer(minLength: 0)
+                        Button { showingSettings = true } label: {
+                            Label("renewal_settings", systemImage: "gearshape")
+                                .frame(minWidth: 44, minHeight: 44)
+                        }.accessibilityIdentifier("renewal.settings.entry")
+                    }
                     if model.log.hasLegacyTotal {
                         LegacyTotalDisclosure(log: model.log, total: model.totalCentigrams,
                                               decimalSeparator: model.decimalSeparator,
@@ -108,6 +116,7 @@ struct RecordHomeView: View {
             .sheet(item: $goalTarget) { target in
                 GoalEditorSheet(target: target, model: model)
             }
+            .sheet(isPresented: $showingSettings) { SettingsView() }
             .sheet(isPresented: $showingDatePicker) {
                 DatePickerSheet(initial: model.selectedDay, timeZone: model.timeZone) { date in
                     model.select(date: date)
