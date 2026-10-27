@@ -9,6 +9,10 @@ struct RecordHomeView: View {
     @State private var legacyTotalTarget: LegacyTotalTarget?
     @State private var goalTarget: GoalEditorTarget?
     @State private var showingDatePicker = false
+    @State private var showingStatistics = false
+    /// Session memory for the statistics length; the end day follows the
+    /// selected day each time the screen opens.
+    @State private var statisticsLength: StatisticsPeriod.Length = .week
     @State private var homeError: RecordHomeViewModel.ActionError?
     @Environment(\.scenePhase) private var scenePhase
     /// Food lookup per confirmed language; injected so UI runs can use doubles.
@@ -51,12 +55,29 @@ struct RecordHomeView: View {
                         .disabled(model.selectedDay == model.today)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showingDatePicker = true } label: {
-                        Image(systemName: "calendar").frame(width: 44, height: 44)
-                            .accessibilityLabel(Text("renewal_pick_date"))
+                    HStack(spacing: 0) {
+                        Button { showingStatistics = true } label: {
+                            Image(systemName: "chart.bar").frame(width: 44, height: 44)
+                                .accessibilityLabel(Text("renewal_statistics_entry"))
+                        }
+                        .accessibilityIdentifier("renewal.statistics.entry")
+                        Button { showingDatePicker = true } label: {
+                            Image(systemName: "calendar").frame(width: 44, height: 44)
+                                .accessibilityLabel(Text("renewal_pick_date"))
+                        }
                     }
                 }
             }
+            .background(
+                // A single push; the tab bar and the home navigation stay.
+                NavigationLink(isActive: $showingStatistics) {
+                    StatisticsView(model: model, length: $statisticsLength) { day in
+                        showingStatistics = false
+                        model.select(day)
+                    }
+                } label: { EmptyView() }
+                .hidden()
+            )
             .safeAreaInset(edge: .bottom) {
                 Button {
                     // The selected day is fixed for the sheet's whole session:

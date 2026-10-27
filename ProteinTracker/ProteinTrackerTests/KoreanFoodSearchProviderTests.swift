@@ -45,6 +45,30 @@ final class KoreanFoodSearchProviderTests: XCTestCase {
         XCTAssertFalse(unverified.isSelectable)
         XCTAssertEqual(unverified.unavailability, .unknownReference)
     }
+    /// The live sample used by the integrated UI scenario: an MFDS row with a
+    /// "100g" serving size and an exact two-decimal protein gets a provider
+    /// basis, so its amount can be edited (150 g → 18.27 g).
+    func testLiveSampleRowGetsAProviderBasisForAmountEditing() throws {
+        let page = try KoreanFoodSearchProvider.decode(response([row("D102-096060000-0001", protein: "12.18")]), expectedPage: 1)
+        let item = try XCTUnwrap(page.items.first)
+        XCTAssertEqual(item.rawProtein, "12.18")
+        let basis = try XCTUnwrap(item.calculationBasis, "a selectable row with an editable reference carries a basis")
+        XCTAssertEqual(basis.origin, .providerSnapshot)
+        XCTAssertEqual(basis.provider?.itemID, "D102-096060000-0001")
+        XCTAssertEqual(try basis.protein(for: FoodQuantity(value: "150", unit: .gram)).centigrams, 1_827)
+        XCTAssertEqual(try basis.protein(for: FoodQuantity(value: "200", unit: .gram)).centigrams, 2_436)
+        // The existing rounded sample reproduces the verified value too, so it is editable as well.
+        let rounded = try KoreanFoodSearchProvider.decode(response([row()]), expectedPage: 1).items[0]
+        XCTAssertNotNil(rounded.calculationBasis)
+        // A number-typed protein is the same text.
+        let numberRow: [String: Any] = ["FOOD_CD": "n-1", "FOOD_NM_KR": "닭가슴살", "AMT_NUM3": 12.18, "SERVING_SIZE": "100g"]
+        let data = try JSONSerialization.data(withJSONObject: ["header": ["resultCode": "00", "resultMsg": "NORMAL SERVICE"],
+            "body": ["items": [numberRow], "totalCount": 1, "pageNo": 1, "numOfRows": 20]])
+        let numberItem = try KoreanFoodSearchProvider.decode(data, expectedPage: 1).items[0]
+        XCTAssertEqual(numberItem.rawProtein, "12.18")
+        XCTAssertNotNil(numberItem.calculationBasis)
+    }
+
     func testZeroNegativeAndMissingProteinRemainUnselectable() throws {
         for (value, reason) in [("0", SearchItemUnavailability.zeroProtein), ("-1", .negativeProtein),
                                 ("0.004", .zeroProtein), ("N/A", .invalidProtein), ("", .invalidProtein),

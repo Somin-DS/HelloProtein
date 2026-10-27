@@ -460,6 +460,95 @@ final class RecordHomeViewModelTests: XCTestCase {
         return (seeded, day)
     }
 
+    // MARK: Statistics (S1)
+
+    private func weekEndingToday(_ model: RecordHomeViewModel) -> StatisticsPeriod {
+        StatisticsPeriod(endingAt: model.today, today: model.today, length: .week)
+    }
+
+    func testStatisticsReadTheConfirmedStateWithoutAnyWriteAndFollowEveryEdit() throws {
+        let state = try seededState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let today = model.today // 2026-09-29
+        let week = weekEndingToday(model)
+        XCTAssertEqual(week.days.map(\.iso8601).first, "2026-09-23")
+
+        // Reading statistics for any period writes and loads nothing.
+        var summary = sync { model.statistics(for: week) }
+        let month = sync { model.statistics(for: StatisticsPeriod(endingAt: today, today: today, length: .month)) }
+        XCTAssertEqual(store.modifyCalls, 0)
+        XCTAssertEqual(store.loadCalls, 0)
+        XCTAssertEqual(summary.aggregate?.loggedDayCount, 0, "the legacy day 09-20 is outside the week")
+        XCTAssertNil(summary.aggregate?.averageCentigrams)
+        XCTAssertEqual(month.aggregate?.loggedDayCount, 1, "09-20 legacy total only")
+        XCTAssertEqual(month.aggregate?.totalCentigrams, 7_000)
+        XCTAssertEqual(month.aggregate?.includesLegacy, true)
+        XCTAssertEqual(month.days.first { $0.day.iso8601 == "2026-09-20" }?.goal, .noHistory, "the goal starts 09-28")
+        XCTAssertEqual(summary.days.last?.goal, .goal(try ProteinAmount(centigrams: 12_000)))
+        let revision0 = sync { model.stateRevision }
+
+        // Add on today: the same period recomputes from the confirmed state.
+        XCTAssertEqual(wait { model.addRecord(day: today, id: "s1", name: "Chicken", proteinText: "18.27", completion: $0) }, .ok)
+        XCTAssertGreaterThan(sync { model.stateRevision }, revision0)
+        summary = sync { model.statistics(for: week) }
+        XCTAssertEqual(summary.aggregate?.loggedDayCount, 1)
+        XCTAssertEqual(summary.aggregate?.totalCentigrams, 1_827)
+        XCTAssertEqual(summary.aggregate?.averageCentigrams, 1_827)
+        XCTAssertEqual(summary.days.last?.comparison, .below)
+        XCTAssertEqual(summary.days.last?.entry, .detailed)
+
+        // Edit, legacy total, goal and delete all show up at once.
+        XCTAssertEqual(wait { model.updateRecord(day: today, id: "s1", name: "Chicken", proteinText: "24.36", completion: $0) }, .ok)
+        XCTAssertEqual(sync { model.statistics(for: week) }.days.last?.totalCentigrams, 2_436)
+        // The legacy day's signed total (09-20, in the 30-day period) changes the month at once.
+        let legacyDay = try CalendarDay(iso8601: "2026-09-20")
+        let monthPeriod = StatisticsPeriod(endingAt: today, today: today, length: .month)
+        XCTAssertEqual(wait { model.setLegacyTotal(day: legacyDay, totalText: "-10", completion: $0) }, .ok)
+        let monthAfter = sync { model.statistics(for: monthPeriod) }
+        XCTAssertEqual(monthAfter.aggregate?.loggedDayCount, 2)
+        XCTAssertEqual(monthAfter.aggregate?.totalCentigrams, 2_436 - 1_000)
+        XCTAssertEqual(monthAfter.aggregate?.includesNegative, true)
+        XCTAssertEqual(monthAfter.aggregate?.averageCentigrams, 718, "1436 / 2 logged days, not / 30")
+        let legacyStatistic = try XCTUnwrap(monthAfter.days.first { $0.day == legacyDay })
+        XCTAssertEqual(legacyStatistic.entry, .legacyOnly)
+        XCTAssertEqual(legacyStatistic.totalCentigrams, -1_000)
+        XCTAssertEqual(legacyStatistic.comparison, .notApplicable)
+        XCTAssertEqual(wait { model.setGoal(day: today, proteinText: "20", completion: $0) }, .ok)
+        summary = sync { model.statistics(for: week) }
+        XCTAssertEqual(summary.days.last?.goal, .goal(try ProteinAmount(centigrams: 2_000)))
+        XCTAssertEqual(summary.days.last?.comparison, .reached)
+        XCTAssertEqual(summary.days[5].goal, .goal(try ProteinAmount(centigrams: 12_000)), "yesterday keeps the goal in effect then")
+        XCTAssertEqual(wait { model.deleteRecord(day: today, id: "s1", completion: $0) }, .ok)
+        summary = sync { model.statistics(for: week) }
+        XCTAssertEqual(summary.days.last?.entry, DayEntryState.none, "an emptied day is no longer logged")
+        XCTAssertEqual(summary.aggregate?.loggedDayCount, 0)
+        XCTAssertEqual(sync { model.statistics(for: week) }, summary, "pure: the same state gives the same summary")
+        XCTAssertEqual(store.loadCalls, 0, "statistics never load the file")
+    }
+
+    func testStatisticsKeepTheLastConfirmedNumbersWhileASaveIsPendingAndRecomputeAfterReconfirm() throws {
+        guard geteuid() != 0 else { throw XCTSkip("root ignores permissions") }
+        let (model, _) = try makeModel(hooks: unreadableAfterFirstReplace())
+        let today = model.today
+        let week = weekEndingToday(model)
+        XCTAssertEqual(sync { model.statistics(for: week) }.aggregate?.loggedDayCount, 0)
+
+        let attempt = wait { model.addRecord(day: today, id: "p1", name: "Egg", proteinText: "6", completion: $0) }
+        guard case .failed(.unconfirmed) = attempt else { return XCTFail("\(attempt)") }
+        XCTAssertNotNil(sync { model.pendingSave })
+        XCTAssertEqual(sync { model.statistics(for: week) }.aggregate?.loggedDayCount, 0,
+                       "pending: the last confirmed numbers, never a guess at the unconfirmed file")
+
+        try restoreStoreAccess()
+        XCTAssertEqual(wait { model.reconfirm(completion: $0) }, .ok, "the record had landed")
+        XCTAssertNil(sync { model.pendingSave })
+        let summary = sync { model.statistics(for: week) }
+        XCTAssertEqual(summary.aggregate?.loggedDayCount, 1)
+        XCTAssertEqual(summary.aggregate?.totalCentigrams, 600)
+    }
+
     func testConfirmedDeleteWritesExactlyOnceAndNothingBeforeThat() throws {
         let (state, day) = try seededWithRecord()
         try FileAppStateStore(fileURL: storeURL).commit(state)
