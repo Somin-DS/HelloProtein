@@ -46,3 +46,11 @@
 - Q2 섭취량 편집 화면, Q2의 검색 세션·pending 회귀, S1 통계 전부. 통합 UI 시나리오(12.18g/100g → 150g → 18.27g → 통계 → 200g → 24.36g → 삭제)는 Q2·S1 뒤에 실행한다.
 - 사용자 실사용 파일의 승격은 출시 전 별도 조건이다. 위 시뮬레이터 파일은 합성 fixture다.
 - 실기기(Som, iPhone 17) 설치는 하지 않았다.
+
+## PR 11 시작 경로 리뷰 수정 (2026-10-27)
+
+`app-state.json`과 기존 완료 마커가 없고 schema 2 백업 또는 승격 마커만 남은 상태에서도 앱이 renewal 경로로 진입하도록 `RenewalPaths.newStoreEvidenceExists()`를 수정했다. 손상 여부는 MigrationCoordinator가 검사한다. 기본 플래그가 꺼져 있어도 기존 UIKit/Realm 경로로 돌아가지 않고, 지원하지 않는 OS는 기존 unsupported 안내로 진입한다. 일반 legacy 캡처 디렉터리만 있는 경우의 기존 판정은 유지했다.
+
+`RenewalLaunchPolicyTests.testPromotionEvidenceAloneBlocksLegacyWithoutOptIn`에서 두 증거 파일 각각의 실제 경로 일치, 손상된 내용, store/완료 마커 부재, 플래그 없음/명시 NO, 지원 OS/미지원 OS를 검증했다. 별도 임시 디렉터리만 사용하며 실사용 데이터는 변경하지 않는다.
+
+수정 후 Debug 앱 테스트: iPhone SE / iOS 26.5 시뮬레이터 **124개 통과, 0 실패**, `TEST SUCCEEDED`. 로그 `/private/tmp/hp-pr11-fix-app-tests.log`. 리뷰 시 Q1 원본 Core 87개·MigrationCore 82개 통과를 확인했고 이번 수정은 해당 모듈을 변경하지 않았다. 이번 후속 수정에서 Release 빌드·수동 UI·실기기 검증은 추가로 실행하지 않았다.

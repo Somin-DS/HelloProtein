@@ -21,14 +21,18 @@ struct RenewalPaths {
 
     var completionMarkerURL: URL { evidenceDirectory.appendingPathComponent("migration-completed.json") }
 
-    /// Evidence that a new store was actually committed (the store file itself
-    /// or the completion marker). Used to keep the old UIKit path from writing
-    /// to the legacy store after migration. A capture/backup directory alone is
-    /// not evidence: a migration that failed before commit must not lock the
-    /// user out of the still-working legacy app.
+    var schema2BackupURL: URL { evidenceDirectory.appendingPathComponent("schema2-app-state.json") }
+    var schemaPromotionURL: URL { evidenceDirectory.appendingPathComponent("schema-promotion.json") }
+
+    /// A schema promotion backup/marker also proves that the new store existed.
+    /// Presence forces the recovery-capable route even if the evidence is corrupt;
+    /// MigrationCoordinator validates it. Ordinary legacy capture directories do
+    /// not prove a commit and must not block the legacy path by themselves.
     func newStoreEvidenceExists(fileManager: FileManager = .default) -> Bool {
         fileManager.fileExists(atPath: storeFileURL.path)
             || fileManager.fileExists(atPath: completionMarkerURL.path)
+            || fileManager.fileExists(atPath: schema2BackupURL.path)
+            || fileManager.fileExists(atPath: schemaPromotionURL.path)
     }
 
     /// Readable after the first unlock so a background relaunch does not see
