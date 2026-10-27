@@ -186,6 +186,9 @@ struct RecordHomeView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint(Text("renewal_edit"))
+                    // Stable per-record identifier: rows with the same food and
+                    // amount read alike, and the lazy list only holds the visible ones.
+                    .accessibilityIdentifier("renewal.record.\(record.id)")
                     .disabled(model.pendingSave != nil)
                     .opacity(model.pendingSave == nil ? 1 : 0.45)
                 }

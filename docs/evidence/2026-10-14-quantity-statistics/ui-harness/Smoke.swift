@@ -1168,26 +1168,45 @@ final class Smoke: XCTestCase {
     /// Home rows live in a LazyVStack: rows below the fold do not exist until
     /// scrolled into view, so scroll to the end before counting, then back.
     func homeRowCount(_ name: String) -> Int {
-        // Rows are a LazyVStack: keep swiping until the screen stops moving
-        // (a fixed swipe count no longer reaches the bottom of a long day).
-        var count = rowCount(name)
+        // Rows are a LazyVStack (off-screen rows are absent from the tree) and
+        // identical rows read alike, so every visible row is keyed by its
+        // `renewal.record.<id>` identifier while the list is scrolled until the
+        // screen stops changing; the count is the number of distinct records.
+        // Count only once the add sheet is fully gone: during its dismissal
+        // the sheet's own result rows and a half-hidden home list both skew
+        // the count (seen as +1 and -1 on the SE).
+        _ = waitUntil(timeout: 5) { !self.app.buttons["renewal.add.cancel"].exists && self.app.buttons["renewal.add"].isHittable }
+        var ids = Set<String>()
+        func collect() {
+            guard let snapshot = try? app.snapshot() else { return }
+            func walk(_ element: XCUIElementSnapshot) {
+                if element.elementType == .button, element.identifier.hasPrefix("renewal.record."), element.label.contains(name) {
+                    ids.insert(element.identifier)
+                }
+                for child in element.children { walk(child) }
+            }
+            walk(snapshot)
+        }
+        collect()
         var last = ""
         var unchanged = 0
-        for _ in 0..<60 {
+        for _ in 0..<80 {
             app.swipeUp()
-            count = max(count, rowCount(name))
+            collect()
+            let signature = screenSignature()
+            if signature == last { unchanged += 1; if unchanged >= 3 { break } } else { unchanged = 0 }
+            last = signature
+        }
+        last = ""
+        unchanged = 0
+        for _ in 0..<80 {
+            app.swipeDown()
+            collect()
             let signature = screenSignature()
             if signature == last { unchanged += 1; if unchanged >= 2 { break } } else { unchanged = 0 }
             last = signature
         }
-        last = ""
-        for _ in 0..<60 {
-            app.swipeDown()
-            let signature = screenSignature()
-            if signature == last { break }
-            last = signature
-        }
-        return count
+        return ids.count
     }
 
     /// One consistent snapshot of the visible static texts and their rows;
