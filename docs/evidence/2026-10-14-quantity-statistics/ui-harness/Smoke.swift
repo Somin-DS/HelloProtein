@@ -2298,4 +2298,109 @@ final class Smoke: XCTestCase {
         XCTAssertTrue(todayRow.label.contains(totalBefore == "0" ? "기록" : totalBefore), "\(todayRow.label) vs \(totalBefore)")
         capture("s1-live-statistics-deleted")
     }
+    /// Offline integration: bundled brie → 150 g → save → statistics →
+    /// relaunch → 200 g → statistics → delete → original total.
+    func test53StatisticsIntegratedBundledFood() {
+        ko = false
+        configure()
+        app.launch()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 10))
+        let today = todayISO()
+        let totalBefore = dailyTotalNumber()
+        openAddSheet()
+        searchTab()
+        ensureLanguage("english")
+        runSearch("cheese, bri")
+        let itemID = "5"
+        let result = showResult(5)
+        XCTAssertTrue(result.exists, "bundled result not found: " + app.debugDescription)
+        XCTAssertTrue(result.label.contains("Cheese, brie"), result.label)
+        XCTAssertTrue((result.value as? String ?? "").contains("20.75"), result.debugDescription)
+        result.tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { self.searchSummary().exists && self.searchSummary().label.contains("20.75") }, app.debugDescription)
+        let edit = app.buttons["renewal.search.editAmount.\(itemID)"]
+        // Use the Q2-tested swipe helper; verify that scrolling did not
+        // accidentally select a neighboring result before applying an amount.
+        reveal(edit)
+        XCTAssertTrue(searchSummary().label.hasPrefix("1 selected"), searchSummary().label)
+        XCTAssertFalse(app.staticTexts["renewal.search.amountUnavailable.\(itemID)"].exists, "the bundled row has a basis")
+        XCTAssertTrue(edit.exists && edit.isHittable, "a bundled row with a 100 g reference gets a basis: " + app.debugDescription)
+        capture("s1-bundled-selected")
+        edit.tap()
+        XCTAssertTrue(amountField().waitForExistence(timeout: 5))
+        XCTAssertEqual(amountField().value as? String, "100")
+        XCTAssertTrue(app.staticTexts["renewal.amount.basis"].label.contains("20.75"), app.staticTexts["renewal.amount.basis"].label)
+        replace(amountField(), with: "150")
+        XCTAssertTrue(waitUntil(timeout: 3) { self.amountPreview().exists && self.amountPreview().label.contains("31.13") }, app.debugDescription)
+        capture("s1-bundled-editor-150")
+        amountApply().tap()
+        XCTAssertTrue(waitUntil(timeout: 5) { self.searchSummary().label.contains("31.13") }, searchSummary().label)
+        searchAddSelected().tap()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 15), app.debugDescription)
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Cheese, brie", "150 g")).firstMatch
+        scrollRowIntoView(row)
+        XCTAssertTrue(row.exists && row.label.contains("31.13"), app.debugDescription)
+        capture("s1-bundled-home-150")
+        for _ in 0..<10 where !app.staticTexts["renewal.dailyTotal"].exists { app.swipeDown() }
+        let totalAfterAdd = dailyTotalNumber()
+        XCTAssertEqual(Decimal(string: totalAfterAdd), Decimal(string: totalBefore)! + Decimal(string: "31.13")!)
+
+        // Home and statistics show the same value for today.
+        openStatistics()
+        var todayRow = statisticsRow(today)
+        reveal(todayRow)
+        XCTAssertTrue(todayRow.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(todayRow.label.contains(totalAfterAdd), "\(todayRow.label) vs \(totalAfterAdd)")
+        capture("s1-bundled-statistics-150")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        // Relaunch: the record and its basis persist; 200 g recomputes to 41.5.
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 15))
+        scrollRowIntoView(row)
+        XCTAssertTrue(row.exists, app.debugDescription)
+        row.tap()
+        let editAmount = app.textFields["renewal.edit.amount"]
+        XCTAssertTrue(editAmount.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertEqual(editAmount.value as? String, "150")
+        replace(editAmount, with: "200")
+        XCTAssertTrue(waitUntil(timeout: 3) { self.amountPreview().exists && self.amountPreview().label.contains("41.5") }, app.debugDescription)
+        capture("s1-bundled-edit-200")
+        app.buttons[L["save"]!].tap()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 15), app.debugDescription)
+        let row200 = app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Cheese, brie", "200 g")).firstMatch
+        scrollRowIntoView(row200)
+        XCTAssertTrue(row200.exists && row200.label.contains("41.5"), app.debugDescription)
+        for _ in 0..<10 where !app.staticTexts["renewal.dailyTotal"].exists { app.swipeDown() }
+        let totalAfterEdit = dailyTotalNumber()
+        XCTAssertEqual(Decimal(string: totalAfterEdit), Decimal(string: totalBefore)! + Decimal(string: "41.5")!)
+        openStatistics()
+        todayRow = statisticsRow(today)
+        reveal(todayRow)
+        XCTAssertTrue(todayRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(todayRow.label.contains(totalAfterEdit), "\(todayRow.label) vs \(totalAfterEdit)")
+        capture("s1-bundled-statistics-200")
+        app.navigationBars.buttons.firstMatch.tap()
+
+        // Delete: statistics return to the earlier total (or no entry).
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 5))
+        scrollRowIntoView(row200)
+        row200.tap()
+        XCTAssertTrue(app.buttons[L["delete"]!].waitForExistence(timeout: 5))
+        reveal(app.buttons[L["delete"]!])
+        app.buttons[L["delete"]!].tap()
+        XCTAssertTrue(alert(L["deleteTitle"]!).waitForExistence(timeout: 3), app.debugDescription)
+        alert(L["deleteTitle"]!).buttons[L["deleteConfirm"]!].tap()
+        XCTAssertTrue(app.buttons["renewal.add"].waitForExistence(timeout: 15))
+        for _ in 0..<10 where !app.staticTexts["renewal.dailyTotal"].exists { app.swipeDown() }
+        XCTAssertEqual(dailyTotalNumber(), totalBefore)
+        openStatistics()
+        todayRow = statisticsRow(today)
+        reveal(todayRow)
+        XCTAssertTrue(todayRow.waitForExistence(timeout: 5))
+        XCTAssertFalse(todayRow.label.contains("41.5"), todayRow.label)
+        XCTAssertTrue(todayRow.label.contains(totalBefore == "0" ? "No entry" : totalBefore), "\(todayRow.label) vs \(totalBefore)")
+        capture("s1-bundled-statistics-deleted")
+    }
 }

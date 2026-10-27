@@ -222,3 +222,24 @@ S1 작업 트리를 별도 검토 pass로 살펴 다음을 고쳤다. 반영 후
 캡처: [PR12 main 통합 SE](screenshots/pr12-main/iphone-se/), [iPhone 17](screenshots/pr12-main/iphone-17/). 테스트 46은 150 g 적용·저장 → 200 g 재계산 → 직접 단백질 수정 → 사용자 기준으로 재계산·삭제를 포함한다. 47은 한국어 AX-XL과 키보드 위 적용 버튼, 48은 저장 지연 중 잠금, 49는 미확정 이력 쓰기 → notApplied 확인 → 수량 적용·추가를 검사한다.
 
 최종 검증 앱 코드 커밋은 `1d8c0ef`이며 이후 변경은 하네스·문서·캡처다. 결과 번들은 `/private/tmp/hp-iphone-ui/results/<실행 이름>.xcresult`에 있다. 하네스는 순차 실행과 240초 테스트 제한을 명시하고 상세 로그를 남긴다. 실기기 설치·배포·renewal 기본 활성화는 수행하지 않았다. 이번 통합 후 Release 빌드는 재실행하지 않았다.
+
+## PR 13 main 통합 리뷰 및 최종 검증 (2026-10-27)
+
+PR base를 `main`으로 변경하고 PR 11의 시작·복구 수정과 PR 12의 독립 UI 검증 보완을 통합했다(`d9969d6`). S1의 단위 테스트·화면·상태 갱신 경로를 검토했으며 새 차단급 앱 결함은 확인하지 못했다. 통계는 확정 상태에서만 계산하고, 기록 없음/0 g·음수 레거시·과거 목표·합계 오버플로·기간 경계를 구분한다.
+
+| 검증 | 결과 |
+| --- | --- |
+| HelloProteinCore | 100개 통과 |
+| MigrationCore | 82개 통과 |
+| Debug 앱 / iPhone SE, iOS 26.5 | 135개 통과 |
+| SE UI 50·51 | `pr13-main-se-153051`의 해당 2개 통과 |
+| SE UI 53 | `pr13-final-se-153446` 통과 |
+| iPhone 17 UI 50·51·53 | `pr13-final-17-153647` 3개 통과 |
+
+새 시나리오 53은 외부 API 없이 번들 Brie 기준(20.75 g/100 g)으로 150 g → 31.13 g 저장 → 홈/통계 일치 → 앱 재실행 → 200 g → 41.5 g 수정 → 통계 반영 → 삭제 → 이전 합계 복귀를 검사한다. 추가·수정 후 합계는 기존 합계와의 정확한 Decimal 차이로도 검증한다. 첫 SE 53 실행은 느린 드래그가 이웃 음식까지 선택해 실패했다(2개 선택); 검증된 Q2의 선택·스크롤 방식과 단일 선택 확인으로 보완한 후 양 기기에서 통과했다. 최초 실행 전체를 통과로 취급하지 않는다.
+
+캡처: [SE](screenshots/pr13-main/iphone-se/), [iPhone 17](screenshots/pr13-main/iphone-17/). 통계 기본 화면·한국어 AX-XL과 수정 후 날짜별 값 캡처를 시각적으로 확인했다.
+
+빌드 소스는 `d9969d6`이며 이후 변경은 하네스·문서·캡처뿐이다. 임시 검증 소스와 tracked `ProteinTracker`/`HelloProteinCore`/`MigrationCore` 파일이 바이트 단위로 일치함을 확인했다. 로그는 `/private/tmp/hp-pr13-core.log`, `/private/tmp/hp-pr13-migration.log`, `/private/tmp/hp-pr13-app.log`, UI 결과 번들은 `/private/tmp/hp-iphone-ui/results/<실행 이름>.xcresult`에 있다.
+
+이번 main 통합 후 실제 MFDS 호출·Release 빌드·실기기 설치·배포·renewal 기본 활성화는 수행하지 않았다. 이전 MFDS/Release 증거는 앞 절의 당시 결과이며 이번 재검증과 구분한다.
