@@ -186,6 +186,9 @@ struct RecordHomeView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint(Text("renewal_edit"))
+                    // Stable per-record identifier: rows with the same food and
+                    // amount read alike, and the lazy list only holds the visible ones.
+                    .accessibilityIdentifier("renewal.record.\(record.id)")
                     .disabled(model.pendingSave != nil)
                     .opacity(model.pendingSave == nil ? 1 : 0.45)
                 }
@@ -241,6 +244,12 @@ private struct RecordEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var protein: String
+    /// The amount eaten, for a record with a basis; its protein is computed.
+    @State private var amount: String
+    /// The explicit "enter the protein yourself" mode for a record with a
+    /// basis. Never persisted as such: saving in this mode writes a new
+    /// user-defined basis; cancelling restores everything.
+    @State private var directProtein = false
     /// Part of this edit's draft: creates a favorite from the saved values in
     /// the same commit. It never removes or toggles an existing favorite.
     @State private var saveAsFavorite = false
@@ -261,15 +270,18 @@ private struct RecordEditorSheet: View {
         self.model = model
         let name = target.record.name ?? ""
         let protein = ProteinInput.format(centigrams: target.record.protein.centigrams, decimalSeparator: model.decimalSeparator)
+        let amount = target.record.quantity.map { PortionEditorPolicy.amountText($0, decimalSeparator: model.decimalSeparator) } ?? ""
         _name = State(initialValue: name)
         _protein = State(initialValue: protein)
-        _initial = State(initialValue: [name, protein])
+        _amount = State(initialValue: amount)
+        _initial = State(initialValue: [name, protein, amount, "0"])
     }
 
     private var locked: Bool { model.isBusy || saveUnconfirmed }
     private var hasPendingSave: Bool { saveUnconfirmed || model.pendingSave != nil }
+    private var basis: CalculationBasis? { target.record.calculationBasis }
     private var isDirty: Bool {
-        AddSheetPolicy.isManualDirty(initial: initial, current: [name, protein],
+        AddSheetPolicy.isManualDirty(initial: initial, current: [name, protein, amount, directProtein ? "1" : "0"],
                                      initialFavorite: false, currentFavorite: saveAsFavorite)
     }
     private var closeDecision: EditorCloseDecision {
@@ -287,11 +299,13 @@ private struct RecordEditorSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(RecordHomeView.longDate(target.day)).foregroundStyle(.secondary)
-                        if let quantity = target.record.quantity {
-                            // The stored reference amount is shown, kept by the
-                            // save, and never presented as a verified value of
-                            // whatever the user types below.
-                            Text(QuantityText.reference(quantity)).font(.footnote).foregroundColor(RenewalTheme.secondary)
+                        if basis == nil, let quantity = target.record.quantity {
+                            // An older search record: the stored reference
+                            // amount is shown, kept by the save, and never
+                            // presented as a verified value of whatever the
+                            // user types below. No amount editing.
+                            Text(RenewalStrings.format("renewal_edit_saved_reference", QuantityText.amount(quantity)))
+                                .font(.footnote).foregroundColor(RenewalTheme.secondary)
                                 .accessibilityIdentifier("renewal.edit.reference")
                         }
                         // Input is locked while a save is running or unconfirmed:
@@ -302,18 +316,22 @@ private struct RecordEditorSheet: View {
                             .renewalInput()
                             .disabled(locked)
                             .opacity(locked ? 0.5 : 1)
-                        TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
-                            .renewalInput()
-                            .keyboardType(.decimalPad)
-                            .accessibilityLabel(Text("renewal_protein_placeholder"))
-                            .disabled(locked)
-                            .opacity(locked ? 0.5 : 1)
+                        if let basis, let quantity = target.record.quantity {
+                            basisFields(basis, quantity: quantity)
+                        } else {
+                            proteinField
+                        }
                         Toggle(isOn: $saveAsFavorite) {
                             Text("renewal_favorite_also_save").font(.subheadline)
                         }
                         .frame(minHeight: 44)
                         .disabled(locked)
                         .accessibilityIdentifier("renewal.edit.favoriteToggle")
+                        if target.record.quantity != nil {
+                            // Favorites hold a name and a protein value only.
+                            Text("renewal_favorite_protein_only").font(.footnote).foregroundColor(RenewalTheme.secondary)
+                                .accessibilityIdentifier("renewal.edit.favoriteNote")
+                        }
                     }
                     .renewalCard()
                     .alert(Text("renewal_favorite_exists_title"), isPresented: $favoriteExistsNotice) {
@@ -362,6 +380,49 @@ private struct RecordEditorSheet: View {
         .navigationViewStyle(.stack)
         .tint(RenewalTheme.action)
         .preferredColorScheme(.light)
+    }
+
+    // MARK: Fields
+
+    private var proteinField: some View {
+        TextField(RenewalStrings.text("renewal_protein_placeholder"), text: $protein)
+            .renewalInput()
+            .keyboardType(.decimalPad)
+            .accessibilityLabel(Text("renewal_protein_placeholder"))
+            .disabled(locked)
+            .opacity(locked ? 0.5 : 1)
+    }
+
+    /// A record with a basis: the amount eaten with its computed protein, or
+    /// the explicit direct-protein mode with the stored amount fixed.
+    @ViewBuilder private func basisFields(_ basis: CalculationBasis, quantity: FoodQuantity) -> some View {
+        if directProtein {
+            Text(PortionText.basis(basis, decimalSeparator: model.decimalSeparator))
+                .font(.footnote).monospacedDigit().foregroundColor(RenewalTheme.secondary)
+            Text(PortionText.eaten(quantity)).font(.subheadline.weight(.semibold)).monospacedDigit()
+                .accessibilityIdentifier("renewal.edit.fixedAmount")
+            proteinField
+            Text("renewal_edit_direct_protein_note").font(.footnote).foregroundColor(RenewalTheme.secondary)
+        } else {
+            PortionAmountEditor(basis: basis, amountText: $amount, decimalSeparator: model.decimalSeparator, locked: locked,
+                                fieldIdentifier: "renewal.edit.amount")
+        }
+        Toggle(isOn: Binding(get: { directProtein }, set: { setDirectProtein($0) })) {
+            Text("renewal_edit_direct_protein").font(.subheadline)
+        }
+        .frame(minHeight: 44)
+        .disabled(locked)
+        .accessibilityIdentifier("renewal.edit.directProtein")
+    }
+
+    /// Entering direct mode fixes the stored amount and starts from the stored
+    /// protein; leaving it restores the fields as they opened. Nothing is
+    /// saved by the switch itself.
+    private func setDirectProtein(_ on: Bool) {
+        guard !locked else { return }
+        amount = initial[2]
+        protein = initial[1]
+        directProtein = on
     }
 
     // MARK: Closing
@@ -418,8 +479,9 @@ private struct RecordEditorSheet: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        model.updateRecord(day: target.day, id: target.record.id, name: trimmed.isEmpty ? nil : trimmed,
-                           proteinText: protein, favoriteID: saveAsFavorite ? target.favoriteID : nil) { result in
+        let savedName = trimmed.isEmpty ? nil : trimmed
+        let favoriteID = saveAsFavorite ? target.favoriteID : nil
+        let completion: (Result<RecordHomeViewModel.FavoriteOutcome, RecordHomeViewModel.ActionError>) -> Void = { result in
             if case .success(.alreadyExisted) = result {
                 // The edit is saved; say that the favorite was not duplicated, then close.
                 prompt = nil
@@ -427,6 +489,16 @@ private struct RecordEditorSheet: View {
                 return
             }
             handle(result.map { _ in () })
+        }
+        if basis != nil, directProtein {
+            model.updateRecordDirectProtein(day: target.day, id: target.record.id, name: savedName, proteinText: protein,
+                                            favoriteID: favoriteID, completion: completion)
+        } else if basis != nil {
+            model.updateRecordAmount(day: target.day, id: target.record.id, name: savedName, amountText: amount,
+                                     favoriteID: favoriteID, completion: completion)
+        } else {
+            model.updateRecord(day: target.day, id: target.record.id, name: savedName, proteinText: protein,
+                               favoriteID: favoriteID, completion: completion)
         }
     }
 
@@ -671,6 +743,7 @@ enum ActionErrorText {
         case .notApplied: return RenewalStrings.text("renewal_error_not_applied_title")
         case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_title")
         case .selectionChanged: return RenewalStrings.text("renewal_error_selection_changed_title")
+        case .amount, .calculation: return RenewalStrings.text("renewal_error_amount_title")
         }
     }
 
@@ -694,6 +767,8 @@ enum ActionErrorText {
         case .reconfirmFailed: return RenewalStrings.text("renewal_error_reconfirm_message")
         case .goalDateChanged: return RenewalStrings.text("renewal_goal_date_changed_message")
         case .selectionChanged: return RenewalStrings.text("renewal_error_selection_changed_message")
+        case .amount(let error): return RenewalStrings.text(PortionText.inputKey(error))
+        case .calculation(let error): return RenewalStrings.text(PortionText.calculationKey(error))
         }
     }
 }

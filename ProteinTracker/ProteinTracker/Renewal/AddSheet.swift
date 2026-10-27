@@ -37,6 +37,14 @@ struct AddSheet: View {
     // Search tab
     /// The last executed search's term could not be recorded; searching went on.
     @State private var historyNotSaved = false
+    /// The selected row whose amount is being edited in place of the tab
+    /// content; nil when the tab is shown. Apply changes the session only.
+    @State private var amountEdit: SearchSessionModel.AmountEditTarget?
+    /// The row whose "Edit amount" button takes VoiceOver focus back after
+    /// the editor closes (apply or cancel).
+    @AccessibilityFocusState private var amountRowFocus: String?
+    @State private var amountText = ""
+    @State private var amountInitial = ""
     // Manual tab
     @State private var name = ""
     @State private var protein = ""
@@ -76,7 +84,16 @@ struct AddSheet: View {
     private var favoritesDirty: Bool {
         AddSheetPolicy.isFavoritesDirty(selectionCount: selected.count, editorDirty: editorDirty)
     }
-    private var searchDirty: Bool { AddSheetPolicy.isSearchDirty(selectionCount: search.selected.count) }
+    private var searchDirty: Bool {
+        AddSheetPolicy.isSearchDirty(selectionCount: search.selected.count, amountDraftCount: search.amountDrafts.count)
+    }
+    private var amountEditDirty: Bool {
+        amountEdit != nil && PortionEditorPolicy.isDirty(initial: amountInitial, current: amountText)
+    }
+    private var amountPreview: PortionPreview? {
+        amountEdit.map { PortionEditorPolicy.preview(basis: $0.basis, amountText: amountText, decimalSeparator: model.decimalSeparator) }
+    }
+    private var isEditingAmount: Bool { tab == .search && amountEdit != nil }
     private var currentTabDirty: Bool {
         switch tab {
         case .manual: return manualDirty
@@ -97,7 +114,12 @@ struct AddSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                tabBar
+                // The amount editor takes the whole sheet: no tab bar, no
+                // selection bar, until it is applied or cancelled.
+                if !isEditingAmount {
+                    tabBar
+                }
+                Color.clear.frame(height: 0)
                     .alert(Text("renewal_favorite_exists_title"), isPresented: $favoriteExistsNotice) {
                         // The record is saved; closing is the only next step.
                         // After the alert has finished closing, so the dismiss is not swallowed.
@@ -105,10 +127,15 @@ struct AddSheet: View {
                     } message: { Text("renewal_favorite_exists_message") }
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        switch tab {
-                        case .manual: manualTab
-                        case .search: searchTab
-                        case .favorites: favoritesTab
+                        if let amountEdit, isEditingAmount {
+                            SearchAmountEditorView(target: amountEdit, amountText: $amountText,
+                                                   decimalSeparator: model.decimalSeparator, locked: locked)
+                        } else {
+                            switch tab {
+                            case .manual: manualTab
+                            case .search: searchTab
+                            case .favorites: favoritesTab
+                            }
                         }
                         if saveUnconfirmed {
                             PendingSaveSection(model: model, onConfirmed: confirmedPending, onNotApplied: {
@@ -119,20 +146,27 @@ struct AddSheet: View {
                     }
                     .padding(RenewalTheme.pageInset)
                     .addSheetPromptAlert($prompt, decimalSeparator: model.decimalSeparator, onConfirm: confirm)
-                    .background(SheetDismissAdapter(shouldDismiss: { closeDecision == .close },
+                    .background(SheetDismissAdapter(shouldDismiss: { closeDecision == .close && !isEditingAmount },
                                                     onAttemptToDismiss: { requestClose() }))
                 }
                 .actionErrorAlert($error)
                 if tab == .favorites, editing == nil { selectionBar }
-                if tab == .search, search.hasSelection { searchSelectionBar }
+                if isEditingAmount {
+                    amountApplyBar
+                } else if tab == .search, search.hasSelection {
+                    searchSelectionBar
+                }
             }
             .background(RenewalTheme.canvas)
-            .navigationTitle(Text("renewal_add"))
+            .navigationTitle(Text(isEditingAmount ? "renewal_amount_edit" : "renewal_add"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
+                    // While the amount editor is up, Cancel leaves the editor
+                    // (asking first when the amount changed), not the sheet.
                     Button { requestClose() } label: { Text("renewal_cancel").frame(minWidth: 44, minHeight: 44) }
                         .disabled(model.isBusy)
+                        .accessibilityIdentifier(isEditingAmount ? "renewal.amount.cancel" : "renewal.add.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     // The top Save belongs to the manual entry; the favorites
@@ -210,6 +244,7 @@ struct AddSheet: View {
             // next visit starts from the saved language and recent list.
             search.invalidate()
             historyNotSaved = false
+            amountEdit = nil
         case .favorites:
             selected = []
             snapshots = [:]
@@ -227,7 +262,9 @@ struct AddSheet: View {
                     recent: { term in requestSearch(.recentSearch(term)) },
                     deleteRecent: { term in requestDeleteRecent(term) },
                     pickLanguage: { language in requestLanguage(language) },
-                    useName: { item in requestUseName(item) }))
+                    useName: { item in requestUseName(item) },
+                    editAmount: { item in beginAmountEdit(item) }),
+                  rowFocus: $amountRowFocus)
     }
 
     /// A new search, a recent tap or a language pick: blocked while locked,
@@ -374,12 +411,75 @@ struct AddSheet: View {
         .background(RenewalTheme.canvas)
     }
 
-    /// Writes the confirmed snapshot (name, verified protein, reference
-    /// amount) with the session's record IDs; no provider is consulted again.
+    // MARK: Amount editing (in place)
+
+    /// Opens the editor for a selected row with a basis, starting from the
+    /// applied amount or the reference amount. A row that is no longer the
+    /// selected snapshot is reported instead of edited.
+    private func beginAmountEdit(_ item: SearchResultItem) {
+        guard AddSheetPolicy.canEditAmount(locked: locked, isSelected: search.isSelected(item),
+                                           hasBasis: item.calculationBasis != nil) else { return }
+        guard let target = search.amountEditTarget(for: item) else { return showError(.selectionChanged) }
+        amountText = PortionEditorPolicy.amountText(target.current, decimalSeparator: model.decimalSeparator)
+        amountInitial = amountText
+        amountEdit = target
+    }
+
+    private var amountApplyBar: some View {
+        HStack(spacing: 12) {
+            Button { cancelAmountEdit() } label: { Text("renewal_cancel").frame(maxWidth: .infinity, minHeight: 44) }
+                .disabled(locked)
+                .accessibilityIdentifier("renewal.amount.cancelBottom")
+            Button { applyAmount() } label: { Text("renewal_amount_apply").font(.headline) }
+                .buttonStyle(RenewalPrimaryButtonStyle())
+                .disabled(!PortionEditorPolicy.canApply(amountPreview ?? .input(.empty), locked: locked))
+                .accessibilityIdentifier("renewal.amount.apply")
+        }
+        .padding(.horizontal, RenewalTheme.pageInset)
+        .padding(.vertical, 12)
+        .background(RenewalTheme.canvas)
+    }
+
+    /// Cancel, the toolbar button and a pull-down while editing: a changed
+    /// amount asks first; agreeing returns to the last applied amount.
+    private func cancelAmountEdit() {
+        guard !locked else { return }
+        if amountEditDirty { show(.discardAmountEdit) } else { endAmountEdit() }
+    }
+
+    /// Leaves the editor and hands VoiceOver focus back to the row's button
+    /// once the list is on screen again.
+    private func endAmountEdit() {
+        let rowID = amountEdit?.id
+        amountEdit = nil
+        guard let rowID else { return }
+        DispatchQueue.main.async { amountRowFocus = rowID }
+    }
+
+    /// Applies the valid amount to the session draft. The row must still be
+    /// selected as the very snapshot the editor opened with; otherwise
+    /// nothing changes and the user is asked to re-select.
+    private func applyAmount() {
+        guard let target = amountEdit, let quantity = amountPreview?.quantity, !locked else { return }
+        switch search.applyAmount(quantity, for: target) {
+        case .applied:
+            endAmountEdit()
+        case .selectionChanged:
+            endAmountEdit()
+            showError(.selectionChanged)
+        }
+    }
+
+    /// Writes every selected row with the session's record IDs: a row with a
+    /// basis with its applied (or reference) amount and the protein computed
+    /// from the basis, an older row as the verified snapshot. No provider is
+    /// consulted again. All or nothing: a selection the session cannot turn
+    /// into a record stops the batch before any write.
     private func addSearchSelected() {
         guard canAddSearch else { return }
         search.cancelPagesKeepingResults()
         let batch = search.selections
+        guard batch.count == search.selected.count else { return showError(.selectionChanged) }
         model.addSearchRecords(day: target.day, selections: batch) { result in
             switch result {
             case .success:
@@ -707,6 +807,8 @@ struct AddSheet: View {
     // MARK: Closing and prompts
 
     private func requestClose() {
+        // The amount editor is left first; the sheet itself stays.
+        if isEditingAmount { return cancelAmountEdit() }
         let decision = closeDecision
         if decision == .close { return dismiss() }
         switch EditorDismissPolicy.prompt(for: decision) {
@@ -757,6 +859,9 @@ struct AddSheet: View {
             DispatchQueue.main.async { performDeleteRecent(term) }
         case .copyNameToManual(let name):
             copyNameToManual(name)
+        case .discardAmountEdit:
+            guard !locked else { return }
+            endAmountEdit()
         }
     }
 }
@@ -794,6 +899,7 @@ enum AddSheetPromptText {
         case .discardSearch: return RenewalStrings.text("renewal_search_discard_title")
         case .deleteSearchTerm: return RenewalStrings.text("renewal_search_delete_recent_title")
         case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_title")
+        case .discardAmountEdit: return RenewalStrings.text("renewal_amount_discard_title")
         }
     }
 
@@ -821,6 +927,7 @@ enum AddSheetPromptText {
             let label = SearchSessionModel.normalized(term.value) ?? RenewalStrings.text("renewal_search_recent_blank")
             return RenewalStrings.format("renewal_search_delete_recent_message", label)
         case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_message")
+        case .discardAmountEdit: return RenewalStrings.text("renewal_amount_discard_message")
         }
     }
 
@@ -831,6 +938,7 @@ enum AddSheetPromptText {
         case .switchTab: return RenewalStrings.text("renewal_switch_tab_stay")
         case .discardSelection, .deleteFavorite, .discardSearch, .deleteSearchTerm, .copyNameToManual:
             return RenewalStrings.text("renewal_cancel")
+        case .discardAmountEdit: return RenewalStrings.text("renewal_discard_keep")
         }
     }
 
@@ -844,6 +952,7 @@ enum AddSheetPromptText {
         case .discardSearch: return RenewalStrings.text("renewal_search_discard_confirm")
         case .deleteSearchTerm: return RenewalStrings.text("renewal_search_delete_recent_confirm")
         case .copyNameToManual: return RenewalStrings.text("renewal_search_copy_name_confirm")
+        case .discardAmountEdit: return RenewalStrings.text("renewal_search_discard_confirm")
         }
     }
 

@@ -10,6 +10,8 @@ struct SearchTabActions {
     let deleteRecent: (SearchTerm) -> Void
     let pickLanguage: (SearchLanguage) -> Void
     let useName: (SearchResultItem) -> Void
+    /// Open the in-sheet amount editor for a selected row.
+    let editAmount: (SearchResultItem) -> Void
 }
 
 /// The search tab's content: language, query, recent searches or results.
@@ -24,6 +26,9 @@ struct SearchTab: View {
     /// The last executed search's term could not be recorded.
     let historyNotSaved: Bool
     let actions: SearchTabActions
+    /// VoiceOver focus returns to this row's "Edit amount" button when the
+    /// amount editor closes (set by the sheet).
+    var rowFocus: AccessibilityFocusState<String?>.Binding
     @FocusState private var queryFocused: Bool
 
     var body: some View {
@@ -205,6 +210,11 @@ struct SearchTab: View {
             return item.rawProtein + " g"
         }()
         let note = item.unavailability.map(Self.unavailabilityKey).map(RenewalStrings.text)
+        let applied = session.appliedAmount(for: item)
+        let appliedText: String? = applied.map {
+            PortionText.eaten($0.quantity) + " · " + PortionText.preview(centigrams: $0.centigrams, decimalSeparator: model.decimalSeparator)
+        }
+        let hasBasis = item.calculationBasis != nil
         return VStack(alignment: .leading, spacing: 8) {
             Button { session.toggle(item) } label: {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -216,7 +226,13 @@ struct SearchTab: View {
                             .multilineTextAlignment(.leading)
                         Text(detail).font(.subheadline).monospacedDigit()
                             .foregroundColor(item.isSelectable ? RenewalTheme.secondary : RenewalTheme.danger)
-                        if item.isSelectable {
+                        if let appliedText {
+                            // The applied amount replaces the "adds the shown
+                            // amount" note: what is added is this.
+                            Text(appliedText).font(.subheadline.weight(.semibold)).monospacedDigit()
+                                .foregroundColor(RenewalTheme.action)
+                                .accessibilityIdentifier("renewal.search.applied.\(item.itemID)")
+                        } else if item.isSelectable {
                             Text("renewal_search_adds_shown").font(.caption).foregroundColor(RenewalTheme.secondary)
                         }
                         if item.rounded {
@@ -236,12 +252,27 @@ struct SearchTab: View {
             .disabled(locked || !item.isSelectable)
             .accessibilityLabel(Text(RenewalStrings.format(isSelected ? "renewal_favorite_deselect" : "renewal_favorite_select", item.name)))
             .accessibilityValue(Text([detail,
-                                      item.isSelectable ? RenewalStrings.text("renewal_search_adds_shown") : nil,
+                                      appliedText ?? (item.isSelectable ? RenewalStrings.text("renewal_search_adds_shown") : nil),
                                       item.rounded ? RenewalStrings.text("renewal_search_rounded") : nil,
                                       RenewalStrings.text(item.sourceKey),
                                       note].compactMap { $0 }.joined(separator: ", ")))
             .accessibilityAddTraits(isSelected ? [.isSelected] : [])
             .accessibilityIdentifier("renewal.search.result.\(item.itemID)")
+            if isSelected, hasBasis {
+                // Its own 44 pt target, separate from the selection toggle.
+                Button { actions.editAmount(item) } label: {
+                    Label { Text("renewal_amount_edit") } icon: { Image(systemName: "scalemass") }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: 44)
+                }
+                .disabled(!AddSheetPolicy.canEditAmount(locked: locked, isSelected: isSelected, hasBasis: hasBasis))
+                .accessibilityLabel(Text(RenewalStrings.format("renewal_amount_edit_action", item.name)))
+                .accessibilityFocused(rowFocus, equals: item.id)
+                .accessibilityIdentifier("renewal.search.editAmount.\(item.itemID)")
+            } else if isSelected {
+                Text("renewal_amount_unavailable").font(.footnote).foregroundColor(RenewalTheme.secondary)
+                    .accessibilityIdentifier("renewal.search.amountUnavailable.\(item.itemID)")
+            }
             if !item.isSelectable {
                 Button { actions.useName(item) } label: {
                     Text("renewal_search_use_name").font(.subheadline).frame(minHeight: 44)

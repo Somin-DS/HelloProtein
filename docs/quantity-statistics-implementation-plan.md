@@ -1,6 +1,6 @@
 # 검색 음식 섭취량과 통계 구현 계획
 
-작성일: 2026-10-14. 상태: **Q1 구현 완료(PR 검토 대기), Q2·S1 미착수**. 진행 기록은 문서 끝의 [진행 상태](#진행-상태)를 본다. 대상: 다음 구현을 맡는 개발 에이전트. 기준: PR #10 병합 main `3c37bcd5d3c097b62ade242aed3a3b9e46da0fbc`. 본사 기획·디자인·개발·QA·마케팅·그로스·프롬프트 엔지니어의 [공동 검토](reviews/2026-10-14-quantity-statistics-team-review.md)를 반영한다.
+작성일: 2026-10-14. 상태: **Q1·Q2 구현 완료(PR 검토 대기), S1 미착수**. 진행 기록은 문서 끝의 [진행 상태](#진행-상태)를 본다. 대상: 다음 구현을 맡는 개발 에이전트. 기준: PR #10 병합 main `3c37bcd5d3c097b62ade242aed3a3b9e46da0fbc`. 본사 기획·디자인·개발·QA·마케팅·그로스·프롬프트 엔지니어의 [공동 검토](reviews/2026-10-14-quantity-statistics-team-review.md)를 반영한다.
 
 이번 업데이트는 검색한 음식의 **실제 먹은 양 입력·재편집**과 **최근 7일·30일 기록 통계**를 함께 완성한다. 예를 들어 100g당 단백질 12.18g인 식품을 150g 먹었다고 입력하면 18.27g을 기록하고, 해당 날짜의 합계와 통계에 반영한다. 기존 사용자 기록과 목표 이력을 보존하는 것이 완료 조건이다.
 
@@ -276,8 +276,8 @@ xcodebuild -project ProteinTracker/ProteinTracker.xcodeproj -scheme ProteinTrack
 | 단계 | 상태 | 근거 |
 | --- | --- | --- |
 | Q1 계산과 저장 계약 | 구현·검증 완료, 브랜치 `feat/renewal-quantity-q1` | [Q1 증거](evidence/2026-10-14-quantity-statistics/README.md): Core 87·MigrationCore 82·앱 123 테스트 통과, Debug/Release 빌드, 시뮬레이터 2대의 실제 schema 2 파일 승격(정상·교체 직후 중단 재개) |
-| Q2 섭취량 화면 | 미착수 | Q1 병합 후 같은 증거 폴더에 이어서 기록 |
+| Q2 섭취량 화면 | 구현·검증 완료, 브랜치 `feat/renewal-quantity-q2`(Q1 위에 쌓음) | [Q2 증거](evidence/2026-10-14-quantity-statistics/README.md#q2-섭취량-화면과-세션-브랜치-featrenewal-quantity-q2-q1-위에-쌓음): 앱 테스트 131 통과·0 실패, Release 빌드, SE/17 UI 하네스(검색 행 섭취량 변경·적용·버리기·해제/재선택·일괄 추가·기록 수량 편집·직접 단백질 전환, 한국어 AX-XL, busy·pending 잠금) |
 | S1 통계와 통합 검증 | 미착수 | Q2 뒤 진행 |
 
-Q1에서 확정한 계약: `FoodRecord.calculationBasis`(proteinGramsText·referenceQuantity·origin·provider), `PortionCalculation`(정수 자릿수 연산, 최종 1회 half-up), `PortionInput.parseQuantity`(9/3자리, 허용 구분자 1개는 소수점), `AppState.currentSchemaVersion = 3`과 schema 2 전용 reader `decodeSchema2`, `StoreInspection.legacySchema2`, `MigrationCoordinator.promoteSchema2`와 증거 파일 `schema2-app-state.json`·`schema-promotion.json`, 복구 종류 `schemaBackupFailed`·`schemaBackupMismatch`. 이번 업데이트 전체(Q1+Q2+S1)는 아직 완료가 아니다.
+Q1에서 확정한 계약: `FoodRecord.calculationBasis`(proteinGramsText·referenceQuantity·origin·provider), `PortionCalculation`(정수 자릿수 연산, 최종 1회 half-up), `PortionInput.parseQuantity`(9/3자리, 허용 구분자 1개는 소수점), `AppState.currentSchemaVersion = 3`과 schema 2 전용 reader `decodeSchema2`, `StoreInspection.legacySchema2`, `MigrationCoordinator.promoteSchema2`와 증거 파일 `schema2-app-state.json`·`schema-promotion.json`, 복구 종류 `schemaBackupFailed`·`schemaBackupMismatch`. Q2에서 확정한 것: 검색 행의 basis 부여 조건(기준량 9/3자리·정확 계산이 검증값 재현), `SearchSessionModel.amountDrafts`·`AmountEditTarget`·`applyAmount`, `RecordHomeViewModel.updateRecordAmount`·`updateRecordDirectProtein`, `PortionEditorPolicy`. 이번 업데이트 전체(Q1+Q2+S1)는 아직 완료가 아니다.
 

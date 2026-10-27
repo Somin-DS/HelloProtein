@@ -1100,6 +1100,135 @@ extension RecordHomeViewModelTests {
         XCTAssertEqual(edited.protein.centigrams, 2_100)
     }
 
+    private func basisSelection(_ key: String, record: String, name: String, amount: String,
+                                protein: String = "12.18") throws -> SearchSelection {
+        let basis = try CalculationBasis.providerSnapshot(proteinGramsText: protein, referenceQuantity: FoodQuantity(value: "100", unit: .gram),
+                                                          providerID: "mfds", dataVersion: "2026-10", itemID: key)
+        let quantity = try FoodQuantity(value: amount, unit: .gram)
+        return SearchSelection(itemKey: key, recordID: record, name: name, proteinCentigrams: try basis.protein(for: quantity).centigrams,
+                               quantity: quantity, basis: basis)
+    }
+
+    func testSearchBatchWritesBasisRecordsWithTheirAppliedAmountsOrNothing() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let chicken = try basisSelection("D1", record: "r1", name: "Chicken", amount: "150")
+        let plain = try searchSelection("en|v|2", record: "r2", name: "Butter, salted", centigrams: 85)
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [chicken, plain], completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, 1)
+        sync { model.select(day) }
+        let records = sync { model.log.records }
+        XCTAssertEqual(records.map(\.id), ["r1", "r2"])
+        XCTAssertEqual(records[0].protein.centigrams, 1_827)
+        XCTAssertEqual(records[0].quantity?.value, "150")
+        XCTAssertEqual(records[0].calculationBasis?.proteinGramsText, "12.18")
+        XCTAssertEqual(records[0].calculationBasis?.provider?.itemID, "D1")
+        XCTAssertNil(records[1].calculationBasis, "a row without a basis is written the old way")
+        XCTAssertEqual(records[1].quantity?.value, "100")
+
+        // A selection whose protein does not match its basis is stale: 0 rows.
+        let stale = SearchSelection(itemKey: "D3", recordID: "r3", name: "Stale", proteinCentigrams: 1_828,
+                                    quantity: chicken.quantity, basis: chicken.basis)
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [stale, plain], completion: $0) }, .failed(.selectionChanged))
+        XCTAssertEqual(sync { model.log.records.count }, 2)
+        XCTAssertEqual(try FileAppStateStore(fileURL: storeURL).load().log(for: day)?.records.count, 2)
+    }
+
+    func testAmountEditRecomputesFromTheBasisAndDirectProteinReplacesIt() throws {
+        let state = try searchState()
+        try FileAppStateStore(fileURL: storeURL).commit(state)
+        let store = CountingStore(inner: FileAppStateStore(fileURL: storeURL))
+        let model = makeModel(store: store, state: state)
+        let day = try CalendarDay(iso8601: "2026-09-20")
+        let chicken = try basisSelection("D1", record: "r1", name: "Chicken", amount: "150")
+        let old = try searchSelection("en|v|2", record: "r2", name: "Brie", centigrams: 2_075)
+        XCTAssertEqual(wait { model.addSearchRecords(day: day, selections: [chicken, old], completion: $0) }, .ok)
+        sync { model.select(day) }
+        let original = try XCTUnwrap(sync { model.log.record(id: "r1") })
+
+        // 200 g → 24.36 g from the basis; name and basis kept.
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "200", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        var edited = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        XCTAssertEqual(edited.protein.centigrams, 2_436)
+        XCTAssertEqual(edited.quantity?.value, "200")
+        XCTAssertEqual(edited.calculationBasis, original.calculationBasis)
+        XCTAssertEqual(edited.source, .search)
+        XCTAssertEqual(sync { model.totalCentigrams }, 7_000 + 2_436 + 2_075)
+        // Back to 150 g gives exactly the first result again (recomputed, not re-rounded).
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(sync { model.log.record(id: "r1") }, original)
+        // Locale separator; name change in the same save.
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken breast", amountText: "150", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        edited = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        XCTAssertEqual(edited.name, "Chicken breast")
+        XCTAssertEqual(edited.calculationBasis, original.calculationBasis)
+
+        // Errors write nothing and are typed.
+        let calls = store.modifyCalls
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: nil, amountText: "abc", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.amount(.notANumber)))
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: nil, amountText: "0", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.amount(.zero)))
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: nil, amountText: "1234567890", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.amount(.tooManyIntegerDigits)))
+        XCTAssertEqual(store.modifyCalls, calls, "input errors never reach the store")
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: nil, amountText: "0.01", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.calculation(.roundsToZero)))
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "missing", name: nil, amountText: "100", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.notFound))
+        guard case .failed(.integrity) = wait({ done in model.updateRecordAmount(day: day, id: "r2", name: nil, amountText: "100", favoriteID: nil) { done($0.map { _ in () }) } }) else { return XCTFail("an old record has no basis to recalculate from") }
+        guard case .failed(.integrity) = wait({ model.updateRecord(day: day, id: "r1", name: "x", proteinText: "20", completion: $0) }) else { return XCTFail("the generic edit never silently drops a basis") }
+        XCTAssertEqual(wait { model.updateRecord(day: day, id: "r1", name: "Chicken", proteinText: "18.27", completion: $0) }, .ok, "the same protein is a plain name edit")
+        XCTAssertEqual(sync { model.log.record(id: "r1")?.calculationBasis }, original.calculationBasis)
+        XCTAssertEqual(sync { model.log.record(id: "r2")?.protein.centigrams }, 2_075, "the old record is untouched")
+
+        // Re-saving what is stored writes nothing: no commit, no operation ID spent.
+        let before = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        let unchangedCalls = store.modifyCalls
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150.0", favoriteID: nil) { done($0.map { _ in () }) } }, .ok, "the same amount written differently is the same amount")
+        XCTAssertEqual(wait { done in model.updateRecordDirectProtein(day: day, id: "r1", name: "Chicken", proteinText: "18.27", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(wait { model.updateRecord(day: day, id: "r2", name: "Brie", proteinText: "20.75", completion: $0) }, .ok)
+        XCTAssertEqual(store.modifyCalls, unchangedCalls, "a save that changes nothing does not commit")
+        XCTAssertEqual(sync { model.log.record(id: "r1") }, before)
+        // A favorite request is a change even with the record untouched.
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150", favoriteID: "fav-0") { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(store.modifyCalls, unchangedCalls + 1)
+        XCTAssertEqual(sync { model.favorites.first { $0.id == "fav-0" }?.proteinCentigrams }, 1_827)
+
+        // Direct mode with the stored protein is not a decision to replace the
+        // basis: the provider basis stays, only the name may change.
+        XCTAssertEqual(wait { done in model.updateRecordDirectProtein(day: day, id: "r1", name: "Chicken thigh", proteinText: "18.27", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        edited = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        XCTAssertEqual(edited.name, "Chicken thigh")
+        XCTAssertEqual(edited.calculationBasis, original.calculationBasis, "same protein keeps the provider basis")
+        XCTAssertEqual(edited.calculationBasis?.origin, .providerSnapshot)
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "200", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(sync { model.log.record(id: "r1")?.protein.centigrams }, 2_436, "later amount edits still use the provider basis")
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+
+        // Direct protein: the stored amount becomes the reference of a new user-defined basis.
+        XCTAssertEqual(wait { done in model.updateRecordDirectProtein(day: day, id: "r1", name: "Chicken", proteinText: "20", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        edited = try XCTUnwrap(sync { model.log.record(id: "r1") })
+        XCTAssertEqual(edited.protein.centigrams, 2_000)
+        XCTAssertEqual(edited.quantity?.value, "150")
+        XCTAssertEqual(edited.calculationBasis?.origin, .userDefined)
+        XCTAssertNil(edited.calculationBasis?.provider)
+        XCTAssertEqual(edited.calculationBasis?.proteinGramsText, "20")
+        XCTAssertEqual(edited.calculationBasis?.referenceQuantity.value, "150")
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "300", favoriteID: nil) { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(sync { model.log.record(id: "r1")?.protein.centigrams }, 4_000, "later amount edits use the new basis")
+        XCTAssertEqual(wait { done in model.updateRecordDirectProtein(day: day, id: "r1", name: nil, proteinText: "92233720368547758.07", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.input(.overflow)), "19 significant digits exceed the basis text limit")
+        XCTAssertEqual(wait { done in model.updateRecordDirectProtein(day: day, id: "r1", name: nil, proteinText: "x", favoriteID: nil) { done($0.map { _ in () }) } }, .failed(.input(.notANumber)))
+        guard case .failed(.integrity) = wait({ done in model.updateRecordDirectProtein(day: day, id: "r2", name: nil, proteinText: "5", favoriteID: nil) { done($0.map { _ in () }) } }) else { return XCTFail("not offered for records without a basis") }
+
+        // Favorite half: created from the computed protein, in the same commit.
+        XCTAssertEqual(wait { done in model.updateRecordAmount(day: day, id: "r1", name: "Chicken", amountText: "150", favoriteID: "fav-1") { done($0.map { _ in () }) } }, .ok)
+        XCTAssertEqual(sync { model.favorites.first { $0.id == "fav-1" }?.proteinCentigrams }, 2_000)
+
+        // Everything above survives a reload.
+        let reloaded = try FileAppStateStore(fileURL: storeURL).load().log(for: day)
+        XCTAssertEqual(reloaded?.record(id: "r1"), sync { model.log.record(id: "r1") })
+    }
+
     func testSearchWritesCarryTheirKindAndRetryWithTheSameIDsAfterNotApplied() throws {
         let state = try searchState()
         try FileAppStateStore(fileURL: storeURL).commit(state)

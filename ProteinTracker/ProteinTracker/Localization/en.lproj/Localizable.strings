@@ -308,3 +308,27 @@
 "renewal_search_source_unverified" = "Legacy catalog · source not verified";
 
 "renewal_search_source_mfds" = "Ministry of Food and Drug Safety · Food Nutrition Database";
+
+/* Amount editing (Q2) */
+"renewal_amount_edit" = "Edit amount";
+"renewal_amount_edit_action" = "Edit amount for %@";
+"renewal_amount_input" = "Amount eaten (%@)";
+"renewal_amount_preview" = "Protein to log: %@ g";
+"renewal_amount_eaten" = "Amount eaten: %@";
+"renewal_amount_user_basis" = "Based on your entered values";
+"renewal_amount_apply" = "Apply";
+"renewal_amount_apply_note" = "Apply only changes the selection in this sheet. Records are saved together with “Add N” below.";
+"renewal_amount_unavailable" = "This item’s amount can’t be recalculated here, so it is added as shown.";
+"renewal_amount_error_empty" = "Enter the amount eaten.";
+"renewal_amount_error_number" = "Enter digits and at most one decimal point (e.g. 150 or 150.5).";
+"renewal_amount_error_positive" = "Enter an amount greater than zero.";
+"renewal_amount_error_digits" = "Up to 9 digits before and 3 after the decimal point.";
+"renewal_amount_error_rounds_to_zero" = "This amount rounds to 0.00 g of protein. Enter a larger amount.";
+"renewal_amount_error_invalid" = "This record’s basis can’t be used for the calculation.";
+"renewal_amount_discard_title" = "Discard the changed amount?";
+"renewal_amount_discard_message" = "The last applied amount is kept.";
+"renewal_error_amount_title" = "Check the amount";
+"renewal_edit_direct_protein" = "Enter protein directly";
+"renewal_edit_direct_protein_note" = "The amount eaten stays as saved; you enter the protein. Switching this resets both fields to the saved values. Saving makes this amount and the entered protein the new basis and removes the search source details.";
+"renewal_edit_saved_reference" = "Saved reference amount: %@";
+"renewal_favorite_protein_only" = "Only the current protein value is saved to favorites, not the amount eaten or its basis.";

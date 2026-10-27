@@ -306,3 +306,27 @@
 "renewal_search_source_unverified" = "기존 카탈로그 · 출처 미확인";
 
 "renewal_search_source_mfds" = "식품의약품안전처 · 식품영양성분DB";
+
+/* 섭취량 편집 (Q2) */
+"renewal_amount_edit" = "섭취량 변경";
+"renewal_amount_edit_action" = "%@ 섭취량 변경";
+"renewal_amount_input" = "먹은 양 (%@)";
+"renewal_amount_preview" = "기록될 단백질 %@g";
+"renewal_amount_eaten" = "먹은 양 %@";
+"renewal_amount_user_basis" = "직접 입력한 값 기준";
+"renewal_amount_apply" = "적용";
+"renewal_amount_apply_note" = "적용은 이 시트 안의 선택에만 반영돼요. 기록은 아래 ‘N개 추가’로 한 번에 저장돼요.";
+"renewal_amount_unavailable" = "이 항목은 여기서 섭취량을 다시 계산할 수 없어 표시된 양 그대로 추가돼요.";
+"renewal_amount_error_empty" = "먹은 양을 입력해 주세요";
+"renewal_amount_error_number" = "숫자와 소수점 하나만 입력할 수 있어요 (예: 150 또는 150.5)";
+"renewal_amount_error_positive" = "0보다 큰 양을 입력해 주세요";
+"renewal_amount_error_digits" = "정수 9자리, 소수점 이하 3자리까지 입력할 수 있어요";
+"renewal_amount_error_rounds_to_zero" = "이 양으로는 기록할 단백질이 0.00g이 돼요. 더 큰 양을 입력해 주세요";
+"renewal_amount_error_invalid" = "이 기록의 기준으로는 계산할 수 없어요";
+"renewal_amount_discard_title" = "변경한 양을 버릴까요?";
+"renewal_amount_discard_message" = "마지막으로 적용한 양으로 돌아가요.";
+"renewal_error_amount_title" = "양을 확인해 주세요";
+"renewal_edit_direct_protein" = "단백질 직접 수정";
+"renewal_edit_direct_protein_note" = "먹은 양은 저장된 값 그대로 두고 단백질만 입력해요. 이 스위치를 바꾸면 두 칸 모두 저장된 값으로 돌아가요. 저장하면 이 양과 입력한 단백질이 새 기준이 되고, 검색 출처 정보는 지워져요.";
+"renewal_edit_saved_reference" = "저장된 기준량 %@";
+"renewal_favorite_protein_only" = "현재 단백질 값만 즐겨찾기에 저장돼요. 먹은 양과 기준은 저장되지 않아요.";
