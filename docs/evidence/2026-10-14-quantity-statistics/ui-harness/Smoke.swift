@@ -2009,13 +2009,10 @@ final class Smoke: XCTestCase {
         searchTab()
         ensureLanguage("english")
         runSearch("butter, salted")
-        // The history write is delayed 8 s, so the lookup starts late: wait
-        // for the single result row (scrolling it in on the SE) without
-        // asserting inside the loop.
-        XCTAssertTrue(waitUntil(timeout: 30) {
-            if !self.resultRow(0).exists { self.app.swipeUp() }
-            return self.resultRow(0).exists && self.resultRow(0).isEnabled
-        }, "the delayed history write finishes first: " + app.debugDescription)
+        // Do not scroll while the deliberately delayed history write is pending:
+        // a downward application swipe can dismiss the still-clean search sheet.
+        XCTAssertTrue(waitUntil(timeout: 20) { self.app.buttons["renewal.search.run"].isEnabled }, "the delayed history write finishes first: " + app.debugDescription)
+        XCTAssertTrue(showResult(0).isEnabled)
         showResult(0, timeout: 2).tap()
         XCTAssertTrue(editAmountButton(0).waitForExistence(timeout: 3), app.debugDescription)
         editAmountButton(0).tap()

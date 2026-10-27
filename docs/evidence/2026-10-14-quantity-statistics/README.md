@@ -194,3 +194,31 @@ S1 작업 트리를 별도 검토 pass로 살펴 다음을 고쳤다. 반영 후
 - 실기기 설치 없음. 새 차트 API·패키지 없음(SwiftUI 도형으로 그림).
 - 통합 시나리오는 실제 MFDS 표본(`D102-096060000-0001` 샌드위치_닭가슴살 12.18 g/100 g)으로 수행했다. 공급자 데이터가 바뀌면 기대값을 재확인해야 한다.
 - 자정·foreground 갱신은 기존 홈의 `refreshToday`에 의존하며 통계 화면이 열린 동안 끝 날짜는 고정이다(단위 테스트의 시계 역행 케이스로 `next`/`latest` 동작 확인). 시뮬레이터에서 실제 자정 통과는 수행하지 않았다.
+
+## PR 11 시작 경로 리뷰 수정 (2026-10-27)
+
+`app-state.json`과 기존 완료 마커가 없고 schema 2 백업 또는 승격 마커만 남은 상태에서도 앱이 renewal 경로로 진입하도록 `RenewalPaths.newStoreEvidenceExists()`를 수정했다. 손상 여부는 MigrationCoordinator가 검사한다. 기본 플래그가 꺼져 있어도 기존 UIKit/Realm 경로로 돌아가지 않고, 지원하지 않는 OS는 기존 unsupported 안내로 진입한다. 일반 legacy 캡처 디렉터리만 있는 경우의 기존 판정은 유지했다.
+
+`RenewalLaunchPolicyTests.testPromotionEvidenceAloneBlocksLegacyWithoutOptIn`에서 두 증거 파일 각각의 실제 경로 일치, 손상된 내용, store/완료 마커 부재, 플래그 없음/명시 NO, 지원 OS/미지원 OS를 검증했다. 별도 임시 디렉터리만 사용하며 실사용 데이터는 변경하지 않는다.
+
+수정 후 Debug 앱 테스트: iPhone SE / iOS 26.5 시뮬레이터 **124개 통과, 0 실패**, `TEST SUCCEEDED`. 로그 `/private/tmp/hp-pr11-fix-app-tests.log`. 리뷰 시 Q1 원본 Core 87개·MigrationCore 82개 통과를 확인했고 이번 수정은 해당 모듈을 변경하지 않았다. 이번 후속 수정에서 Release 빌드·수동 UI·실기기 검증은 추가로 실행하지 않았다.
+
+## PR 12 main 통합 및 독립 UI 검증 (2026-10-27)
+
+- PR base를 `main`으로 변경하고 PR 11의 시작·복구 경로 수정(`521cf12`)을 통합했다. 문서 충돌은 Q2 검증 기록과 PR 11 수정 기록을 모두 보존했다.
+- S1에 있던 홈 기록의 `renewal.record.<id>` 접근성 식별자와 스크롤 중 고유 ID를 모으는 하네스 집계를 Q2로 앞당겼다. 통계 구현은 포함하지 않는다.
+- 저장 지연 시나리오 48에서 `showResult`를 대기 조건으로 호출하면 결과가 도착하기 전에 스크롤하고 깨끗한 시트를 닫을 수 있었다. 검색 버튼이 다시 활성화될 때까지 기다린 다음 결과 행을 찾도록 수정했다.
+- 최종 앱 소스는 임시 검증 디렉터리의 tracked `ProteinTracker`/`Packages` 파일과 바이트 단위로 일치함을 확인했다. 비밀 설정 파일은 복사하지 않았다.
+- Debug 앱 테스트: iPhone SE / iOS 26.5, **132개 통과, 0 실패**. 로그 `/private/tmp/hp-pr12-review-tests.log`.
+- 첫 UI 실행 `pr12-integrated-se-144922`: 46·47 통과, 48은 위 하네스 문제로 실패, 49는 실행기 비정상 종료로 완료되지 않았다. 이후 xcodebuild 로그 정리 단계가 멈춰 해당 실행만 중단했다. 이 실행을 전체 통과 증거로 사용하지 않는다.
+
+최종 UI 하네스는 Q2 앱을 명시적으로 업데이트 설치한 뒤 실행했다. S1 통계 코드는 포함하지 않는다.
+
+| 기기 | 실행 | 결과 |
+| --- | --- | --- |
+| iPhone SE / iOS 26.5 | `pr12-final-se-150411` | 46·47·48·49 모두 통과 (4/4) |
+| iPhone 17 / iOS 26.5 | `pr12-final-17-150938` | 46·47·48·49 모두 통과 (4/4) |
+
+캡처: [PR12 main 통합 SE](screenshots/pr12-main/iphone-se/), [iPhone 17](screenshots/pr12-main/iphone-17/). 테스트 46은 150 g 적용·저장 → 200 g 재계산 → 직접 단백질 수정 → 사용자 기준으로 재계산·삭제를 포함한다. 47은 한국어 AX-XL과 키보드 위 적용 버튼, 48은 저장 지연 중 잠금, 49는 미확정 이력 쓰기 → notApplied 확인 → 수량 적용·추가를 검사한다.
+
+최종 검증 앱 코드 커밋은 `1d8c0ef`이며 이후 변경은 하네스·문서·캡처다. 결과 번들은 `/private/tmp/hp-iphone-ui/results/<실행 이름>.xcresult`에 있다. 하네스는 순차 실행과 240초 테스트 제한을 명시하고 상세 로그를 남긴다. 실기기 설치·배포·renewal 기본 활성화는 수행하지 않았다. 이번 통합 후 Release 빌드는 재실행하지 않았다.

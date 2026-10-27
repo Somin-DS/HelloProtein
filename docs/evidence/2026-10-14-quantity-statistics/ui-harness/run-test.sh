@@ -13,7 +13,7 @@ for m in "$@"; do only+=("-only-testing:Smoke/Smoke/$m"); done
 name="$run-$dev-$T"
 xcodebuild -project Smoke.xcodeproj -scheme Smoke -destination "platform=iOS Simulator,id=$U" \
   -derivedDataPath "${DD:-/private/tmp/hp-iphone-ui/build}" -resultBundlePath "results/$name.xcresult" \
-  "${only[@]}" test -quiet > "results/$name.log" 2>&1
+  "${only[@]}" test -parallel-testing-enabled NO -maximum-test-execution-time-allowance 240 -test-timeouts-enabled YES > "results/$name.log" 2>&1
 code=$?
 echo "## $name exit=$code"
 xcrun xcresulttool get test-results summary --path "results/$name.xcresult" 2>/dev/null | python3 -c "
