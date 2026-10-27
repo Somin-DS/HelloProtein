@@ -365,3 +365,30 @@
 "renewal_statistics_goal_error" = "목표 이력 오류";
 "renewal_statistics_negative_day" = "과거 보정값을 확인해 주세요";
 "renewal_statistics_legacy_day" = "과거 합계 포함";
+
+// Renewal settings and acknowledgements
+"renewal_settings" = "설정";
+"renewal_settings_preferences" = "사용 설정";
+"renewal_settings_goal" = "일일 목표";
+"renewal_settings_goal_hint" = "홈에서 오늘을 선택한 뒤 목표 버튼으로 목표를 설정하거나 변경하세요. 이전 목표는 해당 날짜에 유지됩니다.";
+"renewal_settings_language" = "음식 검색 언어";
+"renewal_settings_language_hint" = "단백질 추가 → 검색에서 영어 또는 한국어 음식 검색을 선택하세요. 앱 표시 언어는 바뀌지 않습니다.";
+"renewal_settings_support" = "문의";
+"renewal_settings_email" = "메일 작성";
+"renewal_settings_copy" = "메일 주소 복사";
+"renewal_settings_copied" = "메일 주소 복사됨";
+"renewal_settings_email_note" = "보낼 내용은 직접 작성합니다. 음식 기록은 자동 첨부되지 않습니다.";
+"renewal_settings_about" = "앱 정보";
+"renewal_settings_credits" = "데이터 출처 및 오픈소스";
+"renewal_settings_done" = "완료";
+"renewal_settings_mail_unavailable" = "메일을 사용할 수 없어요";
+"renewal_settings_mail_unavailable_message" = "주소를 복사해 사용하시는 메일 앱으로 문의해주세요.";
+"renewal_settings_mail_failed" = "메일을 보내지 못했어요";
+"renewal_settings_version" = "버전 %@ (빌드 %@)";
+"renewal_settings_food_sources" = "음식 데이터";
+"renewal_settings_english_source" = "영어 음식 검색: USDA FoodData Central, SR Legacy. 앱에 포함된 목록은 가식부 100g 기준입니다.";
+"renewal_settings_korean_source" = "한국어 음식 검색: 식품의약품안전처 식품영양성분 통합 데이터베이스(공공데이터포털 서비스 15127578). 각 결과에 제공된 기준량을 표시합니다.";
+"renewal_settings_libraries" = "오픈소스 소프트웨어";
+"renewal_settings_licenses" = "저작권 및 라이선스";
+"renewal_settings_licenses_note" = "현재 화면과 기존 화면에서 사용하는 라이브러리를 포함합니다. 라이선스 문구는 원문으로 제공합니다.";
+"renewal_settings_licenses_unavailable" = "라이선스 정보를 불러오지 못했습니다. 문의해 주세요.";

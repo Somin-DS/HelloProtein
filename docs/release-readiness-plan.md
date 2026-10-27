@@ -25,7 +25,7 @@
 
 근거: `ViewController/SettingViewController.swift`, `SettingTargetViewController.swift`, `InfoOpenSourceViewController.swift`, `Renewal/RecordHomePrototypeView.swift`, `Search/SearchTab.swift`, `StatisticsView.swift`.
 
-### 다음 구현: 새 흐름의 설정·정보 접근 복원
+### 설정·정보 접근 복원 — 구현 및 시뮬레이터 검증 완료 (2026-10-27)
 
 - 홈에서 접근 가능한 설정/정보 화면을 추가한다. 새로운 탭바나 Duo/iPad 레이아웃은 도입하지 않는다.
 - 목표 변경과 검색 언어의 현재 위치를 안내한다. 언어/목표 저장 로직을 별도로 복제하지 않는다.
@@ -113,3 +113,5 @@ Android·AI·구독은 이번 iOS 출시 준비와 별도 작업이다. 기존 �
 - Release 시뮬레이터 빌드 **BUILD SUCCEEDED**. Xcode `/Applications/Xcode.app`, generic iOS Simulator, 최소 OS override 없이 `CODE_SIGNING_ALLOWED=NO`로 검증했다. 로그: `/private/tmp/hp-release-preflight.log`.
 - 산출물 Info.plist: ID `com.devsom.ProteinTracker`, version `1.3`, build `1.3.1`, minimum OS `13.0`. 비밀 설정을 복사하지 않은 검증 산출물이므로 MFDS 키는 비어 있다(예상 결과). 로컬 키 존재와 배포 키 주입 성공은 별개다. 이번 빌드로 한국어 실 API를 호출하지 않았다.
 - 이 결과는 서명된 실기기 archive, App Store 업로드 또는 iOS 13/14 실행 성공의 근거가 아니다. 실제 구버전 데이터 대조·배포 환경 확인·활성화·베타는 미완료다.
+
+설정·문의·앱 정보 복원은 현재 작업 브랜치에서 구현 및 SE/17 검증을 완료했다. [증거](evidence/2026-10-27-settings/README.md). 실기기 메일 작성기 검증과 main 병합/출시는 별도다. 계산기와 실데이터 이관 조건은 여전히 남아 있다.
