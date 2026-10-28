@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MigrationCore",
-    platforms: [.iOS(.v13), .macOS(.v10_15)],
+    platforms: [.iOS(.v15), .macOS(.v10_15)],
     products: [.library(name: "MigrationCore", targets: ["MigrationCore"])],
     dependencies: [.package(path: "../HelloProteinCore")],
     targets: [

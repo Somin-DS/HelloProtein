@@ -69,7 +69,7 @@
 | --- | --- | --- |
 | 기본 진입 | `RenewalLaunchPolicy`는 플래그 없고 새 저장소 증거 없으면 legacy | 출시 직전 별도 활성화 변경과 테스트 필요 |
 | 새 저장소 증거 | store·완료 마커·schema 2 백업·승격 마커 | 플래그를 꺼도 renewal/지원 불가 화면 강제 |
-| 지원 OS | 프로젝트 최소 iOS 13, 새 SwiftUI iOS 15 이상 | iOS 13/14 유지 또는 최소 OS 변경을 결정. 현재 코드가 자동으로 정책을 결정하지 않음 |
+| 지원 OS | 최소 iOS 15.0 — 2026-10-28 사용자 결정 | 프로젝트·앱·테스트 및 내부 패키지에 반영. iOS 13/14는 업데이트 대상 제외. 기본 진입 활성화와 데이터 이관은 별도 |
 | 앱 ID | `com.devsom.ProteinTracker` | 업데이트 식별자 유지 |
 | 프로젝트 버전 | marketing 1.3 / build 1.3.1 | 실제 배포 버전과 비교 후 새 값 확정. 임의 증가하지 않음 |
 | 프로젝트 팀 | `KX3AB9M769` | 조직을 추정하지 않음. 배포 계정·프로파일 확인 필요 |
@@ -115,3 +115,10 @@ Android·AI·구독은 이번 iOS 출시 준비와 별도 작업이다. 기존 �
 - 이 결과는 서명된 실기기 archive, App Store 업로드 또는 iOS 13/14 실행 성공의 근거가 아니다. 실제 구버전 데이터 대조·배포 환경 확인·활성화·베타는 미완료다.
 
 설정·문의·앱 정보 복원은 현재 작업 브랜치에서 구현 및 SE/17 검증을 완료했다. [증거](evidence/2026-10-27-settings/README.md). 실기기 메일 작성기 검증과 main 병합/출시는 별도다. 계산기와 실데이터 이관 조건은 여전히 남아 있다.
+
+## 2026-10-28 최소 지원 OS 변경
+
+- 사용자 요청으로 최소 iOS 15.0을 확정했다. 프로젝트 및 앱 Debug/Release를 15.0으로 변경했고, 테스트 타깃의 기존 15.0과 내부 HelloProteinCore/MigrationCore의 iOS 플랫폼 선언을 일치시켰다. macOS 선언은 유지한다.
+- 현재 추적된 앱·패키지 파일과 동일한 격리 복사본으로 generic iOS Simulator Release 빌드를 실행했다. 명령행 `IPHONEOS_DEPLOYMENT_TARGET` 덮어쓰기 없이 **BUILD SUCCEEDED**, 생성 앱 Info.plist의 `MinimumOSVersion = 15.0`을 확인했다.
+- 로그: `/private/tmp/hp-release-preflight.log`. 비밀 설정을 제외한 빌드이므로 MFDS 키는 미설정이다. 서명된 기기 archive·iOS 15 런타임 실행·실기기 설치 검증으로 간주하지 않는다.
+- 데이터 형식·이관 동작·기본 진입·배포 서명·앱 버전은 변경하지 않았다. iOS 13/14는 새 업데이트 설치 대상에서 제외한다.
